@@ -14,8 +14,7 @@ var jwtKey []byte
 func init() {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		// safe default for local dev only
-		secret = "dev_a_super_long_and_complex_secret_key"
+		panic("JWT_SECRET environment variable is required")
 	}
 	jwtKey = []byte(secret)
 }
