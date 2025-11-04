@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: profile-service
+  name: profile-service
+spec:
+  initContainers:
+    - name: wait-for-postgres
+      image: busybox
+      command: ['sh', '-c', 'until nc -z profile-postgres-db 5434; do echo waiting for postgres; sleep 2; done;']
+  containers:
+    - env:
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:postgresql://profile-postgres-db:5434/profiledb
+        - name: SPRING_DATASOURCE_USERNAME
+          value: postgres
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: postgres
+      image: profile-service
+      name: profile-service
+      resources:
+        limits:
+          memory: "536870912"
+  restartPolicy: OnFailure

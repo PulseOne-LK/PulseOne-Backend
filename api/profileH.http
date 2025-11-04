@@ -1,0 +1,91 @@
+### ============================================
+### ACTUATOR ENDPOINTS (Health & Monitoring)
+### ============================================
+
+### Health Check - Basic
+GET http://localhost:8081/profile/actuator/health
+Accept: application/json
+
+###
+
+### Health Check - Detailed (shows all components)
+GET http://localhost:8082/actuator/health
+Accept: application/json
+
+###
+
+### Application Info
+GET http://localhost:8081/profile/actuator/info
+Accept: application/json
+
+###
+
+### Metrics - Available Metrics List
+GET http://localhost:8081/profile/actuator/metrics
+Accept: application/json
+
+###
+
+### Metrics - JVM Memory Usage
+GET http://localhost:8081/profile/actuator/metrics/jvm.memory.used
+Accept: application/json
+
+###
+
+### Metrics - HTTP Server Requests
+GET http://localhost:8081/profile/actuator/metrics/http.server.requests
+Accept: application/json
+
+###
+
+### Metrics - Database Connection Pool
+GET http://localhost:8081/profile/actuator/metrics/hikaricp.connections.active
+Accept: application/json
+
+###
+
+### ============================================
+### DIRECT SERVICE ACCESS (Bypass API Gateway)
+### ============================================
+
+### Health Check - Direct to Profile Service
+GET http://localhost:8082/actuator/health
+Accept: application/json
+
+###
+
+### Info - Direct to Profile Service
+GET http://localhost:8082/actuator/info
+Accept: application/json
+
+###
+
+### ============================================
+### APPLICATION ENDPOINTS (Your Business Logic)
+### ============================================
+
+### Get User Profile (example)
+GET http://localhost:8081/profile/api/users/1
+Content-Type: application/json
+Authorization: Bearer your-jwt-token-here
+
+###
+
+### Create Profile (example)
+POST http://localhost:8081/profile/api/profiles
+Content-Type: application/json
+
+{
+  "userId": "123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com"
+}
+
+###
+
+### Get All Profiles (example)
+GET http://localhost:8081/profile/api/profiles
+Accept: application/json
+
+###

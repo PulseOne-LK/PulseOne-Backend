@@ -15,6 +15,20 @@ services:
     volumes:
       - auth_postgres_data:/var/lib/postgresql/data/
 
+  # PostgreSQL Database Service for Profile Service
+  profile-postgres-db:
+    image: postgres:15-alpine
+    container_name: profile-postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: profiledb
+    ports:
+      - "5434:5432"
+    volumes:
+      - profile_postgres_data:/var/lib/postgresql/data/
+
   auth-service:
     build:
       context: ./auth-service
@@ -30,6 +44,25 @@ services:
         limits:
           memory: 128M
 
+  profile-service:
+    build:
+      context: ./profile-service
+      dockerfile: Dockerfile
+    container_name: profile-service
+    restart: on-failure
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://profile-postgres-db:5432/profiledb"
+      SPRING_DATASOURCE_USERNAME: "postgres"
+      SPRING_DATASOURCE_PASSWORD: "postgres"
+    depends_on:
+      - profile-postgres-db
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   # 3. API Gateway (Go)
   api-gateway:
     build:
@@ -42,8 +75,10 @@ services:
     environment:
       # Reference the internal Docker service names
       AUTH_SERVICE_URL: "http://auth-service:8080"
+      PROFILE_SERVICE_URL: "http://profile-service:8080"
     depends_on:
       - auth-service
+      - profile-service
     deploy:
       resources:
         limits:
@@ -51,3 +86,4 @@ services:
 
 volumes:
   auth_postgres_data:
+  profile_postgres_data:
