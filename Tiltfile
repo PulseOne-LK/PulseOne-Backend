@@ -1,3 +1,5 @@
+trigger_mode(TRIGGER_MODE_MANUAL)
+
 # Auth Service
 docker_build('auth-service', './auth-service')
 
@@ -5,7 +7,8 @@ k8s_yaml([
     'auth-postgres-data-persistentvolumeclaim.yaml',
     'auth-postgres-db-deployment.yaml',
     'auth-postgres-db-service.yaml',
-    'auth-service-pod.yaml'
+    'auth-service-pod.yaml',
+    'auth-service-service.yaml'
 ])
 
 # Profile Service

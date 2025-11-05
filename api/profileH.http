@@ -57,35 +57,3 @@ Accept: application/json
 ### Info - Direct to Profile Service
 GET http://localhost:8082/actuator/info
 Accept: application/json
-
-###
-
-### ============================================
-### APPLICATION ENDPOINTS (Your Business Logic)
-### ============================================
-
-### Get User Profile (example)
-GET http://localhost:8081/profile/api/users/1
-Content-Type: application/json
-Authorization: Bearer your-jwt-token-here
-
-###
-
-### Create Profile (example)
-POST http://localhost:8081/profile/api/profiles
-Content-Type: application/json
-
-{
-  "userId": "123",
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john.doe@example.com"
-}
-
-###
-
-### Get All Profiles (example)
-GET http://localhost:8081/profile/api/profiles
-Accept: application/json
-
-###
