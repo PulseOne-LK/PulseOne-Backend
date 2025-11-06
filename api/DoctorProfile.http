@@ -1,0 +1,28 @@
+### 1. Doctor Profile Creation (Success)
+# Expected Status: 201 Created
+POST http://localhost:8081/profile/doctor
+X-User-ID: 14
+X-User-Role: DOCTOR
+Content-Type: application/json
+
+{
+  "specialty": "Pediatrics",
+  "consultationFee": 75.50,
+  "yearsOfExperience": 12,
+  "bio": "Expert in childhood respiratory illnesses.",
+  "isVirtual": true
+}
+
+### 2. Doctor Profile Update
+# Expected Status: 200 OK
+PUT http://localhost:8081/profile/doctor
+X-User-ID: 14
+X-User-Role: DOCTOR
+Content-Type: application/json
+
+{
+  "specialty": "Pediatrics",
+  "consultationFee": 85.50,
+  "yearsOfExperience": 13,
+  "bio": "Updated bio text for D001."
+}

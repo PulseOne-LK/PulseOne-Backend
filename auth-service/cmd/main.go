@@ -37,9 +37,14 @@ func main() {
 	authHandlers := api.NewAuthHandlers(userService)
 
 	r := chi.NewRouter()
+
+	// Public endpoints
 	r.Post("/register", authHandlers.RegisterHandler)
 	r.Post("/login", authHandlers.LoginHandler)
 	r.Get("/validate", authHandlers.ValidateTokenHandler)
+
+	// Admin endpoints
+	r.Post("/admin/register", authHandlers.AdminRegisterHandler)
 
 	fmt.Printf("Auth Service (Go + PostgreSQL + Chi) running on port %s...\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))

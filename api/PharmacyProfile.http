@@ -1,0 +1,25 @@
+### 1. Pharmacy Creation (Success)
+# Expected Status: 201 Created
+POST http://localhost:8081/profile/pharmacy
+X-User-ID: PH01
+X-User-Role: PHARMACIST
+Content-Type: application/json
+
+{
+  "name": "Central Dispensary",
+  "licenseNumber": "PH-45678",
+  "address": "100 Pharmacy Blvd, Suite 200",
+  "contactPhone": "555-4000",
+  "fulfillmentRadiusKm": 5
+}
+
+### 2. Pharmacy Update
+# Expected Status: 200 OK
+PUT http://localhost:8081/profile/pharmacy
+X-User-ID: PH01
+X-User-Role: PHARMACIST
+Content-Type: application/json
+
+{
+  "operatingHours": "M-F 8am-6pm, Sat 9am-1pm"
+}

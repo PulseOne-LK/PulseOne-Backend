@@ -17,7 +17,7 @@ import java.util.List;
  * Relies on JWT validation from the API Gateway which populates the custom headers.
  */
 @RestController
-@RequestMapping("/profiles")
+@RequestMapping("/")
 public class ProfileController {
 
     private final ProfileService profileService;
@@ -64,6 +64,18 @@ public class ProfileController {
     }
 
     /**
+     * PUT /profiles/patient - Updates the patient's profile.
+     */
+    @PutMapping("/patient")
+    public PatientProfile updatePatientProfile(
+            @RequestHeader("X-User-ID") String authUserId,
+            @RequestHeader("X-User-Role") String authUserRole,
+            @RequestBody PatientProfile updates) {
+        checkRole("PATIENT", authUserRole);
+        return profileService.updatePatientProfile(authUserId, updates);
+    }
+
+    /**
      * GET /profiles/patient/me - Retrieves the patient's own profile.
      */
     @GetMapping("/patient/me")
@@ -102,6 +114,18 @@ public class ProfileController {
 
         DoctorProfile newProfile = profileService.saveDoctorProfile(profile);
         return new ResponseEntity<>(newProfile, HttpStatus.CREATED);
+    }
+
+    /**
+     * PUT /profiles/doctor - Updates the doctor's profile.
+     */
+    @PutMapping("/doctor")
+    public DoctorProfile updateDoctorProfile(
+            @RequestHeader("X-User-ID") String authUserId,
+            @RequestHeader("X-User-Role") String authUserRole,
+            @RequestBody DoctorProfile updates) {
+        checkRole("DOCTOR", authUserRole);
+        return profileService.updateDoctorProfile(authUserId, updates);
     }
 
     /**
@@ -151,6 +175,18 @@ public class ProfileController {
     }
 
     /**
+     * PUT /profiles/pharmacy - Updates the Pharmacy linked to the logged-in Pharmacist.
+     */
+    @PutMapping("/pharmacy")
+    public Pharmacy updatePharmacy(
+            @RequestHeader("X-User-ID") String authUserId,
+            @RequestHeader("X-User-Role") String authUserRole,
+            @RequestBody Pharmacy updates) {
+        checkRole("PHARMACIST", authUserRole);
+        return profileService.updatePharmacy(authUserId, updates);
+    }
+
+    /**
      * GET /profiles/pharmacy/me - Retrieves the Pharmacy entity linked to the logged-in Pharmacist.
      */
     @GetMapping("/pharmacy/me")
@@ -160,5 +196,13 @@ public class ProfileController {
 
         checkRole("PHARMACIST", authUserRole);
         return profileService.getPharmacyByPharmacistUserId(authUserId);
+    }
+
+    /**
+     * GET /profiles/pharmacy/{pharmacyId} - Get Pharmacy by its ID (public or admin use).
+     */
+    @GetMapping("/pharmacy/{pharmacyId}")
+    public Pharmacy getPharmacyById(@PathVariable Long pharmacyId) {
+        return profileService.getPharmacyById(pharmacyId);
     }
 }

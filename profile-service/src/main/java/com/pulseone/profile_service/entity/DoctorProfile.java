@@ -39,8 +39,12 @@ public class DoctorProfile {
     @Column(name = "license_photo_url")
     private String licensePhotoUrl; // Link to the stored document
 
-    @Column(name = "is_Virtual")
+    @Column(name = "is_virtual")
     private Boolean isVirtual;
+
+    // --- Administrative ---
+    @Column(name = "is_verified")
+    private Boolean isVerified = Boolean.FALSE;
 
     public Long getId() {
         return id;
@@ -112,5 +116,13 @@ public class DoctorProfile {
 
     public void setVirtual(Boolean virtual) {
         isVirtual = virtual;
+    }
+
+    public Boolean getVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(Boolean verified) {
+        isVerified = verified;
     }
 }

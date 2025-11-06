@@ -1,0 +1,28 @@
+### 1. Clinic Creation (Success)
+# Expected Status: 201 Created
+POST http://localhost:8081/profile/clinic
+X-User-ID: 17
+X-User-Role: CLINIC_ADMIN
+Content-Type: application/json
+
+{
+  "name": "Unified Health Network",
+  "physicalAddress": "789 Corporate Drive, Suite 1A",
+  "contactPhone": "222-3333",
+  "taxId": "TX-9000"
+}
+
+### 2. Clinic Update
+# Expected Status: 200 OK
+PUT http://localhost:8081/profile/clinic
+X-User-ID: 17
+X-User-Role: CLINIC_ADMIN
+Content-Type: application/json
+
+{
+  "name": "Unified Health Network",
+  "physicalAddress": "789 Corporate Drive, Suite 1B (Updated)"
+}
+
+
+

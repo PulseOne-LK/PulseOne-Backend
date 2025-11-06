@@ -1,6 +1,7 @@
 package com.pulseone.profile_service.controller;
 
 import com.pulseone.profile_service.entity.DoctorProfile;
+import com.pulseone.profile_service.entity.Pharmacy;
 import com.pulseone.profile_service.service.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,14 +11,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 /**
- * REST Controller for System and Clinic Administrators.
- * Handles high-privilege actions like searching the full doctor directory
- * and updating license statuses (Admin functions).
- * * NOTE: Full security checking (is the user SYS_ADMIN?) is performed here
- * by checking the X-User-Role header passed by the Gateway.
+ * REST Controller for System Administrators (cross-context oversight).
  */
 @RestController
-@RequestMapping("/admin/profiles")
+@RequestMapping("/admin")
 public class AdminProfileController {
 
     private final ProfileService profileService;
@@ -27,25 +24,40 @@ public class AdminProfileController {
         this.profileService = profileService;
     }
 
-    // Utility to check role (assuming this is required by the Gateway for routing)
-    private void checkAdminRole(String actualRole) {
-        if (!("SYS_ADMIN".equals(actualRole) || "CLINIC_ADMIN".equals(actualRole))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Must be Admin role.");
+    private void checkSysAdmin(String role) {
+        if (!"SYS_ADMIN".equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Required role is SYS_ADMIN");
         }
     }
 
     /**
-     * GET /admin/profiles/doctors/all - Admin function to list all doctors (including pending).
-     * This is separate from the public /profiles/doctors endpoint.
+     * GET /admin/doctors - List all doctor profiles for verification/compliance.
      */
-    @GetMapping("/doctors/all")
-    public List<DoctorProfile> listAllDoctorsForAdmin(
-            @RequestHeader("X-User-Role") String authUserRole) {
-
-        checkAdminRole(authUserRole);
-        // Implement full lookup logic here (currently relies on existing method, but should be specialized)
+    @GetMapping("/doctors")
+    public List<DoctorProfile> listAllDoctors(
+            @RequestHeader("X-User-Role") String role) {
+        checkSysAdmin(role);
         return profileService.getAllDoctors();
     }
 
-    // Future endpoint: PUT /admin/profiles/doctor/{userId}/verify to approve credentials
+    /**
+     * PUT /admin/verify/{userId}?type=DOCTOR|PHARMACIST&verified=true|false
+     * Update verification status for doctor or pharmacist profiles.
+     */
+    @PutMapping("/verify/{userId}")
+    public Object updateVerification(
+            @RequestHeader("X-User-Role") String role,
+            @PathVariable String userId,
+            @RequestParam("type") String type,
+            @RequestParam("verified") boolean verified) {
+        checkSysAdmin(role);
+        switch (type.toUpperCase()) {
+            case "DOCTOR":
+                return profileService.setDoctorVerification(userId, verified);
+            case "PHARMACIST":
+                return profileService.setPharmacistVerification(userId, verified);
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown type. Expected DOCTOR or PHARMACIST.");
+        }
+    }
 }

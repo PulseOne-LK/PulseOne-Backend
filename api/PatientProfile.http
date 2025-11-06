@@ -1,0 +1,17 @@
+### CORRECTED: Patient Profile Creation
+# Expected Status: 201 Created
+POST http://localhost:8081/profile/patient
+X-User-ID: 6
+X-User-Role: PATIENT
+Content-Type: application/json
+
+{
+  "dob": "1990-01-01",
+  "phoneNumber": "5551234",
+  "address": "123 Main St",
+  "insuranceProvider": "BlueCross",
+  "emergencyContact": "Bob Smith 555-1111",
+  "knownAllergies": "Penicillin"
+
+}
+

@@ -9,7 +9,7 @@ import jakarta.persistence.*;
 @Table(name = "pharmacy")
 public class Pharmacy {
 
-    // Primary Key for the table itselfMicrosoft.QuickAction.WiFi
+    // Primary Key for the table itself
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,6 +38,10 @@ public class Pharmacy {
 
     @Column(name = "fulfillment_radius_km")
     private Integer fulfillmentRadiusKm;
+
+    // --- Administrative ---
+    @Column(name = "is_verified")
+    private Boolean isVerified = Boolean.FALSE;
 
     public Long getId() {
         return id;
@@ -101,5 +105,13 @@ public class Pharmacy {
 
     public void setFulfillmentRadiusKm(Integer fulfillmentRadiusKm) {
         this.fulfillmentRadiusKm = fulfillmentRadiusKm;
+    }
+
+    public Boolean getVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(Boolean verified) {
+        isVerified = verified;
     }
 }

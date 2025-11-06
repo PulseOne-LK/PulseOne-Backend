@@ -1,8 +1,10 @@
 package com.pulseone.profile_service.service;
 
+import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
+import com.pulseone.profile_service.repository.ClinicRepository;
 import com.pulseone.profile_service.repository.DoctorProfileRepository;
 import com.pulseone.profile_service.repository.PatientProfileRepository;
 import com.pulseone.profile_service.repository.PharmacyRepository;
@@ -23,15 +25,18 @@ public class ProfileService {
     private final PatientProfileRepository patientRepo;
     private final DoctorProfileRepository doctorRepo;
     private final PharmacyRepository pharmacyRepo;
+    private final ClinicRepository clinicRepo;
 
     @Autowired
     public ProfileService(
             PatientProfileRepository patientRepo,
             DoctorProfileRepository doctorRepo,
-            PharmacyRepository pharmacyRepo) {
+            PharmacyRepository pharmacyRepo,
+            ClinicRepository clinicRepo) {
         this.patientRepo = patientRepo;
         this.doctorRepo = doctorRepo;
         this.pharmacyRepo = pharmacyRepo;
+        this.clinicRepo = clinicRepo;
     }
 
     // -------------------------------------------------------------------
@@ -49,6 +54,20 @@ public class ProfileService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number is mandatory for patient profile.");
         }
         return patientRepo.save(profile);
+    }
+
+    /**
+     * Updates the existing patient profile for the given user ID.
+     */
+    public PatientProfile updatePatientProfile(String userId, PatientProfile updates) {
+        PatientProfile existing = getPatientProfileByUserId(userId);
+        existing.setPhoneNumber(updates.getPhoneNumber());
+        existing.setAddress(updates.getAddress());
+        existing.setDob(updates.getDob());
+        existing.setInsuranceProvider(updates.getInsuranceProvider());
+        existing.setEmergencyContact(updates.getEmergencyContact());
+        existing.setKnownAllergies(updates.getKnownAllergies());
+        return savePatientProfile(existing);
     }
 
     /**
@@ -76,6 +95,21 @@ public class ProfileService {
     }
 
     /**
+     * Updates the existing doctor profile for the given user ID.
+     */
+    public DoctorProfile updateDoctorProfile(String userId, DoctorProfile updates) {
+        DoctorProfile existing = getDoctorProfileByUserId(userId);
+        existing.setSpecialty(updates.getSpecialty());
+        existing.setConsultationFee(updates.getConsultationFee());
+        existing.setYearsOfExperience(updates.getYearsOfExperience());
+        existing.setBio(updates.getBio());
+        existing.setTelecomUrl(updates.getTelecomUrl());
+        existing.setLicensePhotoUrl(updates.getLicensePhotoUrl());
+        existing.setVirtual(updates.getVirtual());
+        return saveDoctorProfile(existing);
+    }
+
+    /**
      * Retrieves a doctor profile by the Auth Service User ID.
      */
     public DoctorProfile getDoctorProfileByUserId(String userId) {
@@ -84,12 +118,19 @@ public class ProfileService {
     }
 
     /**
-     * Retrieves a list of all verified doctors (for the Patient facing directory).
-     * NOTE: Verification status is primarily in the Auth Service, but we assume
-     * only profiles with specialty data are ready to be listed.
+     * Retrieves a list of all doctors (admin and public directory).
      */
     public List<DoctorProfile> getAllDoctors() {
         return doctorRepo.findAll();
+    }
+
+    /**
+     * Updates verification status of a doctor by user ID.
+     */
+    public DoctorProfile setDoctorVerification(String userId, boolean verified) {
+        DoctorProfile doc = getDoctorProfileByUserId(userId);
+        doc.setVerified(verified);
+        return doctorRepo.save(doc);
     }
 
     // -------------------------------------------------------------------
@@ -108,10 +149,72 @@ public class ProfileService {
     }
 
     /**
+     * Updates the existing pharmacy for the pharmacist user ID.
+     */
+    public Pharmacy updatePharmacy(String pharmacistUserId, Pharmacy updates) {
+        Pharmacy existing = getPharmacyByPharmacistUserId(pharmacistUserId);
+        existing.setName(updates.getName());
+        existing.setLicenseNumber(updates.getLicenseNumber());
+        existing.setAddress(updates.getAddress());
+        existing.setContactPhone(updates.getContactPhone());
+        existing.setOperatingHours(updates.getOperatingHours());
+        existing.setFulfillmentRadiusKm(updates.getFulfillmentRadiusKm());
+        return savePharmacy(existing);
+    }
+
+    /**
      * Retrieves a Pharmacy entity by the Pharmacist's Auth Service User ID.
      */
     public Pharmacy getPharmacyByPharmacistUserId(String pharmacistUserId) {
         return pharmacyRepo.findByPharmacistUserId(pharmacistUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found for this user."));
+    }
+
+    /**
+     * Retrieves Pharmacy by its ID.
+     */
+    public Pharmacy getPharmacyById(Long id) {
+        return pharmacyRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found."));
+    }
+
+    /**
+     * Updates verification status of a pharmacy (by pharmacist user ID).
+     */
+    public Pharmacy setPharmacistVerification(String pharmacistUserId, boolean verified) {
+        Pharmacy ph = getPharmacyByPharmacistUserId(pharmacistUserId);
+        ph.setVerified(verified);
+        return pharmacyRepo.save(ph);
+    }
+
+    // -------------------------------------------------------------------
+    // CLINIC METHODS
+    // -------------------------------------------------------------------
+
+    /**
+     * Creates a clinic for a clinic admin.
+     */
+    public Clinic createClinic(Clinic clinic) {
+        return clinicRepo.save(clinic);
+    }
+
+    /**
+     * Updates clinic fields by admin user id.
+     */
+    public Clinic updateClinicByAdmin(String adminUserId, Clinic updates) {
+        Clinic existing = clinicRepo.findByAdminUserId(adminUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found for this admin."));
+        existing.setName(updates.getName());
+        existing.setPhysicalAddress(updates.getPhysicalAddress());
+        existing.setContactPhone(updates.getContactPhone());
+        existing.setTaxId(updates.getTaxId());
+        existing.setOperatingHours(updates.getOperatingHours());
+        existing.setDoctorUuids(updates.getDoctorUuids());
+        return clinicRepo.save(existing);
+    }
+
+    public Clinic getClinicById(Long clinicId) {
+        return clinicRepo.findById(clinicId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found."));
     }
 }

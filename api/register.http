@@ -1,8 +1,68 @@
-POST http://localhost:8080/auth/register
+### 1. Patient Reg
+# Expected Status: 200 OK
+POST http://localhost:8081/auth/register
 Content-Type: application/json
 
 {
   "email": "new@app.com",
   "password": "123",
   "role": "PATIENT"
+}
+
+### 2. Doctor Reg
+# Expected Status: 200 OK
+POST http://localhost:8081/auth/register
+Content-Type: application/json
+
+{
+"email": "newDoc@app.com",
+"password": "123",
+"role": "DOCTOR"
+}
+
+### 3. PHARMACIST Reg
+# Expected Status: 200 OK
+POST http://localhost:8081/auth/register
+Content-Type: application/json
+
+{
+  "email": "newP@app.com",
+  "password": "123",
+  "role": "PHARMACIST"
+}
+
+### 1. Create CLINIC_ADMIN via Admin Endpoint
+POST http://localhost:8081/auth/admin/register
+X-User-ID: A001
+X-User-Role: SYS_ADMIN
+Content-Type: application/json
+
+{
+  "email": "newClinicAdmin@pulseone.com",
+  "password": "securepassword",
+  "role": "CLINIC_ADMIN"
+}
+
+### 2. Create another CLINIC_ADMIN
+POST http://localhost:8081/auth/admin/register
+X-User-ID: A001
+X-User-Role: SYS_ADMIN
+Content-Type: application/json
+
+{
+  "email": "anotherClinic@pulseone.com",
+  "password": "password123",
+  "role": "CLINIC_ADMIN"
+}
+
+### 3. Test unauthorized access (should fail)
+POST http://localhost:8081/auth/admin/register
+X-User-ID: D001
+X-User-Role: DOCTOR
+Content-Type: application/json
+
+{
+  "email": "shouldfail@pulseone.com",
+  "password": "password123",
+  "role": "CLINIC_ADMIN"
 }

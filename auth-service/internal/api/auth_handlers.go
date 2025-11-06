@@ -105,6 +105,67 @@ func (h *AuthHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// AdminRegisterHandler handles POST /auth/admin/register
+// Allows SYS_ADMIN to create accounts for CLINIC_ADMIN and other roles
+func (h *AuthHandlers) AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
+	// 1. Extract and validate admin credentials from headers
+	adminUserID := r.Header.Get("X-User-ID")
+	adminRole := r.Header.Get("X-User-Role")
+
+	if adminUserID == "" || adminRole != string(model.RoleSysAdmin) {
+		respondJSON(w, http.StatusForbidden, map[string]string{"error": "Access denied: Only SYS_ADMIN can create users via this endpoint"})
+		return
+	}
+
+	// 2. Parse request body
+	var req model.AuthRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+		return
+	}
+
+	// 3. Validate the role being created
+	validAdminRoles := []model.UserRole{
+		model.RoleClinicAdmin,
+		model.RoleSysAdmin,
+		model.RoleDoctor,
+		model.RolePharmacist,
+	}
+
+	isValidRole := false
+	for _, validRole := range validAdminRoles {
+		if req.Role == validRole {
+			isValidRole = true
+			break
+		}
+	}
+
+	if !isValidRole {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid role for admin registration"})
+		return
+	}
+
+	// 4. Register the user using the service (with admin privileges)
+	user, token, err := h.Service.AdminRegisterUser(r.Context(), req)
+	if err != nil {
+		if errors.Is(err, service.ErrUserExists) {
+			respondJSON(w, http.StatusConflict, map[string]string{"error": "User with this email already exists"})
+			return
+		}
+		log.Printf("Admin registration error: %v", err)
+		respondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to register user due to an internal error."})
+		return
+	}
+
+	// 5. Successful registration response
+	respondJSON(w, http.StatusCreated, map[string]interface{}{
+		"message": "User registered successfully by admin",
+		"token":   token,
+		"user_id": user.ID,
+		"role":    user.Role,
+	})
+}
+
 // ValidateTokenHandler handles GET /auth/validate
 // This is used by the API Gateway to enforce security on every request.
 func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
