@@ -39,6 +39,9 @@ public class DoctorProfile {
     @Column(name = "license_photo_url")
     private String licensePhotoUrl; // Link to the stored document
 
+    @Column(name = "is_Virtual")
+    private Boolean isVirtual;
+
     public Long getId() {
         return id;
     }
@@ -101,5 +104,13 @@ public class DoctorProfile {
 
     public void setLicensePhotoUrl(String licensePhotoUrl) {
         this.licensePhotoUrl = licensePhotoUrl;
+    }
+
+    public Boolean getVirtual() {
+        return isVirtual;
+    }
+
+    public void setVirtual(Boolean virtual) {
+        isVirtual = virtual;
     }
 }
