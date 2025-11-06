@@ -5,3 +5,32 @@ Content-Type: application/json
   "email": "new@app.com",
   "password": "123"
 }
+
+### 2. Doctor login
+# Expected Status: 200 OK
+POST http://localhost:8081/auth/login
+Content-Type: application/json
+
+{
+  "email": "newDoc@app.com",
+  "password": "123"
+}
+
+### 3. PHARMACIST login
+# Expected Status: 200 OK
+POST http://localhost:8081/auth/login
+Content-Type: application/json
+
+{
+  "email": "newP@app.com",
+  "password": "123"
+}
+
+### 1. CLINIC_ADMIN login
+POST http://localhost:8081/auth/login
+Content-Type: application/json
+
+{
+  "email": "newClinicAdmin@pulseone.com",
+  "password": "securepassword"
+}

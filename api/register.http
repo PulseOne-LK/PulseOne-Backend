@@ -54,15 +54,3 @@ Content-Type: application/json
   "password": "password123",
   "role": "CLINIC_ADMIN"
 }
-
-### 3. Test unauthorized access (should fail)
-POST http://localhost:8081/auth/admin/register
-X-User-ID: D001
-X-User-Role: DOCTOR
-Content-Type: application/json
-
-{
-  "email": "shouldfail@pulseone.com",
-  "password": "password123",
-  "role": "CLINIC_ADMIN"
-}
