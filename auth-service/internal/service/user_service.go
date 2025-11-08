@@ -146,7 +146,7 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 		return nil, "", err
 	}
 
- // 3. Determine Verification Status based on Role
+	// 3. Determine Verification Status based on Role
 	// For email verification flow, default new self-registered users to not verified.
 	// Professional roles still keep VerificationStatus=PENDING for manual approval flow.
 	isVerified := false
@@ -214,7 +214,7 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 		return nil, "", err
 	}
 
- return &newUser, jwtToken, nil
+	return &newUser, jwtToken, nil
 }
 
 // VerifyEmailToken verifies a token and marks the associated user as verified.
@@ -330,7 +330,7 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (*m
 		return nil, "", ErrAccountInactive
 	}
 
- // 3. Check email verification status (block login until verified for all roles)
+	// 3. Check email verification status (block login until verified for all roles)
 	if !user.IsVerified {
 		return &user, "", nil
 	}
@@ -342,4 +342,177 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (*m
 	}
 
 	return &user, token, nil
+}
+
+// ForgotPassword generates a password reset token and sends it via email
+func (s *UserService) ForgotPassword(ctx context.Context, email string) error {
+	// Check if user exists
+	var userID int
+	var userEmail string
+	err := s.DB.QueryRowContext(ctx, "SELECT id, email FROM users WHERE email = $1", email).Scan(&userID, &userEmail)
+
+	// For security, always return success even if email doesn't exist
+	if err == sql.ErrNoRows {
+		return nil // Don't reveal if email exists or not
+	}
+	if err != nil {
+		return err
+	}
+
+	// Generate password reset token
+	resetToken, err := generateRandomToken(32)
+	if err != nil {
+		return err
+	}
+
+	// Save token to database (expires in 1 hour)
+	if err := s.savePasswordResetToken(ctx, userID, resetToken, 60); err != nil {
+		return err
+	}
+
+	// Send password reset email
+	baseURL := os.Getenv("FRONTEND_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://pulseone.com" // Default frontend URL
+	}
+	resetURL := strings.TrimRight(baseURL, "/") + "/reset-password?token=" + resetToken
+
+	if err := s.sendPasswordResetEmail(userEmail, resetURL); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ResetPassword validates the token and updates the user's password
+func (s *UserService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	// Validate and get user ID from token
+	userID, err := s.validatePasswordResetToken(ctx, token)
+	if err != nil {
+		return err
+	}
+
+	// Hash the new password
+	hashedPassword, err := auth.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	// Update password and mark token as used in a transaction
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	// Update user password
+	if _, err = tx.ExecContext(ctx, `UPDATE users SET password_hash=$1 WHERE id=$2`, hashedPassword, userID); err != nil {
+		return err
+	}
+
+	// Mark token as used
+	if _, err = tx.ExecContext(ctx, `UPDATE password_reset_tokens SET used_at=$1 WHERE token=$2`, time.Now().Unix(), token); err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// savePasswordResetToken stores a password reset token in the database
+func (s *UserService) savePasswordResetToken(ctx context.Context, userID int, token string, ttlMinutes int) error {
+	// First, invalidate any existing tokens for this user
+	_, err := s.DB.ExecContext(ctx, `UPDATE password_reset_tokens SET used_at=$1 WHERE user_id=$2 AND used_at IS NULL`, time.Now().Unix(), userID)
+	if err != nil {
+		return err
+	}
+
+	// Insert new token
+	expiresAt := time.Now().Add(time.Duration(ttlMinutes) * time.Minute).Unix()
+	createdAt := time.Now().Unix()
+	_, err = s.DB.ExecContext(ctx,
+		`INSERT INTO password_reset_tokens(token, user_id, expires_at, created_at) VALUES($1,$2,$3,$4)`,
+		token, userID, expiresAt, createdAt)
+	return err
+}
+
+// validatePasswordResetToken checks if token is valid and returns user ID
+func (s *UserService) validatePasswordResetToken(ctx context.Context, token string) (int, error) {
+	var userID int
+	var expiresAt int64
+	var usedAt sql.NullInt64
+
+	err := s.DB.QueryRowContext(ctx,
+		`SELECT user_id, expires_at, used_at FROM password_reset_tokens WHERE token=$1`,
+		token).Scan(&userID, &expiresAt, &usedAt)
+
+	if err == sql.ErrNoRows {
+		return 0, errors.New("invalid or expired token")
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	if usedAt.Valid {
+		return 0, errors.New("token already used")
+	}
+
+	if time.Now().Unix() > expiresAt {
+		return 0, errors.New("token expired")
+	}
+
+	return userID, nil
+}
+
+// sendPasswordResetEmail sends a password reset email to the user
+func (s *UserService) sendPasswordResetEmail(toEmail, resetURL string) error {
+	from := os.Getenv("GMAIL_SMTP_EMAIL")
+	appPass := os.Getenv("GMAIL_SMTP_APP_PASSWORD")
+	fromName := os.Getenv("EMAIL_FROM_NAME")
+
+	if from == "" || appPass == "" {
+		return errors.New("smtp credentials not configured")
+	}
+
+	host := "smtp.gmail.com"
+	addr := host + ":587"
+	auth := smtp.PlainAuth("", from, appPass, host)
+
+	if fromName == "" {
+		fromName = "PulseOne"
+	}
+
+	subject := "Reset Your Password"
+	body := fmt.Sprintf(`Hello,
+
+You have requested to reset your password. Please click the link below to reset your password:
+
+%s
+
+This link will expire in 60 minutes for security reasons.
+
+If you did not request this password reset, please ignore this email.
+
+Thanks,
+%s Team
+`, resetURL, fromName)
+
+	// Build RFC 5322 message
+	headers := []string{
+		"From: " + fromName + " <" + from + ">",
+		"To: " + toEmail,
+		"Subject: " + subject,
+		"MIME-Version: 1.0",
+		"Content-Type: text/plain; charset=utf-8",
+	}
+	msg := strings.Join(headers, "\r\n") + "\r\n\r\n" + body
+
+	return smtp.SendMail(addr, auth, from, []string{toEmail}, []byte(msg))
 }

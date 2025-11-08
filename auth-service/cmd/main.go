@@ -44,6 +44,10 @@ func main() {
 	r.Get("/validate", authHandlers.ValidateTokenHandler)
 	r.Get("/verify", authHandlers.VerifyHandler)
 
+	// Password reset endpoints
+	r.Post("/forgot-password", authHandlers.ForgotPasswordHandler)
+	r.Post("/reset-password", authHandlers.ResetPasswordHandler)
+
 	// Admin endpoints
 	r.Post("/admin/register", authHandlers.AdminRegisterHandler)
 

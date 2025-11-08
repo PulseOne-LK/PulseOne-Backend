@@ -46,3 +46,23 @@ type LoginResponse struct {
 	UserID  string   `json:"user_id"`
 	Role    UserRole `json:"role"`
 }
+
+// ForgotPasswordRequest is the payload for forgot password API call.
+type ForgotPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+// ResetPasswordRequest is the payload for reset password API call.
+type ResetPasswordRequest struct {
+	Token       string `json:"token" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required,min=8"`
+}
+
+// PasswordResetToken represents a password reset token in the database.
+type PasswordResetToken struct {
+	Token     string        `json:"token"`
+	UserID    string        `json:"user_id"`
+	ExpiresAt int64         `json:"expires_at"`
+	UsedAt    sql.NullInt64 `json:"used_at,omitempty"`
+	CreatedAt int64         `json:"created_at"`
+}

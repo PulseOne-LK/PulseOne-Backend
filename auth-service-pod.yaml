@@ -28,6 +28,8 @@ spec:
           value: kushanrathnayake5@gmail.com
         - name: GMAIL_SMTP_APP_PASSWORD
           value: qsjs eowp wupk xqnt
+        - name: FRONTEND_BASE_URL
+          value: https://pulseone.com
       image: auth-service
       name: auth-service
       resources:

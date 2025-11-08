@@ -214,3 +214,64 @@ func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Reque
 		"role":    claims.Role,
 	})
 }
+
+// ForgotPasswordHandler handles POST /auth/forgot-password
+func (h *AuthHandlers) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var req model.ForgotPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+		return
+	}
+
+	// Basic email validation
+	if req.Email == "" || !strings.Contains(req.Email, "@") {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Valid email is required"})
+		return
+	}
+
+	err := h.Service.ForgotPassword(r.Context(), req.Email)
+	if err != nil {
+		log.Printf("Forgot password error: %v", err)
+		// For security, always return success regardless of whether email exists
+	}
+
+	// Always return success message for security
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "If the email exists in our system, a password reset link has been sent.",
+	})
+}
+
+// ResetPasswordHandler handles POST /auth/reset-password
+func (h *AuthHandlers) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var req model.ResetPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+		return
+	}
+
+	// Validate input
+	if req.Token == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Reset token is required"})
+		return
+	}
+
+	if len(req.NewPassword) < 8 {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Password must be at least 8 characters long"})
+		return
+	}
+
+	err := h.Service.ResetPassword(r.Context(), req.Token, req.NewPassword)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid") || strings.Contains(err.Error(), "expired") || strings.Contains(err.Error(), "used") {
+			respondJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		log.Printf("Reset password error: %v", err)
+		respondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to reset password due to an internal error."})
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Password has been reset successfully. You can now log in with your new password.",
+	})
+}
