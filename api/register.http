@@ -4,7 +4,7 @@ POST http://localhost:8081/auth/register
 Content-Type: application/json
 
 {
-  "email": "new@app.com",
+  "email": "kushansr7@gmail.com",
   "password": "123",
   "role": "PATIENT"
 }

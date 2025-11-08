@@ -18,6 +18,16 @@ spec:
           value: user=postgres password=postgres host=auth-postgres-db port=5433 dbname=authdb sslmode=disable
         - name: JWT_SECRET
           value: dev_a_super_long_and_complex_secret_key
+        - name: PORT
+          value: "8080"
+        - name: AUTH_PUBLIC_BASE_URL
+          value: http://auth-service:8080
+        - name: EMAIL_FROM_NAME
+          value: PulseOne
+        - name: GMAIL_SMTP_EMAIL
+          value: kushanrathnayake5@gmail.com
+        - name: GMAIL_SMTP_APP_PASSWORD
+          value: qsjs eowp wupk xqnt
       image: auth-service
       name: auth-service
       resources:

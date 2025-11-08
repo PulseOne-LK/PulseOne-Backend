@@ -25,7 +25,7 @@ func ConnectAndMigrate(dsn string) *sql.DB {
 	}
 	fmt.Println("Successfully connected to PostgreSQL!")
 
-	createTableQuery := `
+ createTableQuery := `
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email VARCHAR(255) UNIQUE NOT NULL,
@@ -40,6 +40,18 @@ func ConnectAndMigrate(dsn string) *sql.DB {
             verification_status VARCHAR(50) DEFAULT 'PENDING',
             clinic_id VARCHAR(100)
         );
+
+        CREATE TABLE IF NOT EXISTS email_verification_tokens (
+            token VARCHAR(255) PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            expires_at BIGINT NOT NULL,
+            used_at BIGINT,
+            created_at BIGINT NOT NULL,
+            UNIQUE(user_id, token)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_evt_user_id ON email_verification_tokens(user_id);
+        CREATE INDEX IF NOT EXISTS idx_evt_expires_at ON email_verification_tokens(expires_at);
     `
 	if _, err := db.Exec(createTableQuery); err != nil {
 		log.Fatalf("Failed to execute CREATE TABLE migration: %v", err)

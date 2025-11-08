@@ -42,6 +42,7 @@ func main() {
 	r.Post("/register", authHandlers.RegisterHandler)
 	r.Post("/login", authHandlers.LoginHandler)
 	r.Get("/validate", authHandlers.ValidateTokenHandler)
+	r.Get("/verify", authHandlers.VerifyHandler)
 
 	// Admin endpoints
 	r.Post("/admin/register", authHandlers.AdminRegisterHandler)

@@ -35,8 +35,16 @@ services:
       dockerfile: Dockerfile
     container_name: auth-service
     restart: on-failure
+    ports:
+      - "8080:8080"
     environment:
       POSTGRES_DSN: "user=postgres password=postgres host=auth-postgres-db port=5432 dbname=authdb sslmode=disable"
+      PORT: "8080"
+      JWT_SECRET: ${JWT_SECRET:-dev_a_super_long_and_complex_secret_key}
+      GMAIL_SMTP_EMAIL: ${GMAIL_SMTP_EMAIL:-kushanrathnayake5@gmail.com}
+      GMAIL_SMTP_APP_PASSWORD: ${GMAIL_SMTP_APP_PASSWORD:-qsjs eowp wupk xqnt}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-PulseOne}
+      AUTH_PUBLIC_BASE_URL: ${AUTH_PUBLIC_BASE_URL:-http://localhost:8080}
     depends_on:
       - auth-postgres-db
     deploy:

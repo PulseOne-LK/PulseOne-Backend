@@ -57,10 +57,11 @@ func (h *AuthHandlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Successful registration response
 	respondJSON(w, http.StatusCreated, map[string]interface{}{
-		"message": "User registered successfully",
-		"token":   token,
-		"user_id": user.ID,
-		"role":    user.Role,
+		"message":                 "User registered successfully. A verification email has been sent.",
+		"token":                   token,
+		"user_id":                 user.ID,
+		"role":                    user.Role,
+		"verification_email_sent": true,
 	})
 }
 
@@ -85,9 +86,13 @@ func (h *AuthHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Case: User exists, credentials are valid, but verification is pending
 		if token == "" && user != nil {
+			msg := "Please verify your email via the link we sent."
+			if user.Role == model.RoleDoctor || user.Role == model.RolePharmacist || user.Role == model.RoleClinicAdmin {
+				msg = "Please verify your email and wait for an Admin to approve your license/details."
+			}
 			respondJSON(w, http.StatusForbidden, map[string]string{
 				"error":   "Account verification is pending.",
-				"details": "Please wait for an Admin to approve your license/details.",
+				"details": msg,
 			})
 			return
 		}
@@ -102,6 +107,31 @@ func (h *AuthHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Token:   token,
 		UserID:  user.ID,
 		Role:    user.Role,
+	})
+}
+
+// VerifyHandler handles GET /verify?token=XYZ
+func (h *AuthHandlers) VerifyHandler(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "token query parameter is required"})
+		return
+	}
+	if err := h.Service.VerifyEmailToken(r.Context(), token); err != nil {
+		// Map errors to friendly messages
+		errMsg := err.Error()
+		status := http.StatusBadRequest
+		if strings.Contains(errMsg, "expired") {
+			status = http.StatusGone
+		}
+		respondJSON(w, status, map[string]string{
+			"error":   "Verification failed",
+			"details": errMsg,
+		})
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Email verified successfully. You can now log in.",
 	})
 }
 

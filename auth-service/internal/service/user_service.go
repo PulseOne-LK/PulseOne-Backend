@@ -2,15 +2,18 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/smtp"
+	"os"
+	"strings"
 	"time"
 
 	"auth-service/internal/model"
 	"auth-service/pkg/auth"
-
-	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 // Define specific errors for API handlers to interpret
@@ -23,13 +26,100 @@ type UserService struct {
 	DB *sql.DB
 }
 
+// generateRandomToken creates a URL-safe random token string of n bytes.
+func generateRandomToken(n int) (string, error) {
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func (s *UserService) saveVerificationToken(ctx context.Context, userID int, token string, ttlMinutes int) error {
+	expiresAt := time.Now().Add(time.Duration(ttlMinutes) * time.Minute).Unix()
+	createdAt := time.Now().Unix()
+	_, err := s.DB.ExecContext(ctx, `INSERT INTO email_verification_tokens(token, user_id, expires_at, created_at) VALUES($1,$2,$3,$4)`, token, userID, expiresAt, createdAt)
+	return err
+}
+
+func (s *UserService) markTokenUsedAndVerifyUser(ctx context.Context, token string) (int, error) {
+	// Fetch token
+	var userID int
+	var expiresAt int64
+	var usedAt sql.NullInt64
+	err := s.DB.QueryRowContext(ctx, `SELECT user_id, expires_at, used_at FROM email_verification_tokens WHERE token=$1`, token).Scan(&userID, &expiresAt, &usedAt)
+	if err == sql.ErrNoRows {
+		return 0, errors.New("invalid token")
+	}
+	if err != nil {
+		return 0, err
+	}
+	if usedAt.Valid {
+		return 0, errors.New("token already used")
+	}
+	if time.Now().Unix() > expiresAt {
+		return 0, errors.New("token expired")
+	}
+
+	// Verify user and mark token used in a transaction
+	tx, err := s.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	if _, err = tx.ExecContext(ctx, `UPDATE users SET is_verified=TRUE WHERE id=$1`, userID); err != nil {
+		return 0, err
+	}
+	if _, err = tx.ExecContext(ctx, `UPDATE email_verification_tokens SET used_at=$1 WHERE token=$2`, time.Now().Unix(), token); err != nil {
+		return 0, err
+	}
+	if err = tx.Commit(); err != nil {
+		return 0, err
+	}
+	return userID, nil
+}
+
+func (s *UserService) sendVerificationEmail(toEmail, verifyURL string) error {
+	from := os.Getenv("GMAIL_SMTP_EMAIL")
+	appPass := os.Getenv("GMAIL_SMTP_APP_PASSWORD")
+	fromName := os.Getenv("EMAIL_FROM_NAME")
+	if from == "" || appPass == "" {
+		return errors.New("smtp credentials not configured")
+	}
+
+	host := "smtp.gmail.com"
+	addr := host + ":587"
+	auth := smtp.PlainAuth("", from, appPass, host)
+	if fromName == "" {
+		fromName = "PulseOne"
+	}
+
+	subject := "Verify your email"
+	body := fmt.Sprintf("Hello,\r\n\r\nPlease verify your email by clicking the link below:\r\n%s\r\n\r\nThis link will expire in 15 minutes.\r\n\r\nThanks,\r\n%s Team\r\n", verifyURL, fromName)
+	// Build RFC 5322 message
+	headers := []string{
+		"From: " + fromName + " <" + from + ">",
+		"To: " + toEmail,
+		"Subject: " + subject,
+		"MIME-Version: 1.0",
+		"Content-Type: text/plain; charset=utf-8",
+	}
+	msg := strings.Join(headers, "\r\n") + "\r\n\r\n" + body
+	return smtp.SendMail(addr, auth, from, []string{toEmail}, []byte(msg))
+}
+
 func NewUserService(db *sql.DB) *UserService {
 	return &UserService{
 		DB: db,
 	}
 }
 
-// RegisterUser handles user registration, hashing, and initial status setting using PostgreSQL.
+// RegisterUser handles user registration, hashing, initial status, and sends email verification using PostgreSQL.
 func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (*model.User, string, error) {
 	// 1. Check if user already exists (QueryRowContext.Scan will return nil if found)
 	// 1. Check if user already exists
@@ -56,8 +146,10 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 		return nil, "", err
 	}
 
-	// 3. Determine Verification Status based on Role
-	isVerified := req.Role == model.RolePatient || req.Role == model.RoleSysAdmin || req.Role == model.RoleService
+ // 3. Determine Verification Status based on Role
+	// For email verification flow, default new self-registered users to not verified.
+	// Professional roles still keep VerificationStatus=PENDING for manual approval flow.
+	isVerified := false
 	verificationStatus := "APPROVED"
 	if req.Role == model.RoleDoctor || req.Role == model.RolePharmacist || req.Role == model.RoleClinicAdmin {
 		verificationStatus = "PENDING"
@@ -98,13 +190,40 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 	// Convert ID to string for consistent use
 	newUser.ID = fmt.Sprintf("%d", insertedID)
 
-	// 5. Generate Token
-	token, err := auth.GenerateJWT(newUser.ID, string(newUser.Role))
+	// 5. Generate auth token (optional for immediate use)
+	jwtToken, err := auth.GenerateJWT(newUser.ID, string(newUser.Role))
 	if err != nil {
 		return nil, "", err
 	}
 
-	return &newUser, token, nil
+	// 6. Email verification: generate token, store, and send email
+	verifyToken, err := generateRandomToken(32)
+	if err != nil {
+		return nil, "", err
+	}
+	if err := s.saveVerificationToken(ctx, insertedID, verifyToken, 15); err != nil {
+		return nil, "", err
+	}
+	baseURL := os.Getenv("AUTH_PUBLIC_BASE_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+	verifyURL := strings.TrimRight(baseURL, "/") + "/verify?token=" + verifyToken
+	if err := s.sendVerificationEmail(newUser.Email, verifyURL); err != nil {
+		// Log-only behavior could be added here; returning error ensures caller knows email didn't send
+		return nil, "", err
+	}
+
+ return &newUser, jwtToken, nil
+}
+
+// VerifyEmailToken verifies a token and marks the associated user as verified.
+func (s *UserService) VerifyEmailToken(ctx context.Context, token string) error {
+	if strings.TrimSpace(token) == "" {
+		return errors.New("token required")
+	}
+	_, err := s.markTokenUsedAndVerifyUser(ctx, token)
+	return err
 }
 
 // AdminRegisterUser handles user registration by SYS_ADMIN with auto-approval.
@@ -211,8 +330,8 @@ func (s *UserService) LoginUser(ctx context.Context, email, password string) (*m
 		return nil, "", ErrAccountInactive
 	}
 
-	// 3. Check professional verification status (if unverified, return user but no token)
-	if (user.Role == model.RoleDoctor || user.Role == model.RolePharmacist || user.Role == model.RoleClinicAdmin) && !user.IsVerified {
+ // 3. Check email verification status (block login until verified for all roles)
+	if !user.IsVerified {
 		return &user, "", nil
 	}
 

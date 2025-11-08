@@ -1,0 +1,4 @@
+### GET request to example server
+GET http://localhost:8081/auth/verify?token=Qx4nciU-5la0xl6K1N_lsWr3DjTfYKsYfOTNrKobw28
+
+###
