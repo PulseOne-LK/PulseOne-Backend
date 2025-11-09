@@ -1,4 +1,4 @@
 ### GET request to example server
-GET http://localhost:8081/auth/verify?token=Qx4nciU-5la0xl6K1N_lsWr3DjTfYKsYfOTNrKobw28
+GET http://localhost:8000/auth/verify?token=oXzCxNMTD5vDYK7aQwjZ-wua9bagN0KBfV9p3Adgl7o
 
 ###

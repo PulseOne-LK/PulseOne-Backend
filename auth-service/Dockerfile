@@ -1,9 +1,9 @@
 # ----------------------------------------------------
 # STAGE 1: THE BUILDER
 # Goal: Compile the Go source code into a static binary.
-# We use a full Go image (golang:1.25-alpine) for the compiler tools.
+# We use a full Go image (golang:1.23-alpine) for the compiler tools.
 # ----------------------------------------------------
-FROM golang:1.25-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Install C dependencies for building. The PostgreSQL driver (github.com/lib/pq)
 # requires CGO, so we need gcc and other tools for static linking.
@@ -43,7 +43,7 @@ COPY --from=builder /go-auth-service .
 # Set the environment variable for PostgreSQL DSN 
 # IMPORTANT: This placeholder is overwritten by docker-compose.yml
 ENV POSTGRES_DSN="user=postgres password=root2004 host=postgres-db port=5432 dbname=authdb sslmode=disable"
-ENV PORT="8080"
+ENV PORT="8081"
 
 # Expose the service port
 EXPOSE 8080

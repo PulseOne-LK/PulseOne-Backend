@@ -2,7 +2,6 @@ trigger_mode(TRIGGER_MODE_MANUAL)
 
 # Auth Service
 docker_build('auth-service', './auth-service')
-
 k8s_yaml([
     'auth-postgres-data-persistentvolumeclaim.yaml',
     'auth-postgres-db-deployment.yaml',
@@ -21,16 +20,16 @@ k8s_yaml([
     'profile-service-service.yaml'
 ])
 
-# API Gateway
-docker_build('api-gateway', './api-gateway')
+# API Gateway (Kong)
 k8s_yaml([
-    'api-gateway-pod.yaml',
-    'api-gateway-service.yaml'
+    'api-gateway/kong-config-configmap.yaml',
+    'api-gateway/kong-deployment.yaml'
 ])
 
+# Port Forwards
+k8s_resource('kong', port_forwards=['8000:8000', '8001:8001'])  # 8000=proxy, 8001=admin
 k8s_resource('auth-service', port_forwards='8080:8080')
-k8s_resource('profile-service', port_forwards='8082:8080')
-k8s_resource('api-gateway', port_forwards='8081:8081')
+k8s_resource('profile-service', port_forwards='8082:8082')
 k8s_resource('auth-postgres-db', port_forwards='5433:5432')
 k8s_resource('profile-postgres-db', port_forwards='5434:5432')
 

@@ -1,0 +1,30 @@
+# Ignore local environment files
+.env
+.env.local
+.env.*.local
+
+# Ignore Git files
+.git
+.gitignore
+
+# Ignore generated binaries
+main
+main.exe
+go-auth-service
+go-auth-service.exe
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore documentation
+*.md
+README*
+
+# Ignore test files during build
+*_test.go
+
+# Ignore logs
+*.log

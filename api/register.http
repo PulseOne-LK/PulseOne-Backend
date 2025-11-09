@@ -1,6 +1,6 @@
 ### 1. Patient Reg
 # Expected Status: 200 OK
-POST http://localhost:8081/auth/register
+POST http://localhost:8080/register
 Content-Type: application/json
 
 {
@@ -11,7 +11,7 @@ Content-Type: application/json
 
 ### 2. Doctor Reg
 # Expected Status: 200 OK
-POST http://localhost:8081/auth/register
+POST http://localhost:8000/auth/register
 Content-Type: application/json
 
 {

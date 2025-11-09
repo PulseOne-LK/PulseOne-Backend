@@ -3,7 +3,7 @@
 ### ============================================
 
 ### Health Check - Basic
-GET http://localhost:8081/profile/actuator/health
+GET http://localhost:8000/profile/actuator/health
 Accept: application/json
 
 ###

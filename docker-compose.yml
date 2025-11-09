@@ -59,7 +59,7 @@ services:
     container_name: profile-service
     restart: on-failure
     ports:
-      - "8082:8080"
+      - "8082:8082"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://profile-postgres-db:5432/profiledb"
       SPRING_DATASOURCE_USERNAME: "postgres"
@@ -70,27 +70,6 @@ services:
       resources:
         limits:
           memory: 512M
-
-  # 3. API Gateway (Go)
-  api-gateway:
-    build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
-    container_name: api-gateway
-    restart: on-failure
-    ports:
-      - "8081:8081" # Expose the Gateway port to the outside world
-    environment:
-      # Reference the internal Docker service names
-      AUTH_SERVICE_URL: "http://auth-service:8080"
-      PROFILE_SERVICE_URL: "http://profile-service:8080"
-    depends_on:
-      - auth-service
-      - profile-service
-    deploy:
-      resources:
-        limits:
-          memory: 128M # Also a lean limit for I/O bound Go proxy
 
 volumes:
   auth_postgres_data:

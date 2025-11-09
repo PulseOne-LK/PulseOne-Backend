@@ -1,4 +1,4 @@
-POST http://localhost:8081/auth/login
+POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
@@ -8,7 +8,7 @@ Content-Type: application/json
 
 ### 2. Doctor login
 # Expected Status: 200 OK
-POST http://localhost:8081/auth/login
+POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {

@@ -11,6 +11,7 @@ import (
 	"auth-service/internal/service"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -37,6 +38,14 @@ func main() {
 	authHandlers := api.NewAuthHandlers(userService)
 
 	r := chi.NewRouter()
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://pulseone.com", "http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 
 	// Public endpoints
 	r.Post("/register", authHandlers.RegisterHandler)

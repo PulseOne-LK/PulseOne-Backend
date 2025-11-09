@@ -1,0 +1,18 @@
+_format_version: "3.0"
+
+services:
+  - name: auth-service
+    url: http://auth-service:8080
+    routes:
+      - name: auth-route
+        paths:
+          - /auth
+        strip_path: true
+        
+  - name: profile-service
+    url: http://profile-service:8082
+    routes:
+      - name: profile-route
+        paths:
+          - /profile
+        strip_path: true

@@ -1,0 +1,41 @@
+### ============================================
+### PROFILE SERVICE TESTING - PORT 8082
+### ============================================
+
+### Test Actuator Health Endpoint
+GET http://localhost:8000/profile/actuator/health
+Accept: application/json
+
+###
+
+### Test Custom Health Endpoint
+GET http://localhost:8082/api/test/health
+Accept: application/json
+
+###
+
+### Test CORS Endpoint
+GET http://localhost:8082/api/test/cors
+Accept: application/json
+Origin: http://localhost:3000
+
+###
+
+### Test Actuator Health with CORS Headers
+GET http://localhost:8082/actuator/health
+Accept: application/json
+Origin: http://localhost:3000
+
+###
+
+### Test Actuator Info
+GET http://localhost:8082/actuator/info
+Accept: application/json
+
+###
+
+### Test Actuator Metrics
+GET http://localhost:8082/actuator/metrics
+Accept: application/json
+
+###
