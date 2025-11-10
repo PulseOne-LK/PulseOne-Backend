@@ -1,5 +1,33 @@
 _format_version: "3.0"
 
+# Global CORS plugin
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:3000"
+        - "https://your-frontend-domain.com"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        - HEAD
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+        - X-CSRF-Token
+        - Origin
+        - X-Requested-With
+      exposed_headers:
+        - Link
+        - Authorization
+      credentials: true
+      max_age: 3600
+      preflight_continue: false
+
 services:
   - name: auth-service
     url: http://auth-service:8080
@@ -8,7 +36,7 @@ services:
         paths:
           - /auth
         strip_path: true
-        
+
   - name: profile-service
     url: http://profile-service:8082
     routes:

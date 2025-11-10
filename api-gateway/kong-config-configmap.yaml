@@ -1,11 +1,40 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kong-declarative-config
+  name: kong-config
 data:
   kong.yaml: |
     _format_version: "3.0"
-    
+
+    # Global CORS plugin
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "http://localhost:3000"
+            - "https://your-frontend-domain.com"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+            - HEAD
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-CSRF-Token
+            - Origin
+            - X-Requested-With
+            - x-user-id
+          exposed_headers:
+            - Link
+            - Authorization
+          credentials: true
+          max_age: 3600
+          preflight_continue: false
+
     services:
       - name: auth-service
         url: http://auth-service:8080
@@ -14,11 +43,11 @@ data:
             paths:
               - /auth
             strip_path: true
-            
+
       - name: profile-service
         url: http://profile-service:8082
         routes:
           - name: profile-route
             paths:
-              - /profile
+              - /profiles
             strip_path: true

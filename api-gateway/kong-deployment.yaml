@@ -1,35 +1,3 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: kong-proxy
-spec:
-  type: LoadBalancer
-  ports:
-    - name: proxy
-      port: 8000
-      targetPort: 8000
-      protocol: TCP
-    - name: proxy-ssl
-      port: 8443
-      targetPort: 8443
-      protocol: TCP
-  selector:
-    app: kong
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kong-admin
-spec:
-  type: ClusterIP
-  ports:
-    - name: admin
-      port: 8001
-      targetPort: 8001
-      protocol: TCP
-  selector:
-    app: kong
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,41 +18,53 @@ spec:
         env:
         - name: KONG_DATABASE
           value: "off"
+        - name: KONG_DECLARATIVE_CONFIG
+          value: "/kong/kong.yaml"
         - name: KONG_PROXY_ACCESS_LOG
-          value: /dev/stdout
+          value: "/dev/stdout"
         - name: KONG_ADMIN_ACCESS_LOG
-          value: /dev/stdout
+          value: "/dev/stdout"
         - name: KONG_PROXY_ERROR_LOG
-          value: /dev/stderr
+          value: "/dev/stderr"
         - name: KONG_ADMIN_ERROR_LOG
-          value: /dev/stderr
+          value: "/dev/stderr"
         - name: KONG_ADMIN_LISTEN
           value: "0.0.0.0:8001"
-        - name: KONG_PROXY_LISTEN
-          value: "0.0.0.0:8000"
-        - name: KONG_DECLARATIVE_CONFIG
-          value: /kong/config/kong.yaml
-        volumeMounts:
-        - name: kong-config
-          mountPath: /kong/config
-      volumes:
-      - name: kong-config
-        configMap:
-          name: kong-declarative-config
+        - name: KONG_PLUGINS
+          value: "bundled"
         ports:
         - containerPort: 8000
-          name: proxy
         - containerPort: 8001
-          name: admin
-        livenessProbe:
-          httpGet:
-            path: /status
-            port: 8001
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /status
-            port: 8001
-          initialDelaySeconds: 10
-          periodSeconds: 5
+        volumeMounts:
+        - name: kong-config-volume
+          mountPath: /kong
+          readOnly: true
+      volumes:
+      - name: kong-config-volume
+        configMap:
+          name: kong-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-proxy
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    targetPort: 8000
+    nodePort: 30000
+  selector:
+    app: kong
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-admin
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8001
+    targetPort: 8001
+  selector:
+    app: kong
