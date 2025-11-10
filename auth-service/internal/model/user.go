@@ -66,3 +66,13 @@ type PasswordResetToken struct {
 	UsedAt    sql.NullInt64 `json:"used_at,omitempty"`
 	CreatedAt int64         `json:"created_at"`
 }
+
+// ErrorResponse represents an error response
+type ErrorResponse struct {
+	Error string `json:"error" example:"Invalid request payload"`
+}
+
+// SuccessResponse represents a generic success response
+type SuccessResponse struct {
+	Message string `json:"message" example:"Operation successful"`
+}

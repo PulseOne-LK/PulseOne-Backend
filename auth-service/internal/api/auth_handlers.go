@@ -30,7 +30,19 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 	}
 }
 
-// RegisterHandler handles POST /auth/register
+// RegisterHandler godoc
+// @Summary      Register a new user
+// @Description  Register a new user with email and password
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request  body      model.AuthRequest  true  "User registration details"
+// @Success      201      {object}  model.LoginResponse
+// @Failure      400      {object}  model.ErrorResponse
+// @Failure      403      {object}  model.ErrorResponse
+// @Failure      409      {object}  model.ErrorResponse
+// @Failure      500      {object}  model.ErrorResponse
+// @Router       /register [post]
 func (h *AuthHandlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var req model.AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -65,7 +77,18 @@ func (h *AuthHandlers) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// LoginHandler handles POST /auth/login
+// LoginHandler godoc
+// @Summary      User login
+// @Description  Authenticate user with email and password
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request  body      model.AuthRequest  true  "User login credentials"
+// @Success      200      {object}  model.LoginResponse
+// @Failure      400      {object}  model.ErrorResponse
+// @Failure      401      {object}  model.ErrorResponse
+// @Failure      500      {object}  model.ErrorResponse
+// @Router       /login [post]
 func (h *AuthHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var req model.AuthRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -110,7 +133,18 @@ func (h *AuthHandlers) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// VerifyHandler handles GET /verify?token=XYZ
+// VerifyHandler godoc
+// @Summary      Verify user email
+// @Description  Verify user email using verification token
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        token  query     string  true  "Verification token"
+// @Success      200    {object}  model.SuccessResponse
+// @Failure      400    {object}  model.ErrorResponse
+// @Failure      404    {object}  model.ErrorResponse
+// @Failure      500    {object}  model.ErrorResponse
+// @Router       /verify [get]
 func (h *AuthHandlers) VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query().Get("token")
 	if token == "" {
@@ -135,8 +169,21 @@ func (h *AuthHandlers) VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// AdminRegisterHandler handles POST /auth/admin/register
-// Allows SYS_ADMIN to create accounts for CLINIC_ADMIN and other roles
+// AdminRegisterHandler godoc
+// @Summary      Admin user registration
+// @Description  Admin endpoint to create users with any role (SYS_ADMIN only)
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        X-User-ID    header    string             true  "Admin User ID"
+// @Param        X-User-Role  header    string             true  "Admin User Role (must be SYS_ADMIN)"
+// @Param        request      body      model.AuthRequest  true  "User registration details"
+// @Success      201          {object}  model.LoginResponse
+// @Failure      400          {object}  model.ErrorResponse
+// @Failure      403          {object}  model.ErrorResponse
+// @Failure      409          {object}  model.ErrorResponse
+// @Failure      500          {object}  model.ErrorResponse
+// @Router       /admin/register [post]
 func (h *AuthHandlers) AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// 1. Extract and validate admin credentials from headers
 	adminUserID := r.Header.Get("X-User-ID")
@@ -196,8 +243,16 @@ func (h *AuthHandlers) AdminRegisterHandler(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-// ValidateTokenHandler handles GET /auth/validate
-// This is used by the API Gateway to enforce security on every request.
+// ValidateTokenHandler godoc
+// @Summary      Validate JWT token
+// @Description  Validate JWT token and return user information
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string  true  "Bearer token"
+// @Success      200            {object}  map[string]interface{}
+// @Failure      401            {object}  model.ErrorResponse
+// @Router       /validate [get]
 func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Request) {
 	authHeader := r.Header.Get("Authorization")
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
@@ -215,7 +270,17 @@ func (h *AuthHandlers) ValidateTokenHandler(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-// ForgotPasswordHandler handles POST /auth/forgot-password
+// ForgotPasswordHandler godoc
+// @Summary      Request password reset
+// @Description  Send password reset email to user
+// @Tags         Password Reset
+// @Accept       json
+// @Produce      json
+// @Param        request  body      model.ForgotPasswordRequest  true  "Email for password reset"
+// @Success      200      {object}  model.SuccessResponse
+// @Failure      400      {object}  model.ErrorResponse
+// @Failure      500      {object}  model.ErrorResponse
+// @Router       /forgot-password [post]
 func (h *AuthHandlers) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	var req model.ForgotPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -241,7 +306,18 @@ func (h *AuthHandlers) ForgotPasswordHandler(w http.ResponseWriter, r *http.Requ
 	})
 }
 
-// ResetPasswordHandler handles POST /auth/reset-password
+// ResetPasswordHandler godoc
+// @Summary      Reset password
+// @Description  Reset user password using reset token
+// @Tags         Password Reset
+// @Accept       json
+// @Produce      json
+// @Param        request  body      model.ResetPasswordRequest  true  "Password reset details"
+// @Success      200      {object}  model.SuccessResponse
+// @Failure      400      {object}  model.ErrorResponse
+// @Failure      404      {object}  model.ErrorResponse
+// @Failure      500      {object}  model.ErrorResponse
+// @Router       /reset-password [post]
 func (h *AuthHandlers) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	var req model.ResetPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

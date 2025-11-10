@@ -1,0 +1,334 @@
+basePath: /
+definitions:
+  model.AuthRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      role:
+        $ref: '#/definitions/model.UserRole'
+    type: object
+  model.ErrorResponse:
+    properties:
+      error:
+        example: Invalid request payload
+        type: string
+    type: object
+  model.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  model.LoginResponse:
+    properties:
+      message:
+        type: string
+      role:
+        $ref: '#/definitions/model.UserRole'
+      token:
+        type: string
+      user_id:
+        type: string
+    type: object
+  model.ResetPasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      token:
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
+  model.SuccessResponse:
+    properties:
+      message:
+        example: Operation successful
+        type: string
+    type: object
+  model.UserRole:
+    enum:
+    - PATIENT
+    - DOCTOR
+    - PHARMACIST
+    - CLINIC_ADMIN
+    - SYS_ADMIN
+    - SERVICE
+    type: string
+    x-enum-comments:
+      RoleClinicAdmin: Practice Management
+      RoleDoctor: Virtual Doctor
+      RolePharmacist: Fulfillment Agent
+      RoleService: Non-Human Account
+      RoleSysAdmin: Platform Admin
+    x-enum-descriptions:
+    - ""
+    - Virtual Doctor
+    - Fulfillment Agent
+    - Practice Management
+    - Platform Admin
+    - Non-Human Account
+    x-enum-varnames:
+    - RolePatient
+    - RoleDoctor
+    - RolePharmacist
+    - RoleClinicAdmin
+    - RoleSysAdmin
+    - RoleService
+host: localhost:8080
+info:
+  contact:
+    email: support@pulseone.com
+    name: PulseOne Team
+  description: Authentication and user management service for PulseOne platform
+  title: PulseOne Auth Service API
+  version: "1.0"
+paths:
+  /admin/register:
+    post:
+      consumes:
+      - application/json
+      description: Admin endpoint to create users with any role (SYS_ADMIN only)
+      parameters:
+      - description: Admin User ID
+        in: header
+        name: X-User-ID
+        required: true
+        type: string
+      - description: Admin User Role (must be SYS_ADMIN)
+        in: header
+        name: X-User-Role
+        required: true
+        type: string
+      - description: User registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Admin user registration
+      tags:
+      - Admin
+  /forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send password reset email to user
+      parameters:
+      - description: Email for password reset
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Request password reset
+      tags:
+      - Password Reset
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: User login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: User login
+      tags:
+      - Authentication
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: User registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
+  /reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset user password using reset token
+      parameters:
+      - description: Password reset details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Reset password
+      tags:
+      - Password Reset
+  /validate:
+    get:
+      consumes:
+      - application/json
+      description: Validate JWT token and return user information
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Validate JWT token
+      tags:
+      - Authentication
+  /verify:
+    get:
+      consumes:
+      - application/json
+      description: Verify user email using verification token
+      parameters:
+      - description: Verification token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Verify user email
+      tags:
+      - Authentication
+swagger: "2.0"
