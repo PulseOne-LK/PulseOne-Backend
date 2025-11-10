@@ -21,6 +21,8 @@ plugins:
         - X-CSRF-Token
         - Origin
         - X-Requested-With
+        - x-user-id
+        - x-user-role
       exposed_headers:
         - Link
         - Authorization
