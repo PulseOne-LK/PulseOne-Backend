@@ -18,11 +18,11 @@ Content-Type: application/json
 
 ### 3. PHARMACIST login
 # Expected Status: 200 OK
-POST http://localhost:8081/auth/login
+POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "newP@app.com",
+  "email": "kushanrathnayake5@gmail.com",
   "password": "123"
 }
 

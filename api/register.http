@@ -22,17 +22,17 @@ Content-Type: application/json
 
 ### 3. PHARMACIST Reg
 # Expected Status: 200 OK
-POST http://localhost:8081/auth/register
+POST http://localhost:8000/auth/register
 Content-Type: application/json
 
 {
-  "email": "newP@app.com",
+  "email": "kushanrathnayake5@gmail.com",
   "password": "123",
   "role": "PHARMACIST"
 }
 
 ### 1. Create CLINIC_ADMIN via Admin Endpoint
-POST http://localhost:8081/auth/admin/register
+POST http://localhost:8000/auth/admin/register
 X-User-ID: A001
 X-User-Role: SYS_ADMIN
 Content-Type: application/json
@@ -44,7 +44,7 @@ Content-Type: application/json
 }
 
 ### 2. Create another CLINIC_ADMIN
-POST http://localhost:8081/auth/admin/register
+POST http://localhost:8000/auth/admin/register
 X-User-ID: A001
 X-User-Role: SYS_ADMIN
 Content-Type: application/json

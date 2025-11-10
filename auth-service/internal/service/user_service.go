@@ -208,7 +208,7 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 	if baseURL == "" {
 		baseURL = "http://localhost:8080"
 	}
-	verifyURL := strings.TrimRight(baseURL, "/") + "/verify?token=" + verifyToken
+	verifyURL := strings.TrimRight(baseURL, "/") + "/auth/verify?token=" + verifyToken
 	if err := s.sendVerificationEmail(newUser.Email, verifyURL); err != nil {
 		// Log-only behavior could be added here; returning error ensures caller knows email didn't send
 		return nil, "", err
@@ -373,7 +373,7 @@ func (s *UserService) ForgotPassword(ctx context.Context, email string) error {
 	// Send password reset email
 	baseURL := os.Getenv("FRONTEND_BASE_URL")
 	if baseURL == "" {
-		baseURL = "https://pulseone.com" // Default frontend URL
+		baseURL = "http://localhost:3000" // Default frontend URL
 	}
 	resetURL := strings.TrimRight(baseURL, "/") + "/reset-password?token=" + resetToken
 
