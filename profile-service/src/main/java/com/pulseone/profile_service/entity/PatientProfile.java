@@ -21,7 +21,7 @@ public class PatientProfile {
     private String userId;
 
     // --- Personal Details ---
-    @Column(name = "phone_number", nullable = false)
+    @Column(name = "phone_number", nullable = true) // Allow null initially, user can update later
     private String phoneNumber;
 
     @Column(name = "address")

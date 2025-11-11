@@ -26,8 +26,8 @@ k8s_yaml([
     'api-gateway/kong-deployment.yaml'
 ])
 
-# Port Forwards
-k8s_resource('kong', port_forwards=['8000:8000', '8001:8001'])  # 8000=proxy, 8001=admin
+# Resource dependencies and port forwards
+k8s_resource('kong', port_forwards=['8000:8000', '8001:8001'])
 k8s_resource('auth-service', port_forwards='8080:8080')
 k8s_resource('profile-service', port_forwards='8082:8082')
 k8s_resource('auth-postgres-db', port_forwards='5433:5432')
