@@ -30,6 +30,12 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     List<Session> findByDoctorUserIdAndIsActiveTrue(@Param("userId") String userId);
 
     /**
+     * Find sessions for a specific doctor ID and day of week
+     */
+    @Query("SELECT s FROM Session s WHERE s.doctor.userId = :doctorId AND s.dayOfWeek = :dayOfWeek AND s.isActive = true ORDER BY s.sessionStartTime ASC")
+    List<Session> findByDoctorIdAndDayOfWeek(@Param("doctorId") String doctorId, @Param("dayOfWeek") DayOfWeek dayOfWeek);
+
+    /**
      * Find sessions for a specific doctor and day of week
      */
     List<Session> findByDoctorAndDayOfWeekAndIsActiveTrueOrderBySessionStartTimeAsc(Doctor doctor, DayOfWeek dayOfWeek);
