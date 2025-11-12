@@ -8,10 +8,11 @@ metadata:
     io.kompose.service: profile-service
   name: profile-service
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - name: "8082"
       port: 8082
       targetPort: 8082
+      nodePort: 30082
   selector:
     io.kompose.service: profile-service

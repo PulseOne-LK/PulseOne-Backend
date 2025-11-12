@@ -50,5 +50,5 @@ data:
         routes:
           - name: profile-route
             paths:
-              - /profiles
+              - /profile
             strip_path: true
