@@ -6,14 +6,14 @@ metadata:
     kompose.version: 1.31.2 (a92241f79)
   creationTimestamp: null
   labels:
-    io.kompose.service: auth-postgres-db
-  name: auth-postgres-db
+    io.kompose.service: appointments-service
+  name: appointments-service
 spec:
   ports:
-    - name: "5433"
-      port: 5433
-      targetPort: 5432
+    - name: "8083"
+      port: 8083
+      targetPort: 8083
   selector:
-    io.kompose.service: auth-postgres-db
+    io.kompose.service: appointments-service
 status:
   loadBalancer: {}

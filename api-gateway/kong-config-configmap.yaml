@@ -52,3 +52,11 @@ data:
             paths:
               - /profile
             strip_path: true
+
+      - name: appointments-service
+        url: http://appointments-service:8083
+        routes:
+          - name: appointments-route
+            paths:
+              - /appointments
+            strip_path: true

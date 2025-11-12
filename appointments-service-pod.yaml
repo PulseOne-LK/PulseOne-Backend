@@ -7,25 +7,25 @@ metadata:
   creationTimestamp: null
   labels:
     io.kompose.network/pulseone-backend-default: "true"
-    io.kompose.service: profile-service
-  name: profile-service
+    io.kompose.service: appointments-service
+  name: appointments-service
 spec:
   containers:
     - env:
         - name: SPRING_DATASOURCE_PASSWORD
           value: postgres
         - name: SPRING_DATASOURCE_URL
-          value: jdbc:postgresql://profile-postgres-db:5432/profiledb
+          value: jdbc:postgresql://appointments-postgres-db:5435/appointmentsdb
         - name: SPRING_DATASOURCE_USERNAME
           value: postgres
-      image: profile-service
-      name: profile-service
+      image: appointments-service
+      name: appointments-service
       ports:
-        - containerPort: 8082
-          hostPort: 8082
+        - containerPort: 8083
+          hostPort: 8083
           protocol: TCP
       resources:
         limits:
-          memory: "536870912"
+          memory: "268435456"
   restartPolicy: OnFailure
 status: {}

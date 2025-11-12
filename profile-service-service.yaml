@@ -3,16 +3,17 @@ kind: Service
 metadata:
   annotations:
     kompose.cmd: kompose convert -f docker-compose.yml
-    kompose.version: 1.37.0 (fb0539e64)
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
   labels:
     io.kompose.service: profile-service
   name: profile-service
 spec:
-  type: NodePort
   ports:
     - name: "8082"
       port: 8082
       targetPort: 8082
-      nodePort: 30082
   selector:
     io.kompose.service: profile-service
+status:
+  loadBalancer: {}

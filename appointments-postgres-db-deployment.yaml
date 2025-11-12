@@ -6,13 +6,13 @@ metadata:
     kompose.version: 1.31.2 (a92241f79)
   creationTimestamp: null
   labels:
-    io.kompose.service: profile-postgres-db
-  name: profile-postgres-db
+    io.kompose.service: appointments-postgres-db
+  name: appointments-postgres-db
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: profile-postgres-db
+      io.kompose.service: appointments-postgres-db
   strategy:
     type: Recreate
   template:
@@ -23,29 +23,29 @@ spec:
       creationTimestamp: null
       labels:
         io.kompose.network/pulseone-backend-default: "true"
-        io.kompose.service: profile-postgres-db
+        io.kompose.service: appointments-postgres-db
     spec:
       containers:
         - env:
             - name: POSTGRES_DB
-              value: profiledb
+              value: appointmentsdb
             - name: POSTGRES_PASSWORD
               value: postgres
             - name: POSTGRES_USER
               value: postgres
           image: postgres:15-alpine
-          name: profile-postgres-db
+          name: appointments-postgres-db
           ports:
             - containerPort: 5432
-              hostPort: 5434
+              hostPort: 5435
               protocol: TCP
           resources: {}
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: profile-postgres-data
+              name: appointments-postgres-data
       restartPolicy: Always
       volumes:
-        - name: profile-postgres-data
+        - name: appointments-postgres-data
           persistentVolumeClaim:
-            claimName: profile-postgres-data
+            claimName: appointments-postgres-data
 status: {}

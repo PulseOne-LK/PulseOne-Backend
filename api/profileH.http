@@ -9,7 +9,7 @@ Accept: application/json
 ###
 
 ### Health Check - Detailed (shows all components)
-GET http://localhost:8000/actuator/health
+GET http://localhost:8000/appointments/actuator/health
 Accept: application/json
 
 ###

@@ -71,6 +71,39 @@ services:
         limits:
           memory: 512M
 
+  appointments-service:
+    build:
+      context: ./appointments-service
+      dockerfile: Dockerfile
+    container_name: appointments-service
+    restart: on-failure
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://appointments-postgres-db:5435/appointmentsdb"
+      SPRING_DATASOURCE_USERNAME: "postgres"
+      SPRING_DATASOURCE_PASSWORD: "postgres"
+    depends_on:
+      - appointments-postgres-db
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  appointments-postgres-db:
+    image: postgres:15-alpine
+    container_name: appointments-postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appointmentsdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - appointments_postgres_data:/var/lib/postgresql/data/
+
 volumes:
   auth_postgres_data:
   profile_postgres_data:
+  appointments_postgres_data:
