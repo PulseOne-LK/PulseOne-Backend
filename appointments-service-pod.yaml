@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: appointments-service
+  name: appointments-service
+spec:
+  initContainers:
+    - name: wait-for-postgres
+      image: busybox
+      command: ['sh', '-c', 'until nc -z appointments-postgres-db 5435; do echo waiting for postgres; sleep 2; done;']
+  containers:
+    - env:
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:postgresql://appointments-postgres-db:5435/appointmentsdb
+        - name: SPRING_DATASOURCE_USERNAME
+          value: postgres
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: postgres
+      image: appointments-service
+      name: appointments-service
+      resources:
+        limits:
+          memory: "536870912"
+  restartPolicy: OnFailure
