@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package events.v1;
+
+option go_package = "auth-service/internal/proto";
+
+// User registration event message
+message UserRegistrationEvent {
+  // Unique user identifier
+  string user_id = 1;
+  
+  // User email address
+  string email = 2;
+  
+  // User role (PATIENT, DOCTOR, PHARMACIST, etc.)
+  string role = 3;
+  
+  // Optional user first name
+  string first_name = 4;
+  
+  // Optional user last name
+  string last_name = 5;
+  
+  // Event timestamp (Unix timestamp in seconds)
+  int64 timestamp = 6;
+
+  // user phone number
+  string phone_number = 7;
+  
+  // Event type identifier
+  string event_type = 8;
+}
+
+// Response message for user registration events
+message UserRegistrationEventResponse {
+  // Whether the event was processed successfully
+  bool success = 1;
+  
+  // Optional message with details
+  string message = 2;
+  
+  // Error code if processing failed
+  string error_code = 3;
+}
