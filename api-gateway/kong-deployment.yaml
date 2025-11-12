@@ -51,9 +51,10 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - port: 8000
-    targetPort: 8000
-    nodePort: 30000
+    - name: proxy
+      port: 8000
+      targetPort: 8000
+      nodePort: 30000
   selector:
     app: kong
 ---
