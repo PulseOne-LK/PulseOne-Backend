@@ -290,4 +290,12 @@ public class Appointment {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public Long getClinicId() {
+        return clinic != null ? clinic.getId() : null;
+    }
+
+    public Long getSessionId() {
+        return session != null ? session.getId() : null;
+    }
 }
