@@ -20,6 +20,16 @@ k8s_yaml([
     'profile-service-service.yaml'
 ])
 
+# Appointments Service
+docker_build('appointments-service', './appointments-service')
+k8s_yaml([
+    'appointments-postgres-data-persistentvolumeclaim.yaml',
+    'appointments-postgres-db-deployment.yaml',
+    'appointments-postgres-db-service.yaml',
+    'appointments-service-pod.yaml',
+    'appointments-service-service.yaml'
+])
+
 # API Gateway (Kong)
 k8s_yaml([
     'api-gateway/kong-config-configmap.yaml',
@@ -30,8 +40,10 @@ k8s_yaml([
 k8s_resource('kong', port_forwards=['8000:8000', '8001:8001'])
 k8s_resource('auth-service', port_forwards='8080:8080')
 k8s_resource('profile-service', port_forwards='8082:8082')
+k8s_resource('appointments-service', port_forwards='8083:8083')
 k8s_resource('auth-postgres-db', port_forwards='5433:5432')
 k8s_resource('profile-postgres-db', port_forwards='5434:5432')
+k8s_resource('appointments-postgres-db', port_forwards='5435:5432')
 
 # Optionally, you can enable live updates for faster dev cycles
 # For example:
