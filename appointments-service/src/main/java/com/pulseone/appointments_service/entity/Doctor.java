@@ -40,6 +40,13 @@ public class Doctor {
     @Column(name = "is_active")
     private Boolean isActive = Boolean.TRUE;
 
+    /**
+     * Reference to the clinic where the doctor works (optional).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clinic_id")
+    private Clinic clinic;
+
     // Constructors
     public Doctor() {
     }
@@ -90,5 +97,13 @@ public class Doctor {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public Clinic getClinic() {
+        return clinic;
+    }
+
+    public void setClinic(Clinic clinic) {
+        this.clinic = clinic;
     }
 }
