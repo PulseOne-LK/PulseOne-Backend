@@ -3,7 +3,8 @@ kind: Deployment
 metadata:
   annotations:
     kompose.cmd: kompose convert -f docker-compose.yml
-    kompose.version: 1.37.0 (fb0539e64)
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
   labels:
     io.kompose.service: auth-postgres-db
   name: auth-postgres-db
@@ -18,8 +19,10 @@ spec:
     metadata:
       annotations:
         kompose.cmd: kompose convert -f docker-compose.yml
-        kompose.version: 1.37.0 (fb0539e64)
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
       labels:
+        io.kompose.network/pulseone-backend-default: "true"
         io.kompose.service: auth-postgres-db
     spec:
       containers:
@@ -34,7 +37,9 @@ spec:
           name: auth-postgres-db
           ports:
             - containerPort: 5432
+              hostPort: 5433
               protocol: TCP
+          resources: {}
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: auth-postgres-data
@@ -43,3 +48,4 @@ spec:
         - name: auth-postgres-data
           persistentVolumeClaim:
             claimName: auth-postgres-data
+status: {}

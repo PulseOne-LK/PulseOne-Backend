@@ -3,36 +3,37 @@ kind: Pod
 metadata:
   annotations:
     kompose.cmd: kompose convert -f docker-compose.yml
-    kompose.version: 1.37.0 (fb0539e64)
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
   labels:
+    io.kompose.network/pulseone-backend-default: "true"
     io.kompose.service: auth-service
   name: auth-service
 spec:
-  initContainers:
-    - name: wait-for-postgres
-      image: busybox
-      command: ['sh', '-c', 'until nc -z auth-postgres-db 5433; do echo waiting for postgres; sleep 2; done;']
   containers:
     - env:
-        - name: POSTGRES_DSN
-          value: user=postgres password=postgres host=auth-postgres-db port=5433 dbname=authdb sslmode=disable
+        - name: AUTH_PUBLIC_BASE_URL
+          value: http://localhost:8080
+        - name: EMAIL_FROM_NAME
+          value: PulseOne
+        - name: GMAIL_SMTP_APP_PASSWORD
+          value: qsjs eowp wupk xqnt
+        - name: GMAIL_SMTP_EMAIL
+          value: kushanrathnayake5@gmail.com
         - name: JWT_SECRET
           value: dev_a_super_long_and_complex_secret_key
         - name: PORT
           value: "8080"
-        - name: AUTH_PUBLIC_BASE_URL
-          value: http://auth-service:8080
-        - name: EMAIL_FROM_NAME
-          value: PulseOne
-        - name: GMAIL_SMTP_EMAIL
-          value: kushanrathnayake5@gmail.com
-        - name: GMAIL_SMTP_APP_PASSWORD
-          value: qsjs eowp wupk xqnt
-        - name: FRONTEND_BASE_URL
-          value: https://pulseone.com
+        - name: POSTGRES_DSN
+          value: user=postgres password=postgres host=auth-postgres-db port=5432 dbname=authdb sslmode=disable
       image: auth-service
       name: auth-service
+      ports:
+        - containerPort: 8080
+          hostPort: 8080
+          protocol: TCP
       resources:
         limits:
           memory: "134217728"
   restartPolicy: OnFailure
+status: {}
