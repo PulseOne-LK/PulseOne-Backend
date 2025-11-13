@@ -53,8 +53,8 @@ public class SessionService {
         // Validate clinic if provided
         Clinic clinic = null;
         if (request.getClinicId() != null) {
-            clinic = clinicRepository.findById(request.getClinicId())
-                    .orElseThrow(() -> new IllegalArgumentException("Clinic not found with id: " + request.getClinicId()));
+            clinic = clinicRepository.findByProfileClinicId(request.getClinicId())
+                    .orElseThrow(() -> new IllegalArgumentException("Clinic not found with profile clinic id: " + request.getClinicId()));
         }
 
         // Validate session times
@@ -106,8 +106,8 @@ public class SessionService {
 
         // Update clinic if provided
         if (request.getClinicId() != null) {
-            Clinic clinic = clinicRepository.findById(request.getClinicId())
-                    .orElseThrow(() -> new IllegalArgumentException("Clinic not found with id: " + request.getClinicId()));
+            Clinic clinic = clinicRepository.findByProfileClinicId(request.getClinicId())
+                    .orElseThrow(() -> new IllegalArgumentException("Clinic not found with profile clinic id: " + request.getClinicId()));
             session.setClinic(clinic);
         }
 
@@ -257,7 +257,7 @@ public class SessionService {
         // Set clinic information if available
         if (session.getClinic() != null) {
             SessionResponse.ClinicResponse clinicResponse = new SessionResponse.ClinicResponse(
-                    session.getClinic().getId(),
+                    session.getClinic().getProfileClinicId(),
                     session.getClinic().getName(),
                     session.getClinic().getAddress()
             );

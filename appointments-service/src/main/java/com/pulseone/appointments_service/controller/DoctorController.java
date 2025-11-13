@@ -180,7 +180,7 @@ public class DoctorController {
         response.setName(doctor.getName());
         response.setSpecialization(doctor.getSpecialization());
         response.setIsActive(doctor.getIsActive());
-        response.setClinicId(doctor.getClinic() != null ? doctor.getClinic().getId() : null);
+        response.setClinicId(doctor.getClinic() != null ? doctor.getClinic().getProfileClinicId() : null);
         return response;
     }
 }

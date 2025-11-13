@@ -271,7 +271,7 @@ public class AvailabilityService {
             return true;
         }
         
-        return session.getClinic() != null && session.getClinic().getId().equals(clinicId);
+        return session.getClinic() != null && session.getClinic().getProfileClinicId().equals(clinicId);
     }
 
     /**
