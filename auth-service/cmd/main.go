@@ -43,10 +43,11 @@ func main() {
 	dbConn := db.ConnectAndMigrate(postgresDSN)
 	defer dbConn.Close()
 
-	// Initialize Profile Service client
+	// Initialize service clients
 	profileClient := service.NewProfileServiceClient()
+	appointmentsClient := service.NewAppointmentsServiceClient()
 
-	userService := service.NewUserService(dbConn, profileClient)
+	userService := service.NewUserService(dbConn, profileClient, appointmentsClient)
 	authHandlers := api.NewAuthHandlers(userService)
 
 	r := chi.NewRouter()
