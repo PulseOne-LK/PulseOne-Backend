@@ -1,7 +1,9 @@
 package com.pulseone.appointments_service.service;
 
 import com.pulseone.appointments_service.dto.UserRegistrationEventDTO;
+import com.pulseone.appointments_service.entity.Clinic;
 import com.pulseone.appointments_service.entity.Doctor;
+import com.pulseone.appointments_service.repository.ClinicRepository;
 import com.pulseone.appointments_service.repository.DoctorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +23,11 @@ public class AppointmentEventService {
     private static final Logger logger = LoggerFactory.getLogger(AppointmentEventService.class);
 
     private final DoctorRepository doctorRepository;
+    private final ClinicRepository clinicRepository;
 
-    public AppointmentEventService(DoctorRepository doctorRepository) {
+    public AppointmentEventService(DoctorRepository doctorRepository, ClinicRepository clinicRepository) {
         this.doctorRepository = doctorRepository;
+        this.clinicRepository = clinicRepository;
     }
 
     /**
@@ -42,8 +46,10 @@ public class AppointmentEventService {
             case "PATIENT":
                 logger.info("Patient registration processed - no appointment entities needed for role: {} (user: {})", role, userId);
                 break;
-            case "PHARMACIST":
             case "CLINIC_ADMIN":
+                createClinicRecord(event);
+                break;
+            case "PHARMACIST":
             case "SYS_ADMIN":
                 logger.info("No appointment entities needed for role: {} (user: {})", role, userId);
                 break;
@@ -142,6 +148,42 @@ public class AppointmentEventService {
             }
         } catch (Exception e) {
             logger.error("Error deactivating doctor record for user: {}", userId, e);
+        }
+    }
+
+    /**
+     * Creates a Clinic record for users with role "CLINIC_ADMIN"
+     * This allows the clinic to be referenced in sessions and appointments
+     */
+    private void createClinicRecord(UserRegistrationEventDTO event) {
+        try {
+            String userId = event.getUserId();
+            
+            // For clinic admins, we create a clinic based on the data provided
+            String clinicName = event.getClinicName();
+            if (clinicName == null || clinicName.trim().isEmpty()) {
+                clinicName = "Clinic - " + event.getFullName();
+            }
+            
+            String clinicAddress = event.getClinicAddress();
+            if (clinicAddress == null || clinicAddress.trim().isEmpty()) {
+                clinicAddress = "Address to be updated";
+            }
+
+            // Create new clinic record
+            Clinic clinic = new Clinic();
+            clinic.setName(clinicName);
+            clinic.setAddress(clinicAddress);
+            clinic.setIsActive(true);
+
+            // Save the clinic record
+            Clinic savedClinic = clinicRepository.save(clinic);
+            logger.info("Successfully created clinic record with ID: {} (name: '{}') for admin user: {}", 
+                       savedClinic.getId(), savedClinic.getName(), userId);
+            
+        } catch (Exception e) {
+            logger.error("Error creating clinic record for admin user: {}", event.getUserId(), e);
+            throw new RuntimeException("Failed to create clinic record", e);
         }
     }
 

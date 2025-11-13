@@ -29,6 +29,24 @@ message UserRegistrationEvent {
   
   // Event type identifier
   string event_type = 8;
+  
+  // Optional clinic information (for CLINIC_ADMIN users)
+  ClinicData clinic_data = 9;
+}
+
+// Clinic data for clinic admin registration
+message ClinicData {
+  // Clinic name
+  string name = 1;
+  
+  // Physical address
+  string physical_address = 2;
+  
+  // Contact phone
+  string contact_phone = 3;
+  
+  // Operating hours
+  string operating_hours = 4;
 }
 
 // Response message for user registration events

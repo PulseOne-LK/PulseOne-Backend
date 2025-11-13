@@ -1,0 +1,28 @@
+### Register Clinic Admin User Test
+POST http://localhost:8080/auth/admin/register
+Content-Type: application/json
+X-User-ID: test-admin
+X-User-Role: SYS_ADMIN
+
+{
+    "email": "clinic.admin@example.com",
+    "password": "securepassword123",
+    "role": "CLINIC_ADMIN"
+}
+
+### Test Response
+# Expected: 201 Created
+# {
+#   "message": "User registered successfully by admin",
+#   "token": "JWT_TOKEN_HERE",
+#   "user_id": "USER_ID",
+#   "role": "CLINIC_ADMIN"
+# }
+
+### Verify Profile Service Created Clinic Profile
+GET http://localhost:8082/clinics
+Content-Type: application/json
+
+### Verify Appointments Service Created Clinic Record
+GET http://localhost:8083/internal/health
+Content-Type: application/json
