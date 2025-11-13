@@ -1,9 +1,11 @@
 package com.pulseone.profile_service.service;
 
 import com.pulseone.profile_service.dto.UserRegistrationEventDTO;
+import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
+import com.pulseone.profile_service.repository.ClinicRepository;
 import com.pulseone.profile_service.repository.DoctorProfileRepository;
 import com.pulseone.profile_service.repository.PatientProfileRepository;
 import com.pulseone.profile_service.repository.PharmacyRepository;
@@ -25,13 +27,16 @@ public class ProfileCreationService {
     private final PatientProfileRepository patientProfileRepository;
     private final DoctorProfileRepository doctorProfileRepository;
     private final PharmacyRepository pharmacyRepository;
+    private final ClinicRepository clinicRepository;
 
     public ProfileCreationService(PatientProfileRepository patientProfileRepository,
                                  DoctorProfileRepository doctorProfileRepository,
-                                 PharmacyRepository pharmacyRepository) {
+                                 PharmacyRepository pharmacyRepository,
+                                 ClinicRepository clinicRepository) {
         this.patientProfileRepository = patientProfileRepository;
         this.doctorProfileRepository = doctorProfileRepository;
         this.pharmacyRepository = pharmacyRepository;
+        this.clinicRepository = clinicRepository;
     }
 
     /**
@@ -52,6 +57,8 @@ public class ProfileCreationService {
                 createPharmacyProfile(event);
                 break;
             case "CLINIC_ADMIN":
+                createClinicProfile(event);
+                break;
             case "SYS_ADMIN":
                 logger.info("No profile creation needed for role: {} (user: {})", role, userId);
                 break;
@@ -144,6 +151,46 @@ public class ProfileCreationService {
             
         } catch (Exception e) {
             logger.error("Error creating pharmacy profile for user: {}", event.getUserId(), e);
+        }
+    }
+
+    /**
+     * Creates a clinic profile for clinic admin
+     */
+    private void createClinicProfile(UserRegistrationEventDTO event) {
+        try {
+            // Check if clinic already exists
+            if (clinicRepository.findByAdminUserId(event.getUserId()).isPresent()) {
+                logger.warn("Clinic profile already exists for admin user: {}", event.getUserId());
+                return;
+            }
+
+            Clinic clinic = new Clinic();
+            clinic.setAdminUserId(event.getUserId());
+            
+            // Set basic required fields from event data or defaults
+            String clinicName = event.getClinicName();
+            if (clinicName == null || clinicName.trim().isEmpty()) {
+                clinicName = "New Clinic - " + event.getFirstName() + " " + event.getLastName();
+            }
+            clinic.setName(clinicName);
+            
+            String clinicAddress = event.getClinicAddress();
+            if (clinicAddress == null || clinicAddress.trim().isEmpty()) {
+                clinicAddress = "Address pending"; // Default placeholder
+            }
+            clinic.setPhysicalAddress(clinicAddress);
+            
+            // Set optional fields
+            clinic.setContactPhone(event.getClinicPhone());
+            clinic.setOperatingHours(event.getClinicOperatingHours());
+            
+            // Save the clinic
+            clinicRepository.save(clinic);
+            logger.info("Created clinic profile '{}' for admin user: {}", clinic.getName(), event.getUserId());
+            
+        } catch (Exception e) {
+            logger.error("Error creating clinic profile for admin user: {}", event.getUserId(), e);
         }
     }
 }

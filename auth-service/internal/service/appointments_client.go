@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	pb "auth-service/internal/proto"
+	pb "auth-service/proto"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -46,6 +46,18 @@ func (c *AppointmentsServiceClient) NotifyUserRegistered(ctx context.Context, ev
 		LastName:  event.LastName,
 		Timestamp: time.Now().Unix(),
 		EventType: "USER_REGISTERED",
+	}
+
+	// Add clinic data if this is a CLINIC_ADMIN user and clinic data is provided
+	if event.Role == "CLINIC_ADMIN" && event.ClinicName != "" {
+		pbEvent.ClinicData = &pb.ClinicData{
+			Name:            event.ClinicName,
+			PhysicalAddress: event.ClinicPhysicalAddress,
+			ContactPhone:    event.ClinicContactPhone,
+			OperatingHours:  event.ClinicOperatingHours,
+		}
+		log.Printf("Adding clinic data to protobuf event for appointments service: name=%s, address=%s",
+			event.ClinicName, event.ClinicPhysicalAddress)
 	}
 
 	// Marshal protobuf message to bytes

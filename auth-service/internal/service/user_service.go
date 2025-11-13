@@ -227,6 +227,19 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 		LastName:  newUser.LastName.String,
 	}
 
+	// For CLINIC_ADMIN users, add default clinic data
+	// TODO: This should come from a proper clinic registration form
+	if newUser.Role == model.RoleClinicAdmin {
+		fullName := newUser.FirstName.String + " " + newUser.LastName.String
+		if fullName == " " {
+			fullName = newUser.Email
+		}
+		event.ClinicName = "Clinic managed by " + fullName
+		event.ClinicPhysicalAddress = "Address to be provided"
+		event.ClinicContactPhone = ""                           // Optional
+		event.ClinicOperatingHours = "Monday-Friday 9:00-17:00" // Default hours
+	}
+
 	// Send notification to profile service asynchronously
 	if s.ProfileClient != nil {
 		go func() {
@@ -328,6 +341,19 @@ func (s *UserService) AdminRegisterUser(ctx context.Context, req model.AuthReque
 		Role:      string(newUser.Role),
 		FirstName: newUser.FirstName.String,
 		LastName:  newUser.LastName.String,
+	}
+
+	// For CLINIC_ADMIN users, add default clinic data
+	// TODO: This should come from a proper clinic registration form
+	if newUser.Role == model.RoleClinicAdmin {
+		fullName := newUser.FirstName.String + " " + newUser.LastName.String
+		if fullName == " " {
+			fullName = newUser.Email
+		}
+		event.ClinicName = "Clinic managed by " + fullName
+		event.ClinicPhysicalAddress = "Address to be provided"
+		event.ClinicContactPhone = ""                           // Optional
+		event.ClinicOperatingHours = "Monday-Friday 9:00-17:00" // Default hours
 	}
 
 	// Send notification to profile service asynchronously

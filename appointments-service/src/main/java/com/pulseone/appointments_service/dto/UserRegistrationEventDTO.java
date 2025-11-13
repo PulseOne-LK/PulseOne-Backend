@@ -14,6 +14,12 @@ public class UserRegistrationEventDTO {
     private String phoneNumber;
     private String timestamp;
     private String eventType;
+    
+    // Clinic-related fields for CLINIC_ADMIN users
+    private String clinicName;
+    private String clinicAddress;
+    private String clinicPhone;
+    private String clinicOperatingHours;
 
     // Constructors
     public UserRegistrationEventDTO() {
@@ -88,6 +94,38 @@ public class UserRegistrationEventDTO {
 
     public void setEventType(String eventType) {
         this.eventType = eventType;
+    }
+
+    public String getClinicName() {
+        return clinicName;
+    }
+
+    public void setClinicName(String clinicName) {
+        this.clinicName = clinicName;
+    }
+
+    public String getClinicAddress() {
+        return clinicAddress;
+    }
+
+    public void setClinicAddress(String clinicAddress) {
+        this.clinicAddress = clinicAddress;
+    }
+
+    public String getClinicPhone() {
+        return clinicPhone;
+    }
+
+    public void setClinicPhone(String clinicPhone) {
+        this.clinicPhone = clinicPhone;
+    }
+
+    public String getClinicOperatingHours() {
+        return clinicOperatingHours;
+    }
+
+    public void setClinicOperatingHours(String clinicOperatingHours) {
+        this.clinicOperatingHours = clinicOperatingHours;
     }
 
     /**
