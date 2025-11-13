@@ -332,7 +332,7 @@ public class AppointmentService {
         // Set clinic information
         if (appointment.getClinic() != null) {
             response.setClinic(new AppointmentResponse.ClinicSummary(
-                    appointment.getClinic().getId(),
+                    appointment.getClinic().getProfileClinicId(),
                     appointment.getClinic().getName(),
                     appointment.getClinic().getAddress()));
         }
