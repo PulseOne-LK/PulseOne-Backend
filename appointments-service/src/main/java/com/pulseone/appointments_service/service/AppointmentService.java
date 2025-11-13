@@ -267,8 +267,8 @@ public class AppointmentService {
      * Calculate queue number for appointment
      */
     private Integer calculateQueueNumber(Session session, LocalDate appointmentDate) {
-        Integer maxQueueNumber = appointmentRepository.getMaxQueueNumberForSessionAndDate(session, appointmentDate);
-        return maxQueueNumber + 1;
+        Optional<Integer> maxQueueNumber = appointmentRepository.getMaxQueueNumberForSessionAndDate(session, appointmentDate);
+        return maxQueueNumber.orElse(0) + 1;
     }
 
     /**

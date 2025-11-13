@@ -45,7 +45,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      * Get the maximum queue number for a session on a specific date
      */
     @Query("SELECT COALESCE(MAX(a.queueNumber), 0) FROM Appointment a WHERE a.session = :session AND a.appointmentDate = :date AND a.status != 'CANCELLED'")
-    Integer getMaxQueueNumberForSessionAndDate(@Param("session") Session session, @Param("date") LocalDate date);
+    Optional<Integer> getMaxQueueNumberForSessionAndDate(@Param("session") Session session, @Param("date") LocalDate date);
 
     /**
      * Count active appointments for a session on a specific date
