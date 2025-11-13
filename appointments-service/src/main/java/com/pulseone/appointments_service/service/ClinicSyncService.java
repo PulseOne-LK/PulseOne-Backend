@@ -54,11 +54,19 @@ public class ClinicSyncService {
         try {
             Long profileClinicId = event.getClinicId();
             
+            logger.info("Creating clinic record for profile clinic ID: {}", profileClinicId);
+            
             // Check if clinic record already exists
-            Optional<Clinic> existingClinic = clinicRepository.findByProfileClinicId(profileClinicId);
-            if (existingClinic.isPresent()) {
-                logger.warn("Clinic record already exists for profile clinic ID: {}", profileClinicId);
-                return;
+            try {
+                Optional<Clinic> existingClinic = clinicRepository.findByProfileClinicId(profileClinicId);
+                if (existingClinic.isPresent()) {
+                    logger.warn("Clinic record already exists for profile clinic ID: {}", profileClinicId);
+                    return;
+                }
+            } catch (Exception dbError) {
+                logger.error("Database error when checking existing clinic. This might be due to missing column. Error: {}", 
+                           dbError.getMessage());
+                // If the column doesn't exist yet, proceed with creation anyway
             }
 
             // Create new clinic record
@@ -86,8 +94,20 @@ public class ClinicSyncService {
         try {
             Long profileClinicId = event.getClinicId();
             
+            logger.info("Updating clinic record for profile clinic ID: {}", profileClinicId);
+            
             // Find existing clinic record
-            Optional<Clinic> clinicOpt = clinicRepository.findByProfileClinicId(profileClinicId);
+            Optional<Clinic> clinicOpt;
+            try {
+                clinicOpt = clinicRepository.findByProfileClinicId(profileClinicId);
+            } catch (Exception dbError) {
+                logger.error("Database error when finding clinic. This might be due to missing column. Error: {}", 
+                           dbError.getMessage());
+                logger.warn("Falling back to create clinic record instead of update for profile clinic ID: {}", profileClinicId);
+                createClinicRecord(event);
+                return;
+            }
+            
             if (clinicOpt.isEmpty()) {
                 logger.warn("No clinic record found for profile clinic ID: {}. Creating new record.", profileClinicId);
                 createClinicRecord(event);
