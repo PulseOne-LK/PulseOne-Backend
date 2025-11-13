@@ -1,5 +1,6 @@
 package com.pulseone.profile_service.service;
 
+import com.pulseone.profile_service.client.AppointmentsServiceClient;
 import com.pulseone.profile_service.dto.UserRegistrationEventDTO;
 import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.DoctorProfile;
@@ -28,15 +29,18 @@ public class ProfileCreationService {
     private final DoctorProfileRepository doctorProfileRepository;
     private final PharmacyRepository pharmacyRepository;
     private final ClinicRepository clinicRepository;
+    private final AppointmentsServiceClient appointmentsServiceClient;
 
     public ProfileCreationService(PatientProfileRepository patientProfileRepository,
                                  DoctorProfileRepository doctorProfileRepository,
                                  PharmacyRepository pharmacyRepository,
-                                 ClinicRepository clinicRepository) {
+                                 ClinicRepository clinicRepository,
+                                 AppointmentsServiceClient appointmentsServiceClient) {
         this.patientProfileRepository = patientProfileRepository;
         this.doctorProfileRepository = doctorProfileRepository;
         this.pharmacyRepository = pharmacyRepository;
         this.clinicRepository = clinicRepository;
+        this.appointmentsServiceClient = appointmentsServiceClient;
     }
 
     /**
@@ -186,8 +190,24 @@ public class ProfileCreationService {
             clinic.setOperatingHours(event.getClinicOperatingHours());
             
             // Save the clinic
-            clinicRepository.save(clinic);
-            logger.info("Created clinic profile '{}' for admin user: {}", clinic.getName(), event.getUserId());
+            Clinic savedClinic = clinicRepository.save(clinic);
+            logger.info("Created clinic profile '{}' with ID {} for admin user: {}", 
+                       savedClinic.getName(), savedClinic.getId(), event.getUserId());
+            
+            // Notify appointments service asynchronously
+            try {
+                appointmentsServiceClient.notifyClinicCreated(
+                    savedClinic.getId(),
+                    savedClinic.getName(),
+                    savedClinic.getPhysicalAddress(),
+                    savedClinic.getContactPhone(),
+                    savedClinic.getOperatingHours()
+                );
+            } catch (Exception notificationError) {
+                logger.error("Failed to notify appointments service of clinic creation: {}", 
+                           notificationError.getMessage(), notificationError);
+                // Don't fail the clinic creation if notification fails
+            }
             
         } catch (Exception e) {
             logger.error("Error creating clinic profile for admin user: {}", event.getUserId(), e);

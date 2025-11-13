@@ -2082,10 +2082,20 @@ public final class UserEvents {
 
     /**
      * <pre>
+     * Clinic ID from profile service (for updates)
+     * </pre>
+     *
+     * <code>int64 clinic_id = 1;</code>
+     * @return The clinicId.
+     */
+    long getClinicId();
+
+    /**
+     * <pre>
      * Clinic name
      * </pre>
      *
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      * @return The name.
      */
     java.lang.String getName();
@@ -2094,7 +2104,7 @@ public final class UserEvents {
      * Clinic name
      * </pre>
      *
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      * @return The bytes for name.
      */
     com.google.protobuf.ByteString
@@ -2105,7 +2115,7 @@ public final class UserEvents {
      * Physical address
      * </pre>
      *
-     * <code>string physical_address = 2;</code>
+     * <code>string physical_address = 3;</code>
      * @return The physicalAddress.
      */
     java.lang.String getPhysicalAddress();
@@ -2114,7 +2124,7 @@ public final class UserEvents {
      * Physical address
      * </pre>
      *
-     * <code>string physical_address = 2;</code>
+     * <code>string physical_address = 3;</code>
      * @return The bytes for physicalAddress.
      */
     com.google.protobuf.ByteString
@@ -2125,7 +2135,7 @@ public final class UserEvents {
      * Contact phone
      * </pre>
      *
-     * <code>string contact_phone = 3;</code>
+     * <code>string contact_phone = 4;</code>
      * @return The contactPhone.
      */
     java.lang.String getContactPhone();
@@ -2134,7 +2144,7 @@ public final class UserEvents {
      * Contact phone
      * </pre>
      *
-     * <code>string contact_phone = 3;</code>
+     * <code>string contact_phone = 4;</code>
      * @return The bytes for contactPhone.
      */
     com.google.protobuf.ByteString
@@ -2145,7 +2155,7 @@ public final class UserEvents {
      * Operating hours
      * </pre>
      *
-     * <code>string operating_hours = 4;</code>
+     * <code>string operating_hours = 5;</code>
      * @return The operatingHours.
      */
     java.lang.String getOperatingHours();
@@ -2154,7 +2164,7 @@ public final class UserEvents {
      * Operating hours
      * </pre>
      *
-     * <code>string operating_hours = 4;</code>
+     * <code>string operating_hours = 5;</code>
      * @return The bytes for operatingHours.
      */
     com.google.protobuf.ByteString
@@ -2203,7 +2213,22 @@ public final class UserEvents {
               events.v1.UserEvents.ClinicData.class, events.v1.UserEvents.ClinicData.Builder.class);
     }
 
-    public static final int NAME_FIELD_NUMBER = 1;
+    public static final int CLINIC_ID_FIELD_NUMBER = 1;
+    private long clinicId_ = 0L;
+    /**
+     * <pre>
+     * Clinic ID from profile service (for updates)
+     * </pre>
+     *
+     * <code>int64 clinic_id = 1;</code>
+     * @return The clinicId.
+     */
+    @java.lang.Override
+    public long getClinicId() {
+      return clinicId_;
+    }
+
+    public static final int NAME_FIELD_NUMBER = 2;
     @SuppressWarnings("serial")
     private volatile java.lang.Object name_ = "";
     /**
@@ -2211,7 +2236,7 @@ public final class UserEvents {
      * Clinic name
      * </pre>
      *
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      * @return The name.
      */
     @java.lang.Override
@@ -2232,7 +2257,7 @@ public final class UserEvents {
      * Clinic name
      * </pre>
      *
-     * <code>string name = 1;</code>
+     * <code>string name = 2;</code>
      * @return The bytes for name.
      */
     @java.lang.Override
@@ -2250,7 +2275,7 @@ public final class UserEvents {
       }
     }
 
-    public static final int PHYSICAL_ADDRESS_FIELD_NUMBER = 2;
+    public static final int PHYSICAL_ADDRESS_FIELD_NUMBER = 3;
     @SuppressWarnings("serial")
     private volatile java.lang.Object physicalAddress_ = "";
     /**
@@ -2258,7 +2283,7 @@ public final class UserEvents {
      * Physical address
      * </pre>
      *
-     * <code>string physical_address = 2;</code>
+     * <code>string physical_address = 3;</code>
      * @return The physicalAddress.
      */
     @java.lang.Override
@@ -2279,7 +2304,7 @@ public final class UserEvents {
      * Physical address
      * </pre>
      *
-     * <code>string physical_address = 2;</code>
+     * <code>string physical_address = 3;</code>
      * @return The bytes for physicalAddress.
      */
     @java.lang.Override
@@ -2297,7 +2322,7 @@ public final class UserEvents {
       }
     }
 
-    public static final int CONTACT_PHONE_FIELD_NUMBER = 3;
+    public static final int CONTACT_PHONE_FIELD_NUMBER = 4;
     @SuppressWarnings("serial")
     private volatile java.lang.Object contactPhone_ = "";
     /**
@@ -2305,7 +2330,7 @@ public final class UserEvents {
      * Contact phone
      * </pre>
      *
-     * <code>string contact_phone = 3;</code>
+     * <code>string contact_phone = 4;</code>
      * @return The contactPhone.
      */
     @java.lang.Override
@@ -2326,7 +2351,7 @@ public final class UserEvents {
      * Contact phone
      * </pre>
      *
-     * <code>string contact_phone = 3;</code>
+     * <code>string contact_phone = 4;</code>
      * @return The bytes for contactPhone.
      */
     @java.lang.Override
@@ -2344,7 +2369,7 @@ public final class UserEvents {
       }
     }
 
-    public static final int OPERATING_HOURS_FIELD_NUMBER = 4;
+    public static final int OPERATING_HOURS_FIELD_NUMBER = 5;
     @SuppressWarnings("serial")
     private volatile java.lang.Object operatingHours_ = "";
     /**
@@ -2352,7 +2377,7 @@ public final class UserEvents {
      * Operating hours
      * </pre>
      *
-     * <code>string operating_hours = 4;</code>
+     * <code>string operating_hours = 5;</code>
      * @return The operatingHours.
      */
     @java.lang.Override
@@ -2373,7 +2398,7 @@ public final class UserEvents {
      * Operating hours
      * </pre>
      *
-     * <code>string operating_hours = 4;</code>
+     * <code>string operating_hours = 5;</code>
      * @return The bytes for operatingHours.
      */
     @java.lang.Override
@@ -2405,17 +2430,20 @@ public final class UserEvents {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      if (clinicId_ != 0L) {
+        output.writeInt64(1, clinicId_);
+      }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, name_);
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(physicalAddress_)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, physicalAddress_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, physicalAddress_);
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(contactPhone_)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, contactPhone_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, contactPhone_);
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(operatingHours_)) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, operatingHours_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, operatingHours_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2426,17 +2454,21 @@ public final class UserEvents {
       if (size != -1) return size;
 
       size = 0;
+      if (clinicId_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, clinicId_);
+      }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, name_);
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(physicalAddress_)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, physicalAddress_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, physicalAddress_);
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(contactPhone_)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, contactPhone_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, contactPhone_);
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(operatingHours_)) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, operatingHours_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, operatingHours_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -2453,6 +2485,8 @@ public final class UserEvents {
       }
       events.v1.UserEvents.ClinicData other = (events.v1.UserEvents.ClinicData) obj;
 
+      if (getClinicId()
+          != other.getClinicId()) return false;
       if (!getName()
           .equals(other.getName())) return false;
       if (!getPhysicalAddress()
@@ -2472,6 +2506,9 @@ public final class UserEvents {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + CLINIC_ID_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getClinicId());
       hash = (37 * hash) + NAME_FIELD_NUMBER;
       hash = (53 * hash) + getName().hashCode();
       hash = (37 * hash) + PHYSICAL_ADDRESS_FIELD_NUMBER;
@@ -2615,6 +2652,7 @@ public final class UserEvents {
       public Builder clear() {
         super.clear();
         bitField0_ = 0;
+        clinicId_ = 0L;
         name_ = "";
         physicalAddress_ = "";
         contactPhone_ = "";
@@ -2653,15 +2691,18 @@ public final class UserEvents {
       private void buildPartial0(events.v1.UserEvents.ClinicData result) {
         int from_bitField0_ = bitField0_;
         if (((from_bitField0_ & 0x00000001) != 0)) {
-          result.name_ = name_;
+          result.clinicId_ = clinicId_;
         }
         if (((from_bitField0_ & 0x00000002) != 0)) {
-          result.physicalAddress_ = physicalAddress_;
+          result.name_ = name_;
         }
         if (((from_bitField0_ & 0x00000004) != 0)) {
-          result.contactPhone_ = contactPhone_;
+          result.physicalAddress_ = physicalAddress_;
         }
         if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.contactPhone_ = contactPhone_;
+        }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
           result.operatingHours_ = operatingHours_;
         }
       }
@@ -2710,24 +2751,27 @@ public final class UserEvents {
 
       public Builder mergeFrom(events.v1.UserEvents.ClinicData other) {
         if (other == events.v1.UserEvents.ClinicData.getDefaultInstance()) return this;
+        if (other.getClinicId() != 0L) {
+          setClinicId(other.getClinicId());
+        }
         if (!other.getName().isEmpty()) {
           name_ = other.name_;
-          bitField0_ |= 0x00000001;
+          bitField0_ |= 0x00000002;
           onChanged();
         }
         if (!other.getPhysicalAddress().isEmpty()) {
           physicalAddress_ = other.physicalAddress_;
-          bitField0_ |= 0x00000002;
+          bitField0_ |= 0x00000004;
           onChanged();
         }
         if (!other.getContactPhone().isEmpty()) {
           contactPhone_ = other.contactPhone_;
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000008;
           onChanged();
         }
         if (!other.getOperatingHours().isEmpty()) {
           operatingHours_ = other.operatingHours_;
-          bitField0_ |= 0x00000008;
+          bitField0_ |= 0x00000010;
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -2756,26 +2800,31 @@ public final class UserEvents {
               case 0:
                 done = true;
                 break;
-              case 10: {
-                name_ = input.readStringRequireUtf8();
+              case 8: {
+                clinicId_ = input.readInt64();
                 bitField0_ |= 0x00000001;
                 break;
-              } // case 10
+              } // case 8
               case 18: {
-                physicalAddress_ = input.readStringRequireUtf8();
+                name_ = input.readStringRequireUtf8();
                 bitField0_ |= 0x00000002;
                 break;
               } // case 18
               case 26: {
-                contactPhone_ = input.readStringRequireUtf8();
+                physicalAddress_ = input.readStringRequireUtf8();
                 bitField0_ |= 0x00000004;
                 break;
               } // case 26
               case 34: {
-                operatingHours_ = input.readStringRequireUtf8();
+                contactPhone_ = input.readStringRequireUtf8();
                 bitField0_ |= 0x00000008;
                 break;
               } // case 34
+              case 42: {
+                operatingHours_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000010;
+                break;
+              } // case 42
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -2793,13 +2842,57 @@ public final class UserEvents {
       }
       private int bitField0_;
 
+      private long clinicId_ ;
+      /**
+       * <pre>
+       * Clinic ID from profile service (for updates)
+       * </pre>
+       *
+       * <code>int64 clinic_id = 1;</code>
+       * @return The clinicId.
+       */
+      @java.lang.Override
+      public long getClinicId() {
+        return clinicId_;
+      }
+      /**
+       * <pre>
+       * Clinic ID from profile service (for updates)
+       * </pre>
+       *
+       * <code>int64 clinic_id = 1;</code>
+       * @param value The clinicId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setClinicId(long value) {
+
+        clinicId_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Clinic ID from profile service (for updates)
+       * </pre>
+       *
+       * <code>int64 clinic_id = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearClinicId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        clinicId_ = 0L;
+        onChanged();
+        return this;
+      }
+
       private java.lang.Object name_ = "";
       /**
        * <pre>
        * Clinic name
        * </pre>
        *
-       * <code>string name = 1;</code>
+       * <code>string name = 2;</code>
        * @return The name.
        */
       public java.lang.String getName() {
@@ -2819,7 +2912,7 @@ public final class UserEvents {
        * Clinic name
        * </pre>
        *
-       * <code>string name = 1;</code>
+       * <code>string name = 2;</code>
        * @return The bytes for name.
        */
       public com.google.protobuf.ByteString
@@ -2840,7 +2933,7 @@ public final class UserEvents {
        * Clinic name
        * </pre>
        *
-       * <code>string name = 1;</code>
+       * <code>string name = 2;</code>
        * @param value The name to set.
        * @return This builder for chaining.
        */
@@ -2848,7 +2941,7 @@ public final class UserEvents {
           java.lang.String value) {
         if (value == null) { throw new NullPointerException(); }
         name_ = value;
-        bitField0_ |= 0x00000001;
+        bitField0_ |= 0x00000002;
         onChanged();
         return this;
       }
@@ -2857,12 +2950,12 @@ public final class UserEvents {
        * Clinic name
        * </pre>
        *
-       * <code>string name = 1;</code>
+       * <code>string name = 2;</code>
        * @return This builder for chaining.
        */
       public Builder clearName() {
         name_ = getDefaultInstance().getName();
-        bitField0_ = (bitField0_ & ~0x00000001);
+        bitField0_ = (bitField0_ & ~0x00000002);
         onChanged();
         return this;
       }
@@ -2871,7 +2964,7 @@ public final class UserEvents {
        * Clinic name
        * </pre>
        *
-       * <code>string name = 1;</code>
+       * <code>string name = 2;</code>
        * @param value The bytes for name to set.
        * @return This builder for chaining.
        */
@@ -2880,7 +2973,7 @@ public final class UserEvents {
         if (value == null) { throw new NullPointerException(); }
         checkByteStringIsUtf8(value);
         name_ = value;
-        bitField0_ |= 0x00000001;
+        bitField0_ |= 0x00000002;
         onChanged();
         return this;
       }
@@ -2891,7 +2984,7 @@ public final class UserEvents {
        * Physical address
        * </pre>
        *
-       * <code>string physical_address = 2;</code>
+       * <code>string physical_address = 3;</code>
        * @return The physicalAddress.
        */
       public java.lang.String getPhysicalAddress() {
@@ -2911,7 +3004,7 @@ public final class UserEvents {
        * Physical address
        * </pre>
        *
-       * <code>string physical_address = 2;</code>
+       * <code>string physical_address = 3;</code>
        * @return The bytes for physicalAddress.
        */
       public com.google.protobuf.ByteString
@@ -2932,7 +3025,7 @@ public final class UserEvents {
        * Physical address
        * </pre>
        *
-       * <code>string physical_address = 2;</code>
+       * <code>string physical_address = 3;</code>
        * @param value The physicalAddress to set.
        * @return This builder for chaining.
        */
@@ -2940,7 +3033,7 @@ public final class UserEvents {
           java.lang.String value) {
         if (value == null) { throw new NullPointerException(); }
         physicalAddress_ = value;
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000004;
         onChanged();
         return this;
       }
@@ -2949,12 +3042,12 @@ public final class UserEvents {
        * Physical address
        * </pre>
        *
-       * <code>string physical_address = 2;</code>
+       * <code>string physical_address = 3;</code>
        * @return This builder for chaining.
        */
       public Builder clearPhysicalAddress() {
         physicalAddress_ = getDefaultInstance().getPhysicalAddress();
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000004);
         onChanged();
         return this;
       }
@@ -2963,7 +3056,7 @@ public final class UserEvents {
        * Physical address
        * </pre>
        *
-       * <code>string physical_address = 2;</code>
+       * <code>string physical_address = 3;</code>
        * @param value The bytes for physicalAddress to set.
        * @return This builder for chaining.
        */
@@ -2972,7 +3065,7 @@ public final class UserEvents {
         if (value == null) { throw new NullPointerException(); }
         checkByteStringIsUtf8(value);
         physicalAddress_ = value;
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000004;
         onChanged();
         return this;
       }
@@ -2983,7 +3076,7 @@ public final class UserEvents {
        * Contact phone
        * </pre>
        *
-       * <code>string contact_phone = 3;</code>
+       * <code>string contact_phone = 4;</code>
        * @return The contactPhone.
        */
       public java.lang.String getContactPhone() {
@@ -3003,7 +3096,7 @@ public final class UserEvents {
        * Contact phone
        * </pre>
        *
-       * <code>string contact_phone = 3;</code>
+       * <code>string contact_phone = 4;</code>
        * @return The bytes for contactPhone.
        */
       public com.google.protobuf.ByteString
@@ -3024,7 +3117,7 @@ public final class UserEvents {
        * Contact phone
        * </pre>
        *
-       * <code>string contact_phone = 3;</code>
+       * <code>string contact_phone = 4;</code>
        * @param value The contactPhone to set.
        * @return This builder for chaining.
        */
@@ -3032,7 +3125,7 @@ public final class UserEvents {
           java.lang.String value) {
         if (value == null) { throw new NullPointerException(); }
         contactPhone_ = value;
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000008;
         onChanged();
         return this;
       }
@@ -3041,12 +3134,12 @@ public final class UserEvents {
        * Contact phone
        * </pre>
        *
-       * <code>string contact_phone = 3;</code>
+       * <code>string contact_phone = 4;</code>
        * @return This builder for chaining.
        */
       public Builder clearContactPhone() {
         contactPhone_ = getDefaultInstance().getContactPhone();
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000008);
         onChanged();
         return this;
       }
@@ -3055,7 +3148,7 @@ public final class UserEvents {
        * Contact phone
        * </pre>
        *
-       * <code>string contact_phone = 3;</code>
+       * <code>string contact_phone = 4;</code>
        * @param value The bytes for contactPhone to set.
        * @return This builder for chaining.
        */
@@ -3064,7 +3157,7 @@ public final class UserEvents {
         if (value == null) { throw new NullPointerException(); }
         checkByteStringIsUtf8(value);
         contactPhone_ = value;
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000008;
         onChanged();
         return this;
       }
@@ -3075,7 +3168,7 @@ public final class UserEvents {
        * Operating hours
        * </pre>
        *
-       * <code>string operating_hours = 4;</code>
+       * <code>string operating_hours = 5;</code>
        * @return The operatingHours.
        */
       public java.lang.String getOperatingHours() {
@@ -3095,7 +3188,7 @@ public final class UserEvents {
        * Operating hours
        * </pre>
        *
-       * <code>string operating_hours = 4;</code>
+       * <code>string operating_hours = 5;</code>
        * @return The bytes for operatingHours.
        */
       public com.google.protobuf.ByteString
@@ -3116,7 +3209,7 @@ public final class UserEvents {
        * Operating hours
        * </pre>
        *
-       * <code>string operating_hours = 4;</code>
+       * <code>string operating_hours = 5;</code>
        * @param value The operatingHours to set.
        * @return This builder for chaining.
        */
@@ -3124,7 +3217,7 @@ public final class UserEvents {
           java.lang.String value) {
         if (value == null) { throw new NullPointerException(); }
         operatingHours_ = value;
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         onChanged();
         return this;
       }
@@ -3133,12 +3226,12 @@ public final class UserEvents {
        * Operating hours
        * </pre>
        *
-       * <code>string operating_hours = 4;</code>
+       * <code>string operating_hours = 5;</code>
        * @return This builder for chaining.
        */
       public Builder clearOperatingHours() {
         operatingHours_ = getDefaultInstance().getOperatingHours();
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
         return this;
       }
@@ -3147,7 +3240,7 @@ public final class UserEvents {
        * Operating hours
        * </pre>
        *
-       * <code>string operating_hours = 4;</code>
+       * <code>string operating_hours = 5;</code>
        * @param value The bytes for operatingHours to set.
        * @return This builder for chaining.
        */
@@ -3156,7 +3249,7 @@ public final class UserEvents {
         if (value == null) { throw new NullPointerException(); }
         checkByteStringIsUtf8(value);
         operatingHours_ = value;
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         onChanged();
         return this;
       }
@@ -3219,6 +3312,1617 @@ public final class UserEvents {
 
     @java.lang.Override
     public events.v1.UserEvents.ClinicData getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ClinicUpdateEventOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:events.v1.ClinicUpdateEvent)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Profile service clinic ID
+     * </pre>
+     *
+     * <code>int64 clinic_id = 1;</code>
+     * @return The clinicId.
+     */
+    long getClinicId();
+
+    /**
+     * <pre>
+     * Updated clinic name
+     * </pre>
+     *
+     * <code>string name = 2;</code>
+     * @return The name.
+     */
+    java.lang.String getName();
+    /**
+     * <pre>
+     * Updated clinic name
+     * </pre>
+     *
+     * <code>string name = 2;</code>
+     * @return The bytes for name.
+     */
+    com.google.protobuf.ByteString
+        getNameBytes();
+
+    /**
+     * <pre>
+     * Updated physical address
+     * </pre>
+     *
+     * <code>string address = 3;</code>
+     * @return The address.
+     */
+    java.lang.String getAddress();
+    /**
+     * <pre>
+     * Updated physical address
+     * </pre>
+     *
+     * <code>string address = 3;</code>
+     * @return The bytes for address.
+     */
+    com.google.protobuf.ByteString
+        getAddressBytes();
+
+    /**
+     * <pre>
+     * Updated contact phone
+     * </pre>
+     *
+     * <code>string contact_phone = 4;</code>
+     * @return The contactPhone.
+     */
+    java.lang.String getContactPhone();
+    /**
+     * <pre>
+     * Updated contact phone
+     * </pre>
+     *
+     * <code>string contact_phone = 4;</code>
+     * @return The bytes for contactPhone.
+     */
+    com.google.protobuf.ByteString
+        getContactPhoneBytes();
+
+    /**
+     * <pre>
+     * Updated operating hours
+     * </pre>
+     *
+     * <code>string operating_hours = 5;</code>
+     * @return The operatingHours.
+     */
+    java.lang.String getOperatingHours();
+    /**
+     * <pre>
+     * Updated operating hours
+     * </pre>
+     *
+     * <code>string operating_hours = 5;</code>
+     * @return The bytes for operatingHours.
+     */
+    com.google.protobuf.ByteString
+        getOperatingHoursBytes();
+
+    /**
+     * <pre>
+     * Whether the clinic is active
+     * </pre>
+     *
+     * <code>bool is_active = 6;</code>
+     * @return The isActive.
+     */
+    boolean getIsActive();
+
+    /**
+     * <pre>
+     * Event timestamp
+     * </pre>
+     *
+     * <code>int64 timestamp = 7;</code>
+     * @return The timestamp.
+     */
+    long getTimestamp();
+
+    /**
+     * <pre>
+     * Event type identifier
+     * </pre>
+     *
+     * <code>string event_type = 8;</code>
+     * @return The eventType.
+     */
+    java.lang.String getEventType();
+    /**
+     * <pre>
+     * Event type identifier
+     * </pre>
+     *
+     * <code>string event_type = 8;</code>
+     * @return The bytes for eventType.
+     */
+    com.google.protobuf.ByteString
+        getEventTypeBytes();
+  }
+  /**
+   * <pre>
+   * Clinic update event message
+   * </pre>
+   *
+   * Protobuf type {@code events.v1.ClinicUpdateEvent}
+   */
+  public static final class ClinicUpdateEvent extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:events.v1.ClinicUpdateEvent)
+      ClinicUpdateEventOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use ClinicUpdateEvent.newBuilder() to construct.
+    private ClinicUpdateEvent(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private ClinicUpdateEvent() {
+      name_ = "";
+      address_ = "";
+      contactPhone_ = "";
+      operatingHours_ = "";
+      eventType_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new ClinicUpdateEvent();
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return events.v1.UserEvents.internal_static_events_v1_ClinicUpdateEvent_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return events.v1.UserEvents.internal_static_events_v1_ClinicUpdateEvent_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              events.v1.UserEvents.ClinicUpdateEvent.class, events.v1.UserEvents.ClinicUpdateEvent.Builder.class);
+    }
+
+    public static final int CLINIC_ID_FIELD_NUMBER = 1;
+    private long clinicId_ = 0L;
+    /**
+     * <pre>
+     * Profile service clinic ID
+     * </pre>
+     *
+     * <code>int64 clinic_id = 1;</code>
+     * @return The clinicId.
+     */
+    @java.lang.Override
+    public long getClinicId() {
+      return clinicId_;
+    }
+
+    public static final int NAME_FIELD_NUMBER = 2;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object name_ = "";
+    /**
+     * <pre>
+     * Updated clinic name
+     * </pre>
+     *
+     * <code>string name = 2;</code>
+     * @return The name.
+     */
+    @java.lang.Override
+    public java.lang.String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        name_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Updated clinic name
+     * </pre>
+     *
+     * <code>string name = 2;</code>
+     * @return The bytes for name.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int ADDRESS_FIELD_NUMBER = 3;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object address_ = "";
+    /**
+     * <pre>
+     * Updated physical address
+     * </pre>
+     *
+     * <code>string address = 3;</code>
+     * @return The address.
+     */
+    @java.lang.Override
+    public java.lang.String getAddress() {
+      java.lang.Object ref = address_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        address_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Updated physical address
+     * </pre>
+     *
+     * <code>string address = 3;</code>
+     * @return The bytes for address.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getAddressBytes() {
+      java.lang.Object ref = address_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        address_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int CONTACT_PHONE_FIELD_NUMBER = 4;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object contactPhone_ = "";
+    /**
+     * <pre>
+     * Updated contact phone
+     * </pre>
+     *
+     * <code>string contact_phone = 4;</code>
+     * @return The contactPhone.
+     */
+    @java.lang.Override
+    public java.lang.String getContactPhone() {
+      java.lang.Object ref = contactPhone_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        contactPhone_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Updated contact phone
+     * </pre>
+     *
+     * <code>string contact_phone = 4;</code>
+     * @return The bytes for contactPhone.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getContactPhoneBytes() {
+      java.lang.Object ref = contactPhone_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        contactPhone_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int OPERATING_HOURS_FIELD_NUMBER = 5;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object operatingHours_ = "";
+    /**
+     * <pre>
+     * Updated operating hours
+     * </pre>
+     *
+     * <code>string operating_hours = 5;</code>
+     * @return The operatingHours.
+     */
+    @java.lang.Override
+    public java.lang.String getOperatingHours() {
+      java.lang.Object ref = operatingHours_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        operatingHours_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Updated operating hours
+     * </pre>
+     *
+     * <code>string operating_hours = 5;</code>
+     * @return The bytes for operatingHours.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getOperatingHoursBytes() {
+      java.lang.Object ref = operatingHours_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        operatingHours_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int IS_ACTIVE_FIELD_NUMBER = 6;
+    private boolean isActive_ = false;
+    /**
+     * <pre>
+     * Whether the clinic is active
+     * </pre>
+     *
+     * <code>bool is_active = 6;</code>
+     * @return The isActive.
+     */
+    @java.lang.Override
+    public boolean getIsActive() {
+      return isActive_;
+    }
+
+    public static final int TIMESTAMP_FIELD_NUMBER = 7;
+    private long timestamp_ = 0L;
+    /**
+     * <pre>
+     * Event timestamp
+     * </pre>
+     *
+     * <code>int64 timestamp = 7;</code>
+     * @return The timestamp.
+     */
+    @java.lang.Override
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
+    public static final int EVENT_TYPE_FIELD_NUMBER = 8;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object eventType_ = "";
+    /**
+     * <pre>
+     * Event type identifier
+     * </pre>
+     *
+     * <code>string event_type = 8;</code>
+     * @return The eventType.
+     */
+    @java.lang.Override
+    public java.lang.String getEventType() {
+      java.lang.Object ref = eventType_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        eventType_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Event type identifier
+     * </pre>
+     *
+     * <code>string event_type = 8;</code>
+     * @return The bytes for eventType.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getEventTypeBytes() {
+      java.lang.Object ref = eventType_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        eventType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (clinicId_ != 0L) {
+        output.writeInt64(1, clinicId_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, name_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(address_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, address_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(contactPhone_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 4, contactPhone_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(operatingHours_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, operatingHours_);
+      }
+      if (isActive_ != false) {
+        output.writeBool(6, isActive_);
+      }
+      if (timestamp_ != 0L) {
+        output.writeInt64(7, timestamp_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(eventType_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 8, eventType_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (clinicId_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, clinicId_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, name_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(address_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, address_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(contactPhone_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, contactPhone_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(operatingHours_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, operatingHours_);
+      }
+      if (isActive_ != false) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(6, isActive_);
+      }
+      if (timestamp_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(7, timestamp_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(eventType_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, eventType_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof events.v1.UserEvents.ClinicUpdateEvent)) {
+        return super.equals(obj);
+      }
+      events.v1.UserEvents.ClinicUpdateEvent other = (events.v1.UserEvents.ClinicUpdateEvent) obj;
+
+      if (getClinicId()
+          != other.getClinicId()) return false;
+      if (!getName()
+          .equals(other.getName())) return false;
+      if (!getAddress()
+          .equals(other.getAddress())) return false;
+      if (!getContactPhone()
+          .equals(other.getContactPhone())) return false;
+      if (!getOperatingHours()
+          .equals(other.getOperatingHours())) return false;
+      if (getIsActive()
+          != other.getIsActive()) return false;
+      if (getTimestamp()
+          != other.getTimestamp()) return false;
+      if (!getEventType()
+          .equals(other.getEventType())) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + CLINIC_ID_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getClinicId());
+      hash = (37 * hash) + NAME_FIELD_NUMBER;
+      hash = (53 * hash) + getName().hashCode();
+      hash = (37 * hash) + ADDRESS_FIELD_NUMBER;
+      hash = (53 * hash) + getAddress().hashCode();
+      hash = (37 * hash) + CONTACT_PHONE_FIELD_NUMBER;
+      hash = (53 * hash) + getContactPhone().hashCode();
+      hash = (37 * hash) + OPERATING_HOURS_FIELD_NUMBER;
+      hash = (53 * hash) + getOperatingHours().hashCode();
+      hash = (37 * hash) + IS_ACTIVE_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+          getIsActive());
+      hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getTimestamp());
+      hash = (37 * hash) + EVENT_TYPE_FIELD_NUMBER;
+      hash = (53 * hash) + getEventType().hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public static events.v1.UserEvents.ClinicUpdateEvent parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static events.v1.UserEvents.ClinicUpdateEvent parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static events.v1.UserEvents.ClinicUpdateEvent parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(events.v1.UserEvents.ClinicUpdateEvent prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Clinic update event message
+     * </pre>
+     *
+     * Protobuf type {@code events.v1.ClinicUpdateEvent}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:events.v1.ClinicUpdateEvent)
+        events.v1.UserEvents.ClinicUpdateEventOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return events.v1.UserEvents.internal_static_events_v1_ClinicUpdateEvent_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return events.v1.UserEvents.internal_static_events_v1_ClinicUpdateEvent_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                events.v1.UserEvents.ClinicUpdateEvent.class, events.v1.UserEvents.ClinicUpdateEvent.Builder.class);
+      }
+
+      // Construct using events.v1.UserEvents.ClinicUpdateEvent.newBuilder()
+      private Builder() {
+
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bitField0_ = 0;
+        clinicId_ = 0L;
+        name_ = "";
+        address_ = "";
+        contactPhone_ = "";
+        operatingHours_ = "";
+        isActive_ = false;
+        timestamp_ = 0L;
+        eventType_ = "";
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return events.v1.UserEvents.internal_static_events_v1_ClinicUpdateEvent_descriptor;
+      }
+
+      @java.lang.Override
+      public events.v1.UserEvents.ClinicUpdateEvent getDefaultInstanceForType() {
+        return events.v1.UserEvents.ClinicUpdateEvent.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public events.v1.UserEvents.ClinicUpdateEvent build() {
+        events.v1.UserEvents.ClinicUpdateEvent result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public events.v1.UserEvents.ClinicUpdateEvent buildPartial() {
+        events.v1.UserEvents.ClinicUpdateEvent result = new events.v1.UserEvents.ClinicUpdateEvent(this);
+        if (bitField0_ != 0) { buildPartial0(result); }
+        onBuilt();
+        return result;
+      }
+
+      private void buildPartial0(events.v1.UserEvents.ClinicUpdateEvent result) {
+        int from_bitField0_ = bitField0_;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.clinicId_ = clinicId_;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.name_ = name_;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.address_ = address_;
+        }
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.contactPhone_ = contactPhone_;
+        }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.operatingHours_ = operatingHours_;
+        }
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.isActive_ = isActive_;
+        }
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.timestamp_ = timestamp_;
+        }
+        if (((from_bitField0_ & 0x00000080) != 0)) {
+          result.eventType_ = eventType_;
+        }
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof events.v1.UserEvents.ClinicUpdateEvent) {
+          return mergeFrom((events.v1.UserEvents.ClinicUpdateEvent)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(events.v1.UserEvents.ClinicUpdateEvent other) {
+        if (other == events.v1.UserEvents.ClinicUpdateEvent.getDefaultInstance()) return this;
+        if (other.getClinicId() != 0L) {
+          setClinicId(other.getClinicId());
+        }
+        if (!other.getName().isEmpty()) {
+          name_ = other.name_;
+          bitField0_ |= 0x00000002;
+          onChanged();
+        }
+        if (!other.getAddress().isEmpty()) {
+          address_ = other.address_;
+          bitField0_ |= 0x00000004;
+          onChanged();
+        }
+        if (!other.getContactPhone().isEmpty()) {
+          contactPhone_ = other.contactPhone_;
+          bitField0_ |= 0x00000008;
+          onChanged();
+        }
+        if (!other.getOperatingHours().isEmpty()) {
+          operatingHours_ = other.operatingHours_;
+          bitField0_ |= 0x00000010;
+          onChanged();
+        }
+        if (other.getIsActive() != false) {
+          setIsActive(other.getIsActive());
+        }
+        if (other.getTimestamp() != 0L) {
+          setTimestamp(other.getTimestamp());
+        }
+        if (!other.getEventType().isEmpty()) {
+          eventType_ = other.eventType_;
+          bitField0_ |= 0x00000080;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 8: {
+                clinicId_ = input.readInt64();
+                bitField0_ |= 0x00000001;
+                break;
+              } // case 8
+              case 18: {
+                name_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000002;
+                break;
+              } // case 18
+              case 26: {
+                address_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000004;
+                break;
+              } // case 26
+              case 34: {
+                contactPhone_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000008;
+                break;
+              } // case 34
+              case 42: {
+                operatingHours_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000010;
+                break;
+              } // case 42
+              case 48: {
+                isActive_ = input.readBool();
+                bitField0_ |= 0x00000020;
+                break;
+              } // case 48
+              case 56: {
+                timestamp_ = input.readInt64();
+                bitField0_ |= 0x00000040;
+                break;
+              } // case 56
+              case 66: {
+                eventType_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000080;
+                break;
+              } // case 66
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.unwrapIOException();
+        } finally {
+          onChanged();
+        } // finally
+        return this;
+      }
+      private int bitField0_;
+
+      private long clinicId_ ;
+      /**
+       * <pre>
+       * Profile service clinic ID
+       * </pre>
+       *
+       * <code>int64 clinic_id = 1;</code>
+       * @return The clinicId.
+       */
+      @java.lang.Override
+      public long getClinicId() {
+        return clinicId_;
+      }
+      /**
+       * <pre>
+       * Profile service clinic ID
+       * </pre>
+       *
+       * <code>int64 clinic_id = 1;</code>
+       * @param value The clinicId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setClinicId(long value) {
+
+        clinicId_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Profile service clinic ID
+       * </pre>
+       *
+       * <code>int64 clinic_id = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearClinicId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        clinicId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object name_ = "";
+      /**
+       * <pre>
+       * Updated clinic name
+       * </pre>
+       *
+       * <code>string name = 2;</code>
+       * @return The name.
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Updated clinic name
+       * </pre>
+       *
+       * <code>string name = 2;</code>
+       * @return The bytes for name.
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Updated clinic name
+       * </pre>
+       *
+       * <code>string name = 2;</code>
+       * @param value The name to set.
+       * @return This builder for chaining.
+       */
+      public Builder setName(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        name_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Updated clinic name
+       * </pre>
+       *
+       * <code>string name = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearName() {
+        name_ = getDefaultInstance().getName();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Updated clinic name
+       * </pre>
+       *
+       * <code>string name = 2;</code>
+       * @param value The bytes for name to set.
+       * @return This builder for chaining.
+       */
+      public Builder setNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        name_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object address_ = "";
+      /**
+       * <pre>
+       * Updated physical address
+       * </pre>
+       *
+       * <code>string address = 3;</code>
+       * @return The address.
+       */
+      public java.lang.String getAddress() {
+        java.lang.Object ref = address_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          address_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Updated physical address
+       * </pre>
+       *
+       * <code>string address = 3;</code>
+       * @return The bytes for address.
+       */
+      public com.google.protobuf.ByteString
+          getAddressBytes() {
+        java.lang.Object ref = address_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          address_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Updated physical address
+       * </pre>
+       *
+       * <code>string address = 3;</code>
+       * @param value The address to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAddress(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        address_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Updated physical address
+       * </pre>
+       *
+       * <code>string address = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearAddress() {
+        address_ = getDefaultInstance().getAddress();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Updated physical address
+       * </pre>
+       *
+       * <code>string address = 3;</code>
+       * @param value The bytes for address to set.
+       * @return This builder for chaining.
+       */
+      public Builder setAddressBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        address_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object contactPhone_ = "";
+      /**
+       * <pre>
+       * Updated contact phone
+       * </pre>
+       *
+       * <code>string contact_phone = 4;</code>
+       * @return The contactPhone.
+       */
+      public java.lang.String getContactPhone() {
+        java.lang.Object ref = contactPhone_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          contactPhone_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Updated contact phone
+       * </pre>
+       *
+       * <code>string contact_phone = 4;</code>
+       * @return The bytes for contactPhone.
+       */
+      public com.google.protobuf.ByteString
+          getContactPhoneBytes() {
+        java.lang.Object ref = contactPhone_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          contactPhone_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Updated contact phone
+       * </pre>
+       *
+       * <code>string contact_phone = 4;</code>
+       * @param value The contactPhone to set.
+       * @return This builder for chaining.
+       */
+      public Builder setContactPhone(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        contactPhone_ = value;
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Updated contact phone
+       * </pre>
+       *
+       * <code>string contact_phone = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearContactPhone() {
+        contactPhone_ = getDefaultInstance().getContactPhone();
+        bitField0_ = (bitField0_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Updated contact phone
+       * </pre>
+       *
+       * <code>string contact_phone = 4;</code>
+       * @param value The bytes for contactPhone to set.
+       * @return This builder for chaining.
+       */
+      public Builder setContactPhoneBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        contactPhone_ = value;
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object operatingHours_ = "";
+      /**
+       * <pre>
+       * Updated operating hours
+       * </pre>
+       *
+       * <code>string operating_hours = 5;</code>
+       * @return The operatingHours.
+       */
+      public java.lang.String getOperatingHours() {
+        java.lang.Object ref = operatingHours_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          operatingHours_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Updated operating hours
+       * </pre>
+       *
+       * <code>string operating_hours = 5;</code>
+       * @return The bytes for operatingHours.
+       */
+      public com.google.protobuf.ByteString
+          getOperatingHoursBytes() {
+        java.lang.Object ref = operatingHours_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          operatingHours_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Updated operating hours
+       * </pre>
+       *
+       * <code>string operating_hours = 5;</code>
+       * @param value The operatingHours to set.
+       * @return This builder for chaining.
+       */
+      public Builder setOperatingHours(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        operatingHours_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Updated operating hours
+       * </pre>
+       *
+       * <code>string operating_hours = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearOperatingHours() {
+        operatingHours_ = getDefaultInstance().getOperatingHours();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Updated operating hours
+       * </pre>
+       *
+       * <code>string operating_hours = 5;</code>
+       * @param value The bytes for operatingHours to set.
+       * @return This builder for chaining.
+       */
+      public Builder setOperatingHoursBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        operatingHours_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+
+      private boolean isActive_ ;
+      /**
+       * <pre>
+       * Whether the clinic is active
+       * </pre>
+       *
+       * <code>bool is_active = 6;</code>
+       * @return The isActive.
+       */
+      @java.lang.Override
+      public boolean getIsActive() {
+        return isActive_;
+      }
+      /**
+       * <pre>
+       * Whether the clinic is active
+       * </pre>
+       *
+       * <code>bool is_active = 6;</code>
+       * @param value The isActive to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIsActive(boolean value) {
+
+        isActive_ = value;
+        bitField0_ |= 0x00000020;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Whether the clinic is active
+       * </pre>
+       *
+       * <code>bool is_active = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearIsActive() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        isActive_ = false;
+        onChanged();
+        return this;
+      }
+
+      private long timestamp_ ;
+      /**
+       * <pre>
+       * Event timestamp
+       * </pre>
+       *
+       * <code>int64 timestamp = 7;</code>
+       * @return The timestamp.
+       */
+      @java.lang.Override
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <pre>
+       * Event timestamp
+       * </pre>
+       *
+       * <code>int64 timestamp = 7;</code>
+       * @param value The timestamp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTimestamp(long value) {
+
+        timestamp_ = value;
+        bitField0_ |= 0x00000040;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Event timestamp
+       * </pre>
+       *
+       * <code>int64 timestamp = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object eventType_ = "";
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 8;</code>
+       * @return The eventType.
+       */
+      public java.lang.String getEventType() {
+        java.lang.Object ref = eventType_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          eventType_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 8;</code>
+       * @return The bytes for eventType.
+       */
+      public com.google.protobuf.ByteString
+          getEventTypeBytes() {
+        java.lang.Object ref = eventType_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          eventType_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 8;</code>
+       * @param value The eventType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEventType(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        eventType_ = value;
+        bitField0_ |= 0x00000080;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 8;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearEventType() {
+        eventType_ = getDefaultInstance().getEventType();
+        bitField0_ = (bitField0_ & ~0x00000080);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 8;</code>
+       * @param value The bytes for eventType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEventTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        eventType_ = value;
+        bitField0_ |= 0x00000080;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:events.v1.ClinicUpdateEvent)
+    }
+
+    // @@protoc_insertion_point(class_scope:events.v1.ClinicUpdateEvent)
+    private static final events.v1.UserEvents.ClinicUpdateEvent DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new events.v1.UserEvents.ClinicUpdateEvent();
+    }
+
+    public static events.v1.UserEvents.ClinicUpdateEvent getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<ClinicUpdateEvent>
+        PARSER = new com.google.protobuf.AbstractParser<ClinicUpdateEvent>() {
+      @java.lang.Override
+      public ClinicUpdateEvent parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
+      }
+    };
+
+    public static com.google.protobuf.Parser<ClinicUpdateEvent> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<ClinicUpdateEvent> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public events.v1.UserEvents.ClinicUpdateEvent getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -4108,6 +5812,11 @@ public final class UserEvents {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_events_v1_ClinicData_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_events_v1_ClinicUpdateEvent_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_events_v1_ClinicUpdateEvent_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_events_v1_UserRegistrationEventResponse_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -4127,12 +5836,17 @@ public final class UserEvents {
       "(\t\022\021\n\tlast_name\030\005 \001(\t\022\021\n\ttimestamp\030\006 \001(\003" +
       "\022\024\n\014phone_number\030\007 \001(\t\022\022\n\nevent_type\030\010 \001" +
       "(\t\022*\n\013clinic_data\030\t \001(\0132\025.events.v1.Clin" +
-      "icData\"d\n\nClinicData\022\014\n\004name\030\001 \001(\t\022\030\n\020ph" +
-      "ysical_address\030\002 \001(\t\022\025\n\rcontact_phone\030\003 " +
-      "\001(\t\022\027\n\017operating_hours\030\004 \001(\t\"U\n\035UserRegi" +
-      "strationEventResponse\022\017\n\007success\030\001 \001(\010\022\017" +
-      "\n\007message\030\002 \001(\t\022\022\n\nerror_code\030\003 \001(\tB\035Z\033a" +
-      "uth-service/internal/protob\006proto3"
+      "icData\"w\n\nClinicData\022\021\n\tclinic_id\030\001 \001(\003\022" +
+      "\014\n\004name\030\002 \001(\t\022\030\n\020physical_address\030\003 \001(\t\022" +
+      "\025\n\rcontact_phone\030\004 \001(\t\022\027\n\017operating_hour" +
+      "s\030\005 \001(\t\"\257\001\n\021ClinicUpdateEvent\022\021\n\tclinic_" +
+      "id\030\001 \001(\003\022\014\n\004name\030\002 \001(\t\022\017\n\007address\030\003 \001(\t\022" +
+      "\025\n\rcontact_phone\030\004 \001(\t\022\027\n\017operating_hour" +
+      "s\030\005 \001(\t\022\021\n\tis_active\030\006 \001(\010\022\021\n\ttimestamp\030" +
+      "\007 \001(\003\022\022\n\nevent_type\030\010 \001(\t\"U\n\035UserRegistr" +
+      "ationEventResponse\022\017\n\007success\030\001 \001(\010\022\017\n\007m" +
+      "essage\030\002 \001(\t\022\022\n\nerror_code\030\003 \001(\tB\035Z\033auth" +
+      "-service/internal/protob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -4149,9 +5863,15 @@ public final class UserEvents {
     internal_static_events_v1_ClinicData_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_events_v1_ClinicData_descriptor,
-        new java.lang.String[] { "Name", "PhysicalAddress", "ContactPhone", "OperatingHours", });
-    internal_static_events_v1_UserRegistrationEventResponse_descriptor =
+        new java.lang.String[] { "ClinicId", "Name", "PhysicalAddress", "ContactPhone", "OperatingHours", });
+    internal_static_events_v1_ClinicUpdateEvent_descriptor =
       getDescriptor().getMessageTypes().get(2);
+    internal_static_events_v1_ClinicUpdateEvent_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_events_v1_ClinicUpdateEvent_descriptor,
+        new java.lang.String[] { "ClinicId", "Name", "Address", "ContactPhone", "OperatingHours", "IsActive", "Timestamp", "EventType", });
+    internal_static_events_v1_UserRegistrationEventResponse_descriptor =
+      getDescriptor().getMessageTypes().get(3);
     internal_static_events_v1_UserRegistrationEventResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_events_v1_UserRegistrationEventResponse_descriptor,

@@ -1,5 +1,6 @@
 package com.pulseone.profile_service.service;
 
+import com.pulseone.profile_service.client.AppointmentsServiceClient;
 import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
@@ -8,7 +9,8 @@ import com.pulseone.profile_service.repository.ClinicRepository;
 import com.pulseone.profile_service.repository.DoctorProfileRepository;
 import com.pulseone.profile_service.repository.PatientProfileRepository;
 import com.pulseone.profile_service.repository.PharmacyRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,21 +24,25 @@ import java.util.List;
 @Service
 public class ProfileService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProfileService.class);
+
     private final PatientProfileRepository patientRepo;
     private final DoctorProfileRepository doctorRepo;
     private final PharmacyRepository pharmacyRepo;
     private final ClinicRepository clinicRepo;
+    private final AppointmentsServiceClient appointmentsServiceClient;
 
-    @Autowired
     public ProfileService(
             PatientProfileRepository patientRepo,
             DoctorProfileRepository doctorRepo,
             PharmacyRepository pharmacyRepo,
-            ClinicRepository clinicRepo) {
+            ClinicRepository clinicRepo,
+            AppointmentsServiceClient appointmentsServiceClient) {
         this.patientRepo = patientRepo;
         this.doctorRepo = doctorRepo;
         this.pharmacyRepo = pharmacyRepo;
         this.clinicRepo = clinicRepo;
+        this.appointmentsServiceClient = appointmentsServiceClient;
     }
 
     // -------------------------------------------------------------------
@@ -204,13 +210,33 @@ public class ProfileService {
     public Clinic updateClinicByAdmin(String adminUserId, Clinic updates) {
         Clinic existing = clinicRepo.findByAdminUserId(adminUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found for this admin."));
+        
         existing.setName(updates.getName());
         existing.setPhysicalAddress(updates.getPhysicalAddress());
         existing.setContactPhone(updates.getContactPhone());
         existing.setTaxId(updates.getTaxId());
         existing.setOperatingHours(updates.getOperatingHours());
         existing.setDoctorUuids(updates.getDoctorUuids());
-        return clinicRepo.save(existing);
+        
+        Clinic savedClinic = clinicRepo.save(existing);
+        
+        // Notify appointments service of clinic update
+        try {
+            appointmentsServiceClient.notifyClinicUpdated(
+                savedClinic.getId(),
+                savedClinic.getName(),
+                savedClinic.getPhysicalAddress(),
+                savedClinic.getContactPhone(),
+                savedClinic.getOperatingHours(),
+                true // isActive
+            );
+            logger.info("Successfully notified appointments service of clinic update for clinic ID: {}", savedClinic.getId());
+        } catch (Exception e) {
+            logger.error("Failed to notify appointments service of clinic update: {}", e.getMessage(), e);
+            // Don't fail the update if notification fails
+        }
+        
+        return savedClinic;
     }
 
     public Clinic getClinicById(Long clinicId) {

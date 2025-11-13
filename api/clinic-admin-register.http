@@ -23,6 +23,17 @@ X-User-Role: SYS_ADMIN
 GET http://localhost:8082/clinics
 Content-Type: application/json
 
-### Verify Appointments Service Created Clinic Record
-GET http://localhost:8083/internal/health
+### Verify Appointments Service Received Clinic Data
+GET http://localhost:8083/internal/clinic-events/health
 Content-Type: application/json
+
+### Test Clinic Update (should sync to appointments service)
+PUT http://localhost:8082/clinics/admin/clinic.admin@example.com
+Content-Type: application/json
+
+{
+    "name": "Updated Wellness Clinic",
+    "physicalAddress": "123 Main Street, Updated City",
+    "contactPhone": "+1-555-0123",
+    "operatingHours": "Monday-Friday 8:00-18:00"
+}

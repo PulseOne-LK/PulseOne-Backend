@@ -16,6 +16,13 @@ public class Clinic {
     private Long id;
 
     /**
+     * Reference to the clinic ID from profile-service
+     * This ensures both services reference the same logical clinic
+     */
+    @Column(name = "profile_clinic_id", nullable = false, unique = true)
+    private Long profileClinicId;
+
+    /**
      * Clinic name for display purposes
      */
     @Column(name = "name", nullable = false)
@@ -37,7 +44,8 @@ public class Clinic {
     public Clinic() {
     }
 
-    public Clinic(String name, String address) {
+    public Clinic(Long profileClinicId, String name, String address) {
+        this.profileClinicId = profileClinicId;
         this.name = name;
         this.address = address;
         this.isActive = Boolean.TRUE;
@@ -50,6 +58,14 @@ public class Clinic {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getProfileClinicId() {
+        return profileClinicId;
+    }
+
+    public void setProfileClinicId(Long profileClinicId) {
+        this.profileClinicId = profileClinicId;
     }
 
     public String getName() {
