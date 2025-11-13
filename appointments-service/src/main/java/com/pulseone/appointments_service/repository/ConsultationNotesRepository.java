@@ -55,12 +55,13 @@ public interface ConsultationNotesRepository extends JpaRepository<ConsultationN
     /**
      * Find patients requiring follow-up
      */
-    @Query("SELECT cn FROM ConsultationNotes cn " +
-           "JOIN cn.appointment a " +
-           "WHERE cn.followUpRequired = true " +
-           "AND cn.followUpInDays IS NOT NULL " +
-           "AND FUNCTION('DATE_ADD', a.appointmentDate, cn.followUpInDays) <= :currentDate " +
-           "ORDER BY a.appointmentDate, cn.followUpInDays")
+    @Query(value = "SELECT cn.* FROM consultation_notes cn " +
+           "JOIN appointments a ON cn.appointment_id = a.appointment_id " +
+           "WHERE cn.follow_up_required = true " +
+           "AND cn.follow_up_in_days IS NOT NULL " +
+           "AND (a.appointment_date + (cn.follow_up_in_days || ' days')::interval)::date <= :currentDate " +
+           "ORDER BY a.appointment_date, cn.follow_up_in_days", 
+           nativeQuery = true)
     List<ConsultationNotes> findPatientsRequiringFollowUp(@Param("currentDate") LocalDate currentDate);
 
     /**
@@ -89,23 +90,25 @@ public interface ConsultationNotesRepository extends JpaRepository<ConsultationN
     /**
      * Find consultation notes with specific vital signs
      */
-    @Query("SELECT cn FROM ConsultationNotes cn " +
-           "WHERE cn.vitalSigns IS NOT NULL " +
-           "AND JSON_EXTRACT(cn.vitalSigns, :vitalSignPath) IS NOT NULL " +
-           "ORDER BY cn.createdAt DESC")
+    @Query(value = "SELECT cn.* FROM consultation_notes cn " +
+           "WHERE cn.vital_signs IS NOT NULL " +
+           "AND cn.vital_signs->>:vitalSignPath IS NOT NULL " +
+           "ORDER BY cn.created_at DESC", 
+           nativeQuery = true)
     List<ConsultationNotes> findWithVitalSign(@Param("vitalSignPath") String vitalSignPath);
 
     /**
      * Get consultation statistics for a doctor
      */
-    @Query("SELECT " +
-           "COUNT(cn) as totalConsultations, " +
-           "COUNT(CASE WHEN cn.followUpRequired = true THEN 1 END) as followUpRequired, " +
-           "AVG(cn.consultationDurationMinutes) as avgDurationMinutes, " +
-           "COUNT(DISTINCT cn.patientId) as uniquePatients " +
-           "FROM ConsultationNotes cn " +
-           "WHERE cn.doctorId = :doctorId " +
-           "AND cn.createdAt BETWEEN :startDate AND :endDate")
+    @Query(value = "SELECT " +
+           "COUNT(cn.note_id) as total_consultations, " +
+           "COUNT(CASE WHEN cn.follow_up_required = true THEN 1 END) as follow_up_required, " +
+           "AVG(cn.consultation_duration_minutes) as avg_duration_minutes, " +
+           "COUNT(DISTINCT cn.patient_id) as unique_patients " +
+           "FROM consultation_notes cn " +
+           "WHERE cn.doctor_id = :doctorId " +
+           "AND cn.created_at BETWEEN :startDate AND :endDate", 
+           nativeQuery = true)
     Object[] getConsultationStatistics(@Param("doctorId") String doctorId, 
                                        @Param("startDate") LocalDateTime startDate, 
                                        @Param("endDate") LocalDateTime endDate);
@@ -151,12 +154,13 @@ public interface ConsultationNotesRepository extends JpaRepository<ConsultationN
     /**
      * Find patients with chronic conditions (multiple consultations with similar diagnosis)
      */
-    @Query("SELECT cn.patientId, cn.diagnosis, COUNT(cn) as consultationCount " +
-           "FROM ConsultationNotes cn " +
+    @Query(value = "SELECT cn.patient_id, cn.diagnosis, COUNT(cn.note_id) as consultation_count " +
+           "FROM consultation_notes cn " +
            "WHERE cn.diagnosis IS NOT NULL " +
-           "GROUP BY cn.patientId, cn.diagnosis " +
-           "HAVING COUNT(cn) >= :minConsultations " +
-           "ORDER BY consultationCount DESC")
+           "GROUP BY cn.patient_id, cn.diagnosis " +
+           "HAVING COUNT(cn.note_id) >= :minConsultations " +
+           "ORDER BY consultation_count DESC", 
+           nativeQuery = true)
     List<Object[]> findPatientsWithChronicConditions(@Param("minConsultations") Long minConsultations);
 
     /**
@@ -170,11 +174,12 @@ public interface ConsultationNotesRepository extends JpaRepository<ConsultationN
     /**
      * Get average consultation duration for a doctor
      */
-    @Query("SELECT AVG(cn.consultationDurationMinutes) " +
-           "FROM ConsultationNotes cn " +
-           "WHERE cn.doctorId = :doctorId " +
-           "AND cn.consultationDurationMinutes IS NOT NULL " +
-           "AND cn.createdAt >= :sinceDate")
+    @Query(value = "SELECT AVG(cn.consultation_duration_minutes) " +
+           "FROM consultation_notes cn " +
+           "WHERE cn.doctor_id = :doctorId " +
+           "AND cn.consultation_duration_minutes IS NOT NULL " +
+           "AND cn.created_at >= :sinceDate", 
+           nativeQuery = true)
     Optional<Double> getAverageConsultationDuration(@Param("doctorId") String doctorId, 
                                                     @Param("sinceDate") LocalDateTime sinceDate);
 
