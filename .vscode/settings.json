@@ -10,6 +10,17 @@
             "database": "authdb",
             "username": "postgres",
             "password": "postgres"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5435,
+            "driver": "PostgreSQL",
+            "name": "appointments-postgres-db",
+            "database": "appointmentsdb",
+            "username": "postgres",
+            "password": "postgres"
         }
     ]
 }

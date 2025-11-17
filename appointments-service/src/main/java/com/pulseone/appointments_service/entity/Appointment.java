@@ -292,7 +292,7 @@ public class Appointment {
     }
 
     public Long getClinicId() {
-        return clinic != null ? clinic.getId() : null;
+        return clinic != null ? clinic.getProfileClinicId() : null;
     }
 
     public Long getSessionId() {

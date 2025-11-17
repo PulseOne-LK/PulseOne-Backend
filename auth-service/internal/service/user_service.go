@@ -23,8 +23,9 @@ var ErrAccountInactive = errors.New("account inactive or suspended")
 
 // UserService holds the database connection pool.
 type UserService struct {
-	DB            *sql.DB
-	ProfileClient *ProfileServiceClient
+	DB                 *sql.DB
+	ProfileClient      *ProfileServiceClient
+	AppointmentsClient *AppointmentsServiceClient
 }
 
 // generateRandomToken creates a URL-safe random token string of n bytes.
@@ -114,10 +115,11 @@ func (s *UserService) sendVerificationEmail(toEmail, verifyURL string) error {
 	return smtp.SendMail(addr, auth, from, []string{toEmail}, []byte(msg))
 }
 
-func NewUserService(db *sql.DB, profileClient *ProfileServiceClient) *UserService {
+func NewUserService(db *sql.DB, profileClient *ProfileServiceClient, appointmentsClient *AppointmentsServiceClient) *UserService {
 	return &UserService{
-		DB:            db,
-		ProfileClient: profileClient,
+		DB:                 db,
+		ProfileClient:      profileClient,
+		AppointmentsClient: appointmentsClient,
 	}
 }
 
@@ -216,21 +218,44 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 		return nil, "", err
 	}
 
-	// 7. Notify profile service via HTTP
-	if s.ProfileClient != nil {
-		event := UserRegistrationEventRequest{
-			UserID:    newUser.ID,
-			Email:     newUser.Email,
-			Role:      string(newUser.Role),
-			FirstName: newUser.FirstName.String,
-			LastName:  newUser.LastName.String,
-		}
+	// 7. Notify other services via HTTP
+	event := UserRegistrationEventRequest{
+		UserID:    newUser.ID,
+		Email:     newUser.Email,
+		Role:      string(newUser.Role),
+		FirstName: newUser.FirstName.String,
+		LastName:  newUser.LastName.String,
+	}
 
-		// Send notification asynchronously - don't fail registration if profile service is down
+	// For CLINIC_ADMIN users, add default clinic data
+	// TODO: This should come from a proper clinic registration form
+	if newUser.Role == model.RoleClinicAdmin {
+		fullName := newUser.FirstName.String + " " + newUser.LastName.String
+		if fullName == " " {
+			fullName = newUser.Email
+		}
+		event.ClinicName = "Clinic managed by " + fullName
+		event.ClinicPhysicalAddress = "Address to be provided"
+		event.ClinicContactPhone = ""                           // Optional
+		event.ClinicOperatingHours = "Monday-Friday 9:00-17:00" // Default hours
+	}
+
+	// Send notification to profile service asynchronously
+	if s.ProfileClient != nil {
 		go func() {
 			if err := s.ProfileClient.NotifyUserRegistered(context.Background(), event); err != nil {
 				// Log error but don't fail the registration
 				fmt.Printf("Warning: Failed to notify profile service of user registration: %v\n", err)
+			}
+		}()
+	}
+
+	// Send notification to appointments service asynchronously
+	if s.AppointmentsClient != nil {
+		go func() {
+			if err := s.AppointmentsClient.NotifyUserRegistered(context.Background(), event); err != nil {
+				// Log error but don't fail the registration
+				fmt.Printf("Warning: Failed to notify appointments service of user registration: %v\n", err)
 			}
 		}()
 	}
@@ -309,21 +334,44 @@ func (s *UserService) AdminRegisterUser(ctx context.Context, req model.AuthReque
 		return nil, "", err
 	}
 
-	// 6. Notify profile service via HTTP
-	if s.ProfileClient != nil {
-		event := UserRegistrationEventRequest{
-			UserID:    newUser.ID,
-			Email:     newUser.Email,
-			Role:      string(newUser.Role),
-			FirstName: newUser.FirstName.String,
-			LastName:  newUser.LastName.String,
-		}
+	// 6. Notify other services via HTTP
+	event := UserRegistrationEventRequest{
+		UserID:    newUser.ID,
+		Email:     newUser.Email,
+		Role:      string(newUser.Role),
+		FirstName: newUser.FirstName.String,
+		LastName:  newUser.LastName.String,
+	}
 
-		// Send notification asynchronously - don't fail registration if profile service is down
+	// For CLINIC_ADMIN users, add default clinic data
+	// TODO: This should come from a proper clinic registration form
+	if newUser.Role == model.RoleClinicAdmin {
+		fullName := newUser.FirstName.String + " " + newUser.LastName.String
+		if fullName == " " {
+			fullName = newUser.Email
+		}
+		event.ClinicName = "Clinic managed by " + fullName
+		event.ClinicPhysicalAddress = "Address to be provided"
+		event.ClinicContactPhone = ""                           // Optional
+		event.ClinicOperatingHours = "Monday-Friday 9:00-17:00" // Default hours
+	}
+
+	// Send notification to profile service asynchronously
+	if s.ProfileClient != nil {
 		go func() {
 			if err := s.ProfileClient.NotifyUserRegistered(context.Background(), event); err != nil {
 				// Log error but don't fail the registration
 				fmt.Printf("Warning: Failed to notify profile service of user registration: %v\n", err)
+			}
+		}()
+	}
+
+	// Send notification to appointments service asynchronously
+	if s.AppointmentsClient != nil {
+		go func() {
+			if err := s.AppointmentsClient.NotifyUserRegistered(context.Background(), event); err != nil {
+				// Log error but don't fail the registration
+				fmt.Printf("Warning: Failed to notify appointments service of user registration: %v\n", err)
 			}
 		}()
 	}
