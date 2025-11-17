@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	pb "auth-service/internal/proto"
+	pb "auth-service/proto"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -42,6 +42,12 @@ type UserRegistrationEventRequest struct {
 	Role      string
 	FirstName string
 	LastName  string
+
+	// Clinic-related fields for CLINIC_ADMIN users
+	ClinicName            string
+	ClinicPhysicalAddress string
+	ClinicContactPhone    string
+	ClinicOperatingHours  string
 }
 
 // NotifyUserRegistered sends a user registration notification to profile service using protobuf
@@ -55,6 +61,18 @@ func (c *ProfileServiceClient) NotifyUserRegistered(ctx context.Context, event U
 		LastName:  event.LastName,
 		Timestamp: time.Now().Unix(),
 		EventType: "USER_REGISTERED",
+	}
+
+	// Add clinic data if this is a CLINIC_ADMIN user and clinic data is provided
+	if event.Role == "CLINIC_ADMIN" && event.ClinicName != "" {
+		pbEvent.ClinicData = &pb.ClinicData{
+			Name:            event.ClinicName,
+			PhysicalAddress: event.ClinicPhysicalAddress,
+			ContactPhone:    event.ClinicContactPhone,
+			OperatingHours:  event.ClinicOperatingHours,
+		}
+		log.Printf("Adding clinic data to protobuf event: name=%s, address=%s",
+			event.ClinicName, event.ClinicPhysicalAddress)
 	}
 
 	// Marshal protobuf message to bytes

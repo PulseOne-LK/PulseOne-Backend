@@ -29,6 +29,54 @@ message UserRegistrationEvent {
   
   // Event type identifier
   string event_type = 8;
+  
+  // Optional clinic information (for CLINIC_ADMIN users)
+  ClinicData clinic_data = 9;
+}
+
+// Clinic data for clinic admin registration
+message ClinicData {
+  // Clinic ID from profile service (for updates)
+  int64 clinic_id = 1;
+  
+  // Clinic name
+  string name = 2;
+  
+  // Physical address
+  string physical_address = 3;
+  
+  // Contact phone
+  string contact_phone = 4;
+  
+  // Operating hours
+  string operating_hours = 5;
+}
+
+// Clinic update event message
+message ClinicUpdateEvent {
+  // Profile service clinic ID
+  int64 clinic_id = 1;
+  
+  // Updated clinic name
+  string name = 2;
+  
+  // Updated physical address
+  string address = 3;
+  
+  // Updated contact phone
+  string contact_phone = 4;
+  
+  // Updated operating hours
+  string operating_hours = 5;
+  
+  // Whether the clinic is active
+  bool is_active = 6;
+  
+  // Event timestamp
+  int64 timestamp = 7;
+  
+  // Event type identifier
+  string event_type = 8;
 }
 
 // Response message for user registration events

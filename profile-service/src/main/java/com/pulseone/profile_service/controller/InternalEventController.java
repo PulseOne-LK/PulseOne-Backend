@@ -53,6 +53,18 @@ public class InternalEventController {
             eventDTO.setTimestamp(String.valueOf(event.getTimestamp())); // Convert long to string
             eventDTO.setEventType(event.getEventType());
 
+            // Handle clinic data if present (for CLINIC_ADMIN role)
+            if (event.hasClinicData()) {
+                UserEvents.ClinicData clinicData = event.getClinicData();
+                eventDTO.setClinicName(clinicData.getName());
+                eventDTO.setClinicAddress(clinicData.getPhysicalAddress());
+                eventDTO.setClinicPhone(clinicData.getContactPhone());
+                eventDTO.setClinicOperatingHours(clinicData.getOperatingHours());
+                
+                logger.info("Clinic data found: name={}, address={}", 
+                           clinicData.getName(), clinicData.getPhysicalAddress());
+            }
+
             // Process the event
             profileCreationService.createProfileFromEvent(eventDTO);
 

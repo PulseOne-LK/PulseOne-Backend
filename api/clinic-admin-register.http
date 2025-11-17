@@ -1,0 +1,39 @@
+### Register Clinic Admin User Test
+POST http://localhost:8080/auth/admin/register
+Content-Type: application/json
+X-User-ID: test-admin
+X-User-Role: SYS_ADMIN
+
+{
+    "email": "clinic.admin@example.com",
+    "password": "securepassword123",
+    "role": "CLINIC_ADMIN"
+}
+
+### Test Response
+# Expected: 201 Created
+# {
+#   "message": "User registered successfully by admin",
+#   "token": "JWT_TOKEN_HERE",
+#   "user_id": "USER_ID",
+#   "role": "CLINIC_ADMIN"
+# }
+
+### Verify Profile Service Created Clinic Profile
+GET http://localhost:8082/clinics
+Content-Type: application/json
+
+### Verify Appointments Service Received Clinic Data
+GET http://localhost:8083/internal/clinic-events/health
+Content-Type: application/json
+
+### Test Clinic Update (should sync to appointments service)
+PUT http://localhost:8082/clinics/admin/clinic.admin@example.com
+Content-Type: application/json
+
+{
+    "name": "Updated Wellness Clinic",
+    "physicalAddress": "123 Main Street, Updated City",
+    "contactPhone": "+1-555-0123",
+    "operatingHours": "Monday-Friday 8:00-18:00"
+}

@@ -24,6 +24,19 @@ public class UserRegistrationEventDTO {
     
     @JsonProperty("event_type")
     private String eventType;
+    
+    // Clinic-related fields for CLINIC_ADMIN users
+    @JsonProperty("clinic_name")
+    private String clinicName;
+    
+    @JsonProperty("clinic_address")
+    private String clinicAddress;
+    
+    @JsonProperty("clinic_phone")
+    private String clinicPhone;
+    
+    @JsonProperty("clinic_operating_hours")
+    private String clinicOperatingHours;
 
     // Default constructor
     public UserRegistrationEventDTO() {}
@@ -95,6 +108,38 @@ public class UserRegistrationEventDTO {
 
     public void setEventType(String eventType) {
         this.eventType = eventType;
+    }
+
+    public String getClinicName() {
+        return clinicName;
+    }
+
+    public void setClinicName(String clinicName) {
+        this.clinicName = clinicName;
+    }
+
+    public String getClinicAddress() {
+        return clinicAddress;
+    }
+
+    public void setClinicAddress(String clinicAddress) {
+        this.clinicAddress = clinicAddress;
+    }
+
+    public String getClinicPhone() {
+        return clinicPhone;
+    }
+
+    public void setClinicPhone(String clinicPhone) {
+        this.clinicPhone = clinicPhone;
+    }
+
+    public String getClinicOperatingHours() {
+        return clinicOperatingHours;
+    }
+
+    public void setClinicOperatingHours(String clinicOperatingHours) {
+        this.clinicOperatingHours = clinicOperatingHours;
     }
 
     @Override
