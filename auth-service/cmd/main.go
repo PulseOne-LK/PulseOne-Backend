@@ -31,10 +31,15 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-func main() {
-	// Load .env file if present
-	_ = godotenv.Load()
+func init() {
+	// Load .env file before anything else
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Println("⚠️  Warning: .env file not found, using system environment variables")
+	}
+}
 
+func main() {
 	// Read config from environment
 	postgresDSN := getEnv("POSTGRES_DSN", "user=postgres password=postgres host=auth-postgres-db port=5432 dbname=authdb sslmode=disable")
 	port := getEnv("PORT", "8080")
@@ -74,7 +79,7 @@ func main() {
 	r.Post("/admin/register", authHandlers.AdminRegisterHandler)
 
 	// Swagger documentation
-	r.Get("/swagger/*", httpSwagger.WrapHandler)
+	r.Get("/swagger-ui/*", httpSwagger.WrapHandler)
 
 	fmt.Printf("Auth Service (Go + PostgreSQL + Chi) running on port %s...\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
