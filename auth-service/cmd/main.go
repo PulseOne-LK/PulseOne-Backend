@@ -33,9 +33,13 @@ func getEnv(key, fallback string) string {
 
 func init() {
 	// Load .env file before anything else
-	err := godotenv.Load("../.env")
+	// Try loading from current directory first, then parent directory
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Println("⚠️  Warning: .env file not found, using system environment variables")
+		err = godotenv.Load("../.env")
+		if err != nil {
+			log.Println("⚠️  Warning: .env file not found, using system environment variables")
+		}
 	}
 }
 
