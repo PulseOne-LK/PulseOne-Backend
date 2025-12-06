@@ -1,3 +1,34 @@
+# Environment variables
 .env
-.exe
+.env.local
+.env.*.local
+
+# Binaries & Executables
+*.exe
+*.exe~
+*.o
+*.a
+*.so
+*.dylib
+main
+
+# Build outputs
+target/
+build/
+dist/
+node_modules/
+
+# IDE & Editor
+.vscode/
 .idea/
+*.swp
+*.swo
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
