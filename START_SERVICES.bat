@@ -60,7 +60,17 @@ if not exist "appointments-service" (
 echo ✓ Appointments Service found
 echo.
 
-REM Step 5: Start services
+REM Step 5: Check if Inventory Service folder exists
+echo [5/5] Checking Inventory Service (Spring Boot)...
+if not exist "inventory-service" (
+    echo ✗ Inventory Service folder not found!
+    pause
+    exit /b 1
+)
+echo ✓ Inventory Service found
+echo.
+
+REM Step 6: Start services
 echo [5/5] Starting all services...
 echo.
 echo ┌─────────────────────────────────────────────────────┐
@@ -79,6 +89,10 @@ timeout /t 3 /nobreak
 
 start "Appointments Service (Spring Boot)" cmd /k "cd appointments-service && mvn clean spring-boot:run"
 
+timeout /t 3 /nobreak
+
+start "Inventory Service (Spring Boot)" cmd /k "cd inventory-service && mvn clean spring-boot:run"
+
 echo.
 echo ✓ All services are starting!
 echo.
@@ -86,6 +100,7 @@ echo Services will be available at:
 echo   - Auth Service:         http://localhost:8080/swagger-ui.html
 echo   - Profile Service:      http://localhost:8082/swagger-ui.html
 echo   - Appointments Service: http://localhost:8083/swagger-ui.html
+echo   - Inventory Service:    http://localhost:8084/api/inventory
 echo.
 echo Check the service windows for startup messages.
 echo.

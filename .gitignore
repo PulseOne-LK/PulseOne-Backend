@@ -10,7 +10,6 @@
 *.a
 *.so
 *.dylib
-main
 
 # Build outputs
 target/
