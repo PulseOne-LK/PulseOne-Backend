@@ -3,20 +3,28 @@ package auth
 import (
 	"errors"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtKey []byte
+var (
+	jwtKey []byte
+	once   sync.Once
+)
 
-func init() {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		panic("JWT_SECRET environment variable is required")
-	}
-	jwtKey = []byte(secret)
+// getJWTKey returns the JWT secret key, loading it lazily from environment
+func getJWTKey() []byte {
+	once.Do(func() {
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			panic("JWT_SECRET environment variable is required")
+		}
+		jwtKey = []byte(secret)
+	})
+	return jwtKey
 }
 
 // AuthClaims holds the custom claims included in the JWT payload.
@@ -53,14 +61,14 @@ func GenerateJWT(userID string, role string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtKey)
+	return token.SignedString(getJWTKey())
 }
 
 // ValidateJWT parses and validates the JWT.
 func ValidateJWT(tokenString string) (*AuthClaims, error) {
 	claims := &AuthClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+		return getJWTKey(), nil
 	})
 
 	if err != nil {
