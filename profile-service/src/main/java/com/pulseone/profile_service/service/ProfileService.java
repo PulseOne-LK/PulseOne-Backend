@@ -51,6 +51,7 @@ public class ProfileService {
 
     /**
      * Saves or updates a patient profile.
+     * 
      * @param profile The patient profile data.
      * @return The saved profile.
      */
@@ -78,6 +79,7 @@ public class ProfileService {
 
     /**
      * Retrieves a patient profile by the Auth Service User ID.
+     * 
      * @param userId The ID from the JWT token.
      */
     public PatientProfile getPatientProfileByUserId(String userId) {
@@ -149,7 +151,8 @@ public class ProfileService {
     public Pharmacy savePharmacy(Pharmacy pharmacy) {
         // Business Rule: Pharmacy must have a legal license number set.
         if (pharmacy.getLicenseNumber() == null || pharmacy.getLicenseNumber().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pharmacy license number is required for registration.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Pharmacy license number is required for registration.");
         }
         return pharmacyRepo.save(pharmacy);
     }
@@ -173,7 +176,8 @@ public class ProfileService {
      */
     public Pharmacy getPharmacyByPharmacistUserId(String pharmacistUserId) {
         return pharmacyRepo.findByPharmacistUserId(pharmacistUserId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found for this user."));
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pharmacy not found for this user."));
     }
 
     /**
@@ -209,38 +213,100 @@ public class ProfileService {
      */
     public Clinic updateClinicByAdmin(String adminUserId, Clinic updates) {
         Clinic existing = clinicRepo.findByAdminUserId(adminUserId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found for this admin."));
-        
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found for this admin."));
+
         existing.setName(updates.getName());
         existing.setPhysicalAddress(updates.getPhysicalAddress());
         existing.setContactPhone(updates.getContactPhone());
         existing.setTaxId(updates.getTaxId());
         existing.setOperatingHours(updates.getOperatingHours());
         existing.setDoctorUuids(updates.getDoctorUuids());
-        
+
         Clinic savedClinic = clinicRepo.save(existing);
-        
+
         // Notify appointments service of clinic update
         try {
             appointmentsServiceClient.notifyClinicUpdated(
-                savedClinic.getId(),
-                savedClinic.getName(),
-                savedClinic.getPhysicalAddress(),
-                savedClinic.getContactPhone(),
-                savedClinic.getOperatingHours(),
-                true // isActive
+                    savedClinic.getId(),
+                    savedClinic.getName(),
+                    savedClinic.getPhysicalAddress(),
+                    savedClinic.getContactPhone(),
+                    savedClinic.getOperatingHours(),
+                    true // isActive
             );
-            logger.info("Successfully notified appointments service of clinic update for clinic ID: {}", savedClinic.getId());
+            logger.info("Successfully notified appointments service of clinic update for clinic ID: {}",
+                    savedClinic.getId());
         } catch (Exception e) {
             logger.error("Failed to notify appointments service of clinic update: {}", e.getMessage(), e);
             // Don't fail the update if notification fails
         }
-        
+
         return savedClinic;
     }
 
     public Clinic getClinicById(Long clinicId) {
         return clinicRepo.findById(clinicId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found."));
+    }
+
+    // -------------------------------------------------------------------
+    // EVENT HANDLING METHODS (RabbitMQ)
+    // -------------------------------------------------------------------
+
+    /**
+     * Create patient profile from user registration event
+     */
+    public void createPatientProfileFromEvent(events.v1.UserEvents.UserRegistrationEvent event) {
+        try {
+            logger.info("Processing patient registration event for user: {} (email: {})",
+                    event.getUserId(), event.getEmail());
+            // Profile service creates patient profile
+            // TODO: Implement based on entity structure
+        } catch (Exception e) {
+            logger.error("Failed to create patient profile from event: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Create doctor profile from user registration event
+     */
+    public void createDoctorProfileFromEvent(events.v1.UserEvents.UserRegistrationEvent event) {
+        try {
+            logger.info("Processing doctor registration event for user: {} (email: {})",
+                    event.getUserId(), event.getEmail());
+            // Profile service creates doctor profile
+            // TODO: Implement based on entity structure
+        } catch (Exception e) {
+            logger.error("Failed to create doctor profile from event: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Create pharmacist profile from user registration event
+     */
+    public void createPharmacistProfileFromEvent(events.v1.UserEvents.UserRegistrationEvent event) {
+        try {
+            logger.info("Processing pharmacist registration event for user: {} (email: {})",
+                    event.getUserId(), event.getEmail());
+            // Profile service creates pharmacist/pharmacy profile
+            // TODO: Implement based on entity structure
+        } catch (Exception e) {
+            logger.error("Failed to create pharmacist profile from event: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Create clinic admin profile from user registration event
+     */
+    public void createClinicAdminProfileFromEvent(events.v1.UserEvents.UserRegistrationEvent event) {
+        try {
+            logger.info("Processing clinic admin registration event for clinic: {} (email: {})",
+                    event.hasClinicData() ? event.getClinicData().getName() : "N/A", event.getEmail());
+            // Profile service creates clinic profile
+            // TODO: Implement based on entity structure
+        } catch (Exception e) {
+            logger.error("Failed to create clinic profile from event: {}", e.getMessage(), e);
+        }
     }
 }

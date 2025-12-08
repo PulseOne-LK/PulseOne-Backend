@@ -248,11 +248,14 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 	if s.RabbitPublisher != nil {
 		go func() {
 			// Convert to protobuf format
-			clinicData := &proto.ClinicData{
-				Name:            event.ClinicName,
-				PhysicalAddress: event.ClinicPhysicalAddress,
-				ContactPhone:    event.ClinicContactPhone,
-				OperatingHours:  event.ClinicOperatingHours,
+			var clinicData *proto.ClinicData
+			if newUser.Role == model.RoleClinicAdmin {
+				clinicData = &proto.ClinicData{
+					Name:            event.ClinicName,
+					PhysicalAddress: event.ClinicPhysicalAddress,
+					ContactPhone:    event.ClinicContactPhone,
+					OperatingHours:  event.ClinicOperatingHours,
+				}
 			}
 
 			pbEvent := &proto.UserRegistrationEvent{
@@ -407,11 +410,14 @@ func (s *UserService) AdminRegisterUser(ctx context.Context, req model.AuthReque
 	if s.RabbitPublisher != nil {
 		go func() {
 			// Convert to protobuf format
-			clinicData := &proto.ClinicData{
-				Name:            event.ClinicName,
-				PhysicalAddress: event.ClinicPhysicalAddress,
-				ContactPhone:    event.ClinicContactPhone,
-				OperatingHours:  event.ClinicOperatingHours,
+			var clinicData *proto.ClinicData
+			if newUser.Role == model.RoleClinicAdmin {
+				clinicData = &proto.ClinicData{
+					Name:            event.ClinicName,
+					PhysicalAddress: event.ClinicPhysicalAddress,
+					ContactPhone:    event.ClinicContactPhone,
+					OperatingHours:  event.ClinicOperatingHours,
+				}
 			}
 
 			pbEvent := &proto.UserRegistrationEvent{

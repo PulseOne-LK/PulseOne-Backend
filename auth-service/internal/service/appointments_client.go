@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	pb "auth-service/proto"
+	pb "auth-service/internal/proto"
 
 	"google.golang.org/protobuf/proto"
 )

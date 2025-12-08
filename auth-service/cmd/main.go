@@ -34,13 +34,27 @@ func getEnv(key, fallback string) string {
 
 func init() {
 	// Load .env file before anything else
-	// Try loading from current directory first, then parent directory
-	err := godotenv.Load(".env")
-	if err != nil {
-		err = godotenv.Load("../.env")
-		if err != nil {
-			log.Println("⚠️  Warning: .env file not found, using system environment variables")
+	// Try loading from multiple locations:
+	// 1. Current working directory
+	// 2. Parent directory
+	// 3. auth-service directory (for running from project root)
+	paths := []string{
+		".env",
+		"../.env",
+		"./auth-service/.env",
+		"../../.env",
+	}
+
+	var loaded bool
+	for _, path := range paths {
+		if err := godotenv.Load(path); err == nil {
+			loaded = true
+			break
 		}
+	}
+
+	if !loaded {
+		log.Println("⚠️  Warning: .env file not found in common locations, using system environment variables")
 	}
 }
 
