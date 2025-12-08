@@ -12,7 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"auth-service/internal/messaging"
 	"auth-service/internal/model"
+	"auth-service/internal/proto"
 	"auth-service/pkg/auth"
 )
 
@@ -26,6 +28,7 @@ type UserService struct {
 	DB                 *sql.DB
 	ProfileClient      *ProfileServiceClient
 	AppointmentsClient *AppointmentsServiceClient
+	RabbitPublisher    *messaging.RabbitMQPublisher
 }
 
 // generateRandomToken creates a URL-safe random token string of n bytes.
@@ -115,11 +118,12 @@ func (s *UserService) sendVerificationEmail(toEmail, verifyURL string) error {
 	return smtp.SendMail(addr, auth, from, []string{toEmail}, []byte(msg))
 }
 
-func NewUserService(db *sql.DB, profileClient *ProfileServiceClient, appointmentsClient *AppointmentsServiceClient) *UserService {
+func NewUserService(db *sql.DB, profileClient *ProfileServiceClient, appointmentsClient *AppointmentsServiceClient, rabbitPublisher *messaging.RabbitMQPublisher) *UserService {
 	return &UserService{
 		DB:                 db,
 		ProfileClient:      profileClient,
 		AppointmentsClient: appointmentsClient,
+		RabbitPublisher:    rabbitPublisher,
 	}
 }
 
@@ -240,24 +244,70 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 		event.ClinicOperatingHours = "Monday-Friday 9:00-17:00" // Default hours
 	}
 
-	// Send notification to profile service asynchronously
-	if s.ProfileClient != nil {
+	// Publish event to RabbitMQ (primary method)
+	if s.RabbitPublisher != nil {
 		go func() {
-			if err := s.ProfileClient.NotifyUserRegistered(context.Background(), event); err != nil {
-				// Log error but don't fail the registration
-				fmt.Printf("Warning: Failed to notify profile service of user registration: %v\n", err)
+			// Convert to protobuf format
+			var clinicData *proto.ClinicData
+			if newUser.Role == model.RoleClinicAdmin {
+				clinicData = &proto.ClinicData{
+					Name:            event.ClinicName,
+					PhysicalAddress: event.ClinicPhysicalAddress,
+					ContactPhone:    event.ClinicContactPhone,
+					OperatingHours:  event.ClinicOperatingHours,
+				}
 			}
-		}()
-	}
 
-	// Send notification to appointments service asynchronously
-	if s.AppointmentsClient != nil {
-		go func() {
-			if err := s.AppointmentsClient.NotifyUserRegistered(context.Background(), event); err != nil {
-				// Log error but don't fail the registration
-				fmt.Printf("Warning: Failed to notify appointments service of user registration: %v\n", err)
+			pbEvent := &proto.UserRegistrationEvent{
+				UserId:      newUser.ID,
+				Email:       newUser.Email,
+				Role:        string(newUser.Role),
+				FirstName:   newUser.FirstName.String,
+				LastName:    newUser.LastName.String,
+				PhoneNumber: "",
+				Timestamp:   time.Now().Unix(),
+				EventType:   "user.registered",
+				ClinicData:  clinicData,
+			}
+
+			if err := s.RabbitPublisher.PublishUserRegistrationEvent(pbEvent); err != nil {
+				fmt.Printf("⚠️  Warning: Failed to publish to RabbitMQ: %v. Falling back to HTTP.\n", err)
+				// Fall back to HTTP if RabbitMQ fails
+				if s.ProfileClient != nil {
+					if err := s.ProfileClient.NotifyUserRegistered(context.Background(), event); err != nil {
+						fmt.Printf("Warning: Failed to notify profile service of user registration: %v\n", err)
+					}
+				}
+				if s.AppointmentsClient != nil {
+					if err := s.AppointmentsClient.NotifyUserRegistered(context.Background(), event); err != nil {
+						fmt.Printf("Warning: Failed to notify appointments service of user registration: %v\n", err)
+					}
+				}
+			} else {
+				fmt.Printf("✓ Published user registration event to RabbitMQ: %s (role: %s, email: %s)\n", newUser.ID, newUser.Role, newUser.Email)
 			}
 		}()
+	} else {
+		// RabbitMQ not available, use HTTP fallback
+		// Send notification to profile service asynchronously
+		if s.ProfileClient != nil {
+			go func() {
+				if err := s.ProfileClient.NotifyUserRegistered(context.Background(), event); err != nil {
+					// Log error but don't fail the registration
+					fmt.Printf("Warning: Failed to notify profile service of user registration: %v\n", err)
+				}
+			}()
+		}
+
+		// Send notification to appointments service asynchronously
+		if s.AppointmentsClient != nil {
+			go func() {
+				if err := s.AppointmentsClient.NotifyUserRegistered(context.Background(), event); err != nil {
+					// Log error but don't fail the registration
+					fmt.Printf("Warning: Failed to notify appointments service of user registration: %v\n", err)
+				}
+			}()
+		}
 	}
 
 	return &newUser, jwtToken, nil
@@ -356,24 +406,70 @@ func (s *UserService) AdminRegisterUser(ctx context.Context, req model.AuthReque
 		event.ClinicOperatingHours = "Monday-Friday 9:00-17:00" // Default hours
 	}
 
-	// Send notification to profile service asynchronously
-	if s.ProfileClient != nil {
+	// Publish event to RabbitMQ (primary method)
+	if s.RabbitPublisher != nil {
 		go func() {
-			if err := s.ProfileClient.NotifyUserRegistered(context.Background(), event); err != nil {
-				// Log error but don't fail the registration
-				fmt.Printf("Warning: Failed to notify profile service of user registration: %v\n", err)
+			// Convert to protobuf format
+			var clinicData *proto.ClinicData
+			if newUser.Role == model.RoleClinicAdmin {
+				clinicData = &proto.ClinicData{
+					Name:            event.ClinicName,
+					PhysicalAddress: event.ClinicPhysicalAddress,
+					ContactPhone:    event.ClinicContactPhone,
+					OperatingHours:  event.ClinicOperatingHours,
+				}
 			}
-		}()
-	}
 
-	// Send notification to appointments service asynchronously
-	if s.AppointmentsClient != nil {
-		go func() {
-			if err := s.AppointmentsClient.NotifyUserRegistered(context.Background(), event); err != nil {
-				// Log error but don't fail the registration
-				fmt.Printf("Warning: Failed to notify appointments service of user registration: %v\n", err)
+			pbEvent := &proto.UserRegistrationEvent{
+				UserId:      newUser.ID,
+				Email:       newUser.Email,
+				Role:        string(newUser.Role),
+				FirstName:   newUser.FirstName.String,
+				LastName:    newUser.LastName.String,
+				PhoneNumber: "",
+				Timestamp:   time.Now().Unix(),
+				EventType:   "user.registered",
+				ClinicData:  clinicData,
+			}
+
+			if err := s.RabbitPublisher.PublishUserRegistrationEvent(pbEvent); err != nil {
+				fmt.Printf("⚠️  Warning: Failed to publish to RabbitMQ: %v. Falling back to HTTP.\n", err)
+				// Fall back to HTTP if RabbitMQ fails
+				if s.ProfileClient != nil {
+					if err := s.ProfileClient.NotifyUserRegistered(context.Background(), event); err != nil {
+						fmt.Printf("Warning: Failed to notify profile service of user registration: %v\n", err)
+					}
+				}
+				if s.AppointmentsClient != nil {
+					if err := s.AppointmentsClient.NotifyUserRegistered(context.Background(), event); err != nil {
+						fmt.Printf("Warning: Failed to notify appointments service of user registration: %v\n", err)
+					}
+				}
+			} else {
+				fmt.Printf("✓ Published user registration event to RabbitMQ: %s (role: %s, email: %s)\n", newUser.ID, newUser.Role, newUser.Email)
 			}
 		}()
+	} else {
+		// RabbitMQ not available, use HTTP fallback
+		// Send notification to profile service asynchronously
+		if s.ProfileClient != nil {
+			go func() {
+				if err := s.ProfileClient.NotifyUserRegistered(context.Background(), event); err != nil {
+					// Log error but don't fail the registration
+					fmt.Printf("Warning: Failed to notify profile service of user registration: %v\n", err)
+				}
+			}()
+		}
+
+		// Send notification to appointments service asynchronously
+		if s.AppointmentsClient != nil {
+			go func() {
+				if err := s.AppointmentsClient.NotifyUserRegistered(context.Background(), event); err != nil {
+					// Log error but don't fail the registration
+					fmt.Printf("Warning: Failed to notify appointments service of user registration: %v\n", err)
+				}
+			}()
+		}
 	}
 
 	return &newUser, token, nil

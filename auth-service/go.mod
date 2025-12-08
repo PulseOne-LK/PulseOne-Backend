@@ -6,6 +6,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/lib/pq v1.10.9
+	github.com/rabbitmq/amqp091-go v1.8.1
 	golang.org/x/crypto v0.43.0
 	google.golang.org/protobuf v1.34.2
 )
