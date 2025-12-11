@@ -1,0 +1,237 @@
+definitions:
+  model.CreatePrescriptionItemRequest:
+    properties:
+      dosage:
+        type: string
+      drug_name:
+        type: string
+      duration:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  model.CreatePrescriptionRequest:
+    properties:
+      appointment_id:
+        type: string
+      clinic_id:
+        type: string
+      doctor_id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/model.CreatePrescriptionItemRequest'
+        type: array
+      patient_id:
+        type: string
+    type: object
+  model.Prescription:
+    properties:
+      appointment_id:
+        type: string
+      clinic_id:
+        type: string
+      created_at:
+        type: string
+      doctor_id:
+        type: string
+      id:
+        type: string
+      issued_at:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/model.PrescriptionItem'
+        type: array
+      patient_id:
+        type: string
+      status:
+        description: ACTIVE, FILLED, CANCELLED
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.PrescriptionItem:
+    properties:
+      created_at:
+        type: string
+      dosage:
+        type: string
+      drug_name:
+        type: string
+      duration:
+        type: string
+      id:
+        type: string
+      prescription_id:
+        type: string
+      quantity:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  model.UpdateStatusRequest:
+    properties:
+      status:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /prescriptions:
+    get:
+      description: Retrieve prescriptions for a clinic with optional filters. Used
+        by clinic admins to see pending prescriptions.
+      parameters:
+      - description: Clinic ID
+        in: query
+        name: clinic_id
+        required: true
+        type: string
+      - default: ACTIVE
+        description: 'Status: ACTIVE, FILLED, CANCELLED'
+        in: query
+        name: status
+        type: string
+      - description: 'Date filter: TODAY or YYYY-MM-DD format'
+        in: query
+        name: date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Prescription'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get prescriptions for clinic dashboard
+      tags:
+      - Prescriptions
+    post:
+      consumes:
+      - application/json
+      description: Create a new prescription with items (drugs). Default status is
+        ACTIVE.
+      parameters:
+      - description: Prescription request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreatePrescriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Prescription'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new prescription
+      tags:
+      - Prescriptions
+  /prescriptions/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update prescription status (ACTIVE, FILLED, CANCELLED). Used when
+        admin dispenses drugs or external pharmacy completes the order.
+      parameters:
+      - description: Prescription ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Prescription'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update prescription status
+      tags:
+      - Prescriptions
+  /prescriptions/patient/{patient_id}:
+    get:
+      description: Retrieve complete prescription history for a specific patient
+      parameters:
+      - description: Patient ID
+        in: path
+        name: patient_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Prescription'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get patient prescription history
+      tags:
+      - Prescriptions
+swagger: "2.0"
