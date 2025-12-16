@@ -70,8 +70,18 @@ if not exist "inventory-service" (
 echo ✓ Inventory Service found
 echo.
 
+REM Step 5.5: Check if Node.js API Gateway folder exists
+echo [5.5/7] Checking Node.js API Gateway...
+if not exist "nodejs-api-gateway" (
+    echo ✗ Node.js API Gateway folder not found!
+    pause
+    exit /b 1
+)
+echo ✓ Node.js API Gateway found
+echo.
+
 REM Step 6: Check if Prescription Service folder exists
-echo [6/6] Checking Prescription Service (Go)...
+echo [6/7] Checking Prescription Service (Go)...
 if not exist "prescription-service" (
     echo ✗ Prescription Service folder not found!
     pause
@@ -81,12 +91,17 @@ echo ✓ Prescription Service found
 echo.
 
 REM Step 7: Start services
-echo [6/6] Starting all services...
+echo [7/7] Starting all services...
 echo.
 echo ┌─────────────────────────────────────────────────────┐
 echo │   Services Starting - Wait for all to load...       │
 echo └─────────────────────────────────────────────────────┘
 echo.
+
+REM Start Node.js API Gateway first (on port 8000)
+start "Node.js API Gateway" cmd /k "cd nodejs-api-gateway && npm install && node server.js"
+
+timeout /t 2 /nobreak
 
 REM Start each service in a new window
 start "Auth Service (Go)" cmd /k "cd auth-service && go mod download && go build -o auth-service.exe .\cmd\main.go && echo. && echo ✓ Auth Service built! Starting on port 8080... && echo. && .\auth-service.exe"
@@ -110,12 +125,24 @@ start "Prescription Service (Go)" cmd /k "cd prescription-service && go mod down
 echo.
 echo ✓ All services are starting!
 echo.
-echo Services will be available at:
-echo   - Auth Service:         http://localhost:8080/swagger-ui.html
-echo   - Profile Service:      http://localhost:8082/swagger-ui.html
-echo   - Appointments Service: http://localhost:8083/swagger-ui.html
-echo   - Inventory Service:    http://localhost:8084/api/inventory
-echo   - Prescription Service: http://localhost:8085/swagger/index.html
+echo ┌─────────────────────────────────────────────────────┐
+echo │              Service Endpoints                      │
+echo ├─────────────────────────────────────────────────────┤
+echo │   API Gateway:      http://localhost:8000           │
+echo │   - Gateway Health: http://localhost:8000/health    │
+echo │   Auth Service:     http://localhost:8080           │
+echo │   Profile Service:  http://localhost:8082           │
+echo │   Appointments:     http://localhost:8083           │
+echo │   Inventory:        http://localhost:8084           │
+echo │   Prescription:     http://localhost:8085           │
+echo └─────────────────────────────────────────────────────┘
+echo.
+echo Routed through API Gateway:
+echo   - http://localhost:8000/auth
+echo   - http://localhost:8000/profile
+echo   - http://localhost:8000/appointments
+echo   - http://localhost:8000/inventory
+echo   - http://localhost:8000/prescription
 echo.
 echo Check the service windows for startup messages.
 echo.
