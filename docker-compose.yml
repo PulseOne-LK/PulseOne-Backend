@@ -1,7 +1,8 @@
 version: "3.8"
 
 services:
-  # 1. PostgreSQL Database Service for Auth Service
+  # ===================== DATABASES =====================
+  # PostgreSQL for Auth Service
   auth-postgres-db:
     image: postgres:15-alpine
     container_name: auth-postgres-db
@@ -13,9 +14,16 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - auth_postgres_data:/var/lib/postgresql/data/
+      - auth_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # PostgreSQL Database Service for Profile Service
+  # PostgreSQL for Profile Service
   profile-postgres-db:
     image: postgres:15-alpine
     container_name: profile-postgres-db
@@ -27,8 +35,183 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - profile_postgres_data:/var/lib/postgresql/data/
+      - profile_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # PostgreSQL for Appointments Service
+  appointments-postgres-db:
+    image: postgres:15-alpine
+    container_name: appointments-postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appointmentsdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - appointments_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL for Prescription Service
+  prescription-postgres-db:
+    image: postgres:15-alpine
+    container_name: prescription-postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: prescriptiondb
+    ports:
+      - "5436:5432"
+    volumes:
+      - prescription_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL for Inventory Service
+  inventory-postgres-db:
+    image: postgres:15-alpine
+    container_name: inventory-postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: inventorydb
+    ports:
+      - "5437:5432"
+    volumes:
+      - inventory_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===================== MESSAGE BROKER =====================
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_VHOST: "/"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===================== API GATEWAY =====================
+  kong-db:
+    image: postgres:15-alpine
+    container_name: kong-db
+    restart: always
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+      POSTGRES_DB: kong
+    volumes:
+      - kong_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kong-migration:
+    image: kong:3.4.0-alpine
+    container_name: kong-migration
+    restart: on-failure
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+    command: kong migrations bootstrap
+    networks:
+      - pulseone-network
+
+  kong:
+    image: kong:3.4.0-alpine
+    container_name: kong
+    restart: on-failure
+    depends_on:
+      - kong-migration
+      - kong-db
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8444:8444"
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+      KONG_PROXY_ACCESS_LOG: "/dev/stdout"
+      KONG_ADMIN_ACCESS_LOG: "/dev/stdout"
+      KONG_PROXY_ERROR_LOG: "/dev/stderr"
+      KONG_ADMIN_ERROR_LOG: "/dev/stderr"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_PLUGINS: "bundled"
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kong-admin-ui:
+    image: pgbi/kong-dashboard:latest
+    container_name: kong-admin-ui
+    restart: always
+    ports:
+      - "8002:8080"
+    environment:
+      KONG_URL: "http://kong:8001"
+    depends_on:
+      - kong
+    networks:
+      - pulseone-network
+
+  # ===================== MICROSERVICES =====================
+  # Auth Service (Go)
   auth-service:
     build:
       context: ./auth-service
@@ -44,14 +227,21 @@ services:
       GMAIL_SMTP_EMAIL: ${GMAIL_SMTP_EMAIL:-kushanrathnayake5@gmail.com}
       GMAIL_SMTP_APP_PASSWORD: ${GMAIL_SMTP_APP_PASSWORD:-qsjs eowp wupk xqnt}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-PulseOne}
-      AUTH_PUBLIC_BASE_URL: ${AUTH_PUBLIC_BASE_URL:-http://localhost:8080}
+      AUTH_PUBLIC_BASE_URL: ${AUTH_PUBLIC_BASE_URL:-http://localhost:8000}
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
     depends_on:
-      - auth-postgres-db
+      auth-postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulseone-network
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 256M
 
+  # Profile Service (Spring Boot)
   profile-service:
     build:
       context: ./profile-service
@@ -64,8 +254,105 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://profile-postgres-db:5432/profiledb"
       SPRING_DATASOURCE_USERNAME: "postgres"
       SPRING_DATASOURCE_PASSWORD: "postgres"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+      SPRING_RABBITMQ_HOST: "rabbitmq"
+      SPRING_RABBITMQ_PORT: "5672"
+      SPRING_RABBITMQ_USERNAME: "guest"
+      SPRING_RABBITMQ_PASSWORD: "guest"
     depends_on:
-      - profile-postgres-db
+      profile-postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulseone-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # Appointments Service (Spring Boot)
+  appointments-service:
+    build:
+      context: ./appointments-service
+      dockerfile: Dockerfile
+    container_name: appointments-service
+    restart: on-failure
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://appointments-postgres-db:5432/appointmentsdb"
+      SPRING_DATASOURCE_USERNAME: "postgres"
+      SPRING_DATASOURCE_PASSWORD: "postgres"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+      SPRING_RABBITMQ_HOST: "rabbitmq"
+      SPRING_RABBITMQ_PORT: "5672"
+      SPRING_RABBITMQ_USERNAME: "guest"
+      SPRING_RABBITMQ_PASSWORD: "guest"
+      SERVER_PORT: "8083"
+    depends_on:
+      appointments-postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulseone-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # Prescription Service (Go)
+  prescription-service:
+    build:
+      context: ./prescription-service
+      dockerfile: Dockerfile
+    container_name: prescription-service
+    restart: on-failure
+    ports:
+      - "8085:8085"
+    environment:
+      POSTGRES_DSN: "user=postgres password=postgres host=prescription-postgres-db port=5432 dbname=prescriptiondb sslmode=disable"
+      PORT: "8085"
+      RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+    depends_on:
+      prescription-postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulseone-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # Inventory Service (Spring Boot)
+  inventory-service:
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    container_name: inventory-service
+    restart: on-failure
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://inventory-postgres-db:5432/inventorydb"
+      SPRING_DATASOURCE_USERNAME: "postgres"
+      SPRING_DATASOURCE_PASSWORD: "postgres"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+      SPRING_RABBITMQ_HOST: "rabbitmq"
+      SPRING_RABBITMQ_PORT: "5672"
+      SPRING_RABBITMQ_USERNAME: "guest"
+      SPRING_RABBITMQ_PASSWORD: "guest"
+      SERVER_PORT: "8084"
+    depends_on:
+      inventory-postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulseone-network
     deploy:
       resources:
         limits:
@@ -74,3 +361,12 @@ services:
 volumes:
   auth_postgres_data:
   profile_postgres_data:
+  appointments_postgres_data:
+  prescription_postgres_data:
+  inventory_postgres_data:
+  kong_postgres_data:
+  rabbitmq_data:
+
+networks:
+  pulseone-network:
+    driver: bridge

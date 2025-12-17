@@ -303,8 +303,24 @@ public class ProfileService {
         try {
             logger.info("Processing clinic admin registration event for clinic: {} (email: {})",
                     event.hasClinicData() ? event.getClinicData().getName() : "N/A", event.getEmail());
-            // Profile service creates clinic profile
-            // TODO: Implement based on entity structure
+
+            // Create clinic from the event's clinic data
+            if (event.hasClinicData()) {
+                events.v1.UserEvents.ClinicData clinicData = event.getClinicData();
+
+                Clinic clinic = new Clinic();
+                clinic.setAdminUserId(event.getUserId());
+                clinic.setName(clinicData.getName());
+                clinic.setPhysicalAddress(clinicData.getPhysicalAddress());
+                clinic.setContactPhone(clinicData.getContactPhone());
+                clinic.setOperatingHours(clinicData.getOperatingHours());
+
+                Clinic savedClinic = createClinic(clinic);
+                logger.info("Successfully created clinic with ID: {} for admin user: {}",
+                        savedClinic.getId(), event.getUserId());
+            } else {
+                logger.warn("Clinic data not provided in registration event for user: {}", event.getUserId());
+            }
         } catch (Exception e) {
             logger.error("Failed to create clinic profile from event: {}", e.getMessage(), e);
         }

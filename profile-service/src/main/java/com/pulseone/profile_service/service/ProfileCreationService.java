@@ -6,12 +6,14 @@ import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
+import com.pulseone.profile_service.messaging.RabbitMQPublisher;
 import com.pulseone.profile_service.repository.ClinicRepository;
 import com.pulseone.profile_service.repository.DoctorProfileRepository;
 import com.pulseone.profile_service.repository.PatientProfileRepository;
 import com.pulseone.profile_service.repository.PharmacyRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -31,11 +33,14 @@ public class ProfileCreationService {
     private final ClinicRepository clinicRepository;
     private final AppointmentsServiceClient appointmentsServiceClient;
 
+    @Autowired(required = false)
+    private RabbitMQPublisher rabbitMQPublisher;
+
     public ProfileCreationService(PatientProfileRepository patientProfileRepository,
-                                 DoctorProfileRepository doctorProfileRepository,
-                                 PharmacyRepository pharmacyRepository,
-                                 ClinicRepository clinicRepository,
-                                 AppointmentsServiceClient appointmentsServiceClient) {
+            DoctorProfileRepository doctorProfileRepository,
+            PharmacyRepository pharmacyRepository,
+            ClinicRepository clinicRepository,
+            AppointmentsServiceClient appointmentsServiceClient) {
         this.patientProfileRepository = patientProfileRepository;
         this.doctorProfileRepository = doctorProfileRepository;
         this.pharmacyRepository = pharmacyRepository;
@@ -84,15 +89,15 @@ public class ProfileCreationService {
 
             PatientProfile profile = new PatientProfile();
             profile.setUserId(event.getUserId());
-            
+
             // Set basic fields - phone number can be null initially
             profile.setPhoneNumber(null); // User will update this later
             profile.setAddress("");
-            
+
             // Save the profile
             patientProfileRepository.save(profile);
             logger.info("Created patient profile for user: {}", event.getUserId());
-            
+
         } catch (Exception e) {
             logger.error("Error creating patient profile for user: {}", event.getUserId(), e);
         }
@@ -111,18 +116,18 @@ public class ProfileCreationService {
 
             DoctorProfile profile = new DoctorProfile();
             profile.setUserId(event.getUserId());
-            
+
             // Set basic required fields with placeholder values
             profile.setSpecialty("General Medicine"); // Default specialty
             profile.setConsultationFee(BigDecimal.valueOf(50.00)); // Default fee
             profile.setYearsOfExperience(0);
             profile.setVirtual(true); // Default to virtual consultations
             profile.setVerified(false); // Requires admin verification
-            
+
             // Save the profile
             doctorProfileRepository.save(profile);
             logger.info("Created doctor profile for user: {}", event.getUserId());
-            
+
         } catch (Exception e) {
             logger.error("Error creating doctor profile for user: {}", event.getUserId(), e);
         }
@@ -141,18 +146,18 @@ public class ProfileCreationService {
 
             Pharmacy profile = new Pharmacy();
             profile.setPharmacistUserId(event.getUserId());
-            
+
             // Set basic required fields with placeholder values
             profile.setName("New Pharmacy"); // Default name - user will update
             profile.setLicenseNumber("PENDING-" + event.getUserId()); // Temporary license number
             profile.setAddress(""); // User will need to provide
             profile.setFulfillmentRadiusKm(5); // Default radius
             profile.setVerified(false); // Requires admin verification
-            
+
             // Save the profile
             pharmacyRepository.save(profile);
             logger.info("Created pharmacy profile for user: {}", event.getUserId());
-            
+
         } catch (Exception e) {
             logger.error("Error creating pharmacy profile for user: {}", event.getUserId(), e);
         }
@@ -171,44 +176,63 @@ public class ProfileCreationService {
 
             Clinic clinic = new Clinic();
             clinic.setAdminUserId(event.getUserId());
-            
+
             // Set basic required fields from event data or defaults
             String clinicName = event.getClinicName();
             if (clinicName == null || clinicName.trim().isEmpty()) {
                 clinicName = "New Clinic - " + event.getFirstName() + " " + event.getLastName();
             }
             clinic.setName(clinicName);
-            
+
             String clinicAddress = event.getClinicAddress();
             if (clinicAddress == null || clinicAddress.trim().isEmpty()) {
                 clinicAddress = "Address pending"; // Default placeholder
             }
             clinic.setPhysicalAddress(clinicAddress);
-            
+
             // Set optional fields
             clinic.setContactPhone(event.getClinicPhone());
             clinic.setOperatingHours(event.getClinicOperatingHours());
-            
+
             // Save the clinic
             Clinic savedClinic = clinicRepository.save(clinic);
-            logger.info("Created clinic profile '{}' with ID {} for admin user: {}", 
-                       savedClinic.getName(), savedClinic.getId(), event.getUserId());
-            
+            logger.info("Created clinic profile '{}' with ID {} for admin user: {}",
+                    savedClinic.getName(), savedClinic.getId(), event.getUserId());
+
+            // Publish clinic created event to auth service
+            // This will trigger auth service to update the user's clinic_id
+            if (rabbitMQPublisher != null) {
+                try {
+                    rabbitMQPublisher.publishClinicCreated(
+                            savedClinic.getId(),
+                            event.getUserId(),
+                            savedClinic.getName(),
+                            savedClinic.getPhysicalAddress(),
+                            savedClinic.getContactPhone(),
+                            savedClinic.getOperatingHours());
+                } catch (Exception publishError) {
+                    logger.error("Failed to publish clinic created event to auth service: {}",
+                            publishError.getMessage(), publishError);
+                    // Don't fail the clinic creation if event publishing fails
+                }
+            } else {
+                logger.warn("RabbitMQ Publisher not available - clinic_id sync with auth service will not happen");
+            }
+
             // Notify appointments service asynchronously
             try {
                 appointmentsServiceClient.notifyClinicCreated(
-                    savedClinic.getId(),
-                    savedClinic.getName(),
-                    savedClinic.getPhysicalAddress(),
-                    savedClinic.getContactPhone(),
-                    savedClinic.getOperatingHours()
-                );
+                        savedClinic.getId(),
+                        savedClinic.getName(),
+                        savedClinic.getPhysicalAddress(),
+                        savedClinic.getContactPhone(),
+                        savedClinic.getOperatingHours());
             } catch (Exception notificationError) {
-                logger.error("Failed to notify appointments service of clinic creation: {}", 
-                           notificationError.getMessage(), notificationError);
+                logger.error("Failed to notify appointments service of clinic creation: {}",
+                        notificationError.getMessage(), notificationError);
                 // Don't fail the clinic creation if notification fails
             }
-            
+
         } catch (Exception e) {
             logger.error("Error creating clinic profile for admin user: {}", event.getUserId(), e);
         }
