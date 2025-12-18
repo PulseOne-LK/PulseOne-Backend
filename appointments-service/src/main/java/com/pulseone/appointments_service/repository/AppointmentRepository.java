@@ -95,4 +95,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      */
     @Query("SELECT a FROM Appointment a WHERE a.patientId = :patientId AND (a.appointmentDate < :currentDate OR a.status IN ('COMPLETED', 'NO_SHOW')) ORDER BY a.appointmentDate DESC")
     List<Appointment> findPastAppointmentsByPatientId(@Param("patientId") String patientId, @Param("currentDate") LocalDate currentDate);
+
+    /**
+     * Find today's appointments for a specific clinic
+     */
+    @Query("SELECT a FROM Appointment a WHERE a.clinic.profileClinicId = :clinicId AND a.appointmentDate = :today AND a.status NOT IN ('CANCELLED', 'NO_SHOW') ORDER BY a.queueNumber ASC")
+    List<Appointment> findTodayAppointmentsByClinicId(@Param("clinicId") Long clinicId, @Param("today") LocalDate today);
 }

@@ -1,8 +1,25 @@
 {
+    "schemes": [
+        "http",
+        "https"
+    ],
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API for managing patient prescriptions, including creation, retrieval, and status management",
+        "title": "Prescription Service API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "PulseOne Support",
+            "url": "http://www.pulseone.com/support"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
     },
+    "host": "localhost:8085",
+    "basePath": "/api",
     "paths": {
         "/prescriptions": {
             "get": {

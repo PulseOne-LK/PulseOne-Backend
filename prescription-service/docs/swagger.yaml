@@ -1,3 +1,4 @@
+basePath: /api
 definitions:
   model.CreatePrescriptionItemRequest:
     properties:
@@ -75,8 +76,19 @@ definitions:
       status:
         type: string
     type: object
+host: localhost:8085
 info:
-  contact: {}
+  contact:
+    name: PulseOne Support
+    url: http://www.pulseone.com/support
+  description: API for managing patient prescriptions, including creation, retrieval,
+    and status management
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Prescription Service API
+  version: "1.0"
 paths:
   /prescriptions:
     get:
@@ -234,4 +246,7 @@ paths:
       summary: Get patient prescription history
       tags:
       - Prescriptions
+schemes:
+- http
+- https
 swagger: "2.0"

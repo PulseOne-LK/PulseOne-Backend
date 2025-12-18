@@ -159,6 +159,23 @@ public class AppointmentService {
     }
 
     /**
+     * Get today's appointments for a clinic
+     */
+    @Transactional(readOnly = true)
+    public List<AppointmentResponse> getTodayAppointments(Long clinicId) {
+        if (clinicId == null || clinicId <= 0) {
+            throw new IllegalArgumentException("Invalid clinic ID provided");
+        }
+        
+        List<Appointment> appointments = appointmentRepository
+                .findTodayAppointmentsByClinicId(clinicId, LocalDate.now());
+        
+        return appointments.stream()
+                .map(this::convertToAppointmentResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Cancel an appointment
      */
     public AppointmentResponse cancelAppointment(UUID appointmentId, String cancelledBy, String cancelledByType, String reason) {

@@ -226,6 +226,41 @@ public class AppointmentController {
     }
 
     /**
+     * Get today's appointments for a clinic
+     */
+    @GetMapping("/today")
+    @Operation(summary = "Get today's appointments", description = "Retrieve all appointments scheduled for today at a specific clinic")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Today's appointments retrieved successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Invalid clinic ID",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json"))
+    })
+    public ResponseEntity<?> getTodayAppointments(
+            @Parameter(description = "Clinic ID", required = true)
+            @RequestParam Long clinicId) {
+        
+        try {
+            List<AppointmentResponse> appointments = appointmentService.getTodayAppointments(clinicId);
+            return ResponseEntity.ok(Map.of(
+                    "clinicId", clinicId,
+                    "appointments", appointments,
+                    "count", appointments.size()
+            ));
+            
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred while retrieving today's appointments"));
+        }
+    }
+
+    /**
      * Get appointment booking statistics (for admin/analytics)
      */
     @GetMapping("/stats")
@@ -245,6 +280,7 @@ public class AppointmentController {
                             "GET /appointments/patient/{patientId}",
                             "GET /appointments/patient/{patientId}/upcoming",
                             "GET /appointments/patient/{patientId}/past",
+                            "GET /appointments/today",
                             "POST /appointments/book",
                             "PUT /appointments/{appointmentId}/cancel"
                     )

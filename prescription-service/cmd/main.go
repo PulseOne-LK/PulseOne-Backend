@@ -14,6 +14,17 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// @title           Prescription Service API
+// @version         1.0
+// @description     API for managing patient prescriptions, including creation, retrieval, and status management
+// @termsOfService  http://swagger.io/terms/
+// @contact.name    PulseOne Support
+// @contact.url     http://www.pulseone.com/support
+// @license.name    Apache 2.0
+// @license.url     http://www.apache.org/licenses/LICENSE-2.0.html
+// @host            localhost:8085
+// @BasePath        /api
+// @schemes         http https
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -72,6 +83,10 @@ func main() {
 
 	// Swagger documentation
 	app.Get("/swagger/*", swagger.HandlerDefault)
+	// Swagger UI index route
+	app.Get("/swagger-ui/index.html", func(c *fiber.Ctx) error {
+		return c.Redirect("/swagger/index.html", fiber.StatusMovedPermanently)
+	})
 
 	// Initialize handlers
 	prescriptionHandlers := handlers.NewPrescriptionHandler(db)
