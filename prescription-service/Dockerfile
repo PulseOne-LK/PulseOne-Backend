@@ -39,11 +39,11 @@ WORKDIR /app
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/main .
 
-# Copy the .env file (if it exists)
-COPY .env ./
+# Copy the .env file if it exists (optional)
+COPY .env* ./
 
 # Expose the port (change as needed)
-EXPOSE 8084
+EXPOSE 8085
 
 # Run the application
 CMD ["./main"]

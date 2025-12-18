@@ -6,14 +6,12 @@ import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
-import com.pulseone.profile_service.messaging.RabbitMQPublisher;
 import com.pulseone.profile_service.repository.ClinicRepository;
 import com.pulseone.profile_service.repository.DoctorProfileRepository;
 import com.pulseone.profile_service.repository.PatientProfileRepository;
 import com.pulseone.profile_service.repository.PharmacyRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,9 +30,6 @@ public class ProfileCreationService {
     private final PharmacyRepository pharmacyRepository;
     private final ClinicRepository clinicRepository;
     private final AppointmentsServiceClient appointmentsServiceClient;
-
-    @Autowired(required = false)
-    private RabbitMQPublisher rabbitMQPublisher;
 
     public ProfileCreationService(PatientProfileRepository patientProfileRepository,
             DoctorProfileRepository doctorProfileRepository,
@@ -198,26 +193,6 @@ public class ProfileCreationService {
             Clinic savedClinic = clinicRepository.save(clinic);
             logger.info("Created clinic profile '{}' with ID {} for admin user: {}",
                     savedClinic.getName(), savedClinic.getId(), event.getUserId());
-
-            // Publish clinic created event to auth service
-            // This will trigger auth service to update the user's clinic_id
-            if (rabbitMQPublisher != null) {
-                try {
-                    rabbitMQPublisher.publishClinicCreated(
-                            savedClinic.getId(),
-                            event.getUserId(),
-                            savedClinic.getName(),
-                            savedClinic.getPhysicalAddress(),
-                            savedClinic.getContactPhone(),
-                            savedClinic.getOperatingHours());
-                } catch (Exception publishError) {
-                    logger.error("Failed to publish clinic created event to auth service: {}",
-                            publishError.getMessage(), publishError);
-                    // Don't fail the clinic creation if event publishing fails
-                }
-            } else {
-                logger.warn("RabbitMQ Publisher not available - clinic_id sync with auth service will not happen");
-            }
 
             // Notify appointments service asynchronously
             try {

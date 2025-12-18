@@ -261,8 +261,23 @@ public class ProfileService {
         try {
             logger.info("Processing patient registration event for user: {} (email: {})",
                     event.getUserId(), event.getEmail());
-            // Profile service creates patient profile
-            // TODO: Implement based on entity structure
+
+            // Create a new patient profile with the user's basic info
+            PatientProfile patientProfile = new PatientProfile();
+            patientProfile.setUserId(event.getUserId());
+
+            // Set phone number if available (required for savePatientProfile)
+            if (!event.getPhoneNumber().isEmpty()) {
+                patientProfile.setPhoneNumber(event.getPhoneNumber());
+            } else {
+                // Default placeholder if phone number is not provided
+                patientProfile.setPhoneNumber("Not provided");
+            }
+
+            // Save the patient profile
+            PatientProfile savedProfile = patientRepo.save(patientProfile);
+            logger.info("Successfully created patient profile with ID: {} for user: {}",
+                    savedProfile.getId(), event.getUserId());
         } catch (Exception e) {
             logger.error("Failed to create patient profile from event: {}", e.getMessage(), e);
         }
@@ -275,8 +290,22 @@ public class ProfileService {
         try {
             logger.info("Processing doctor registration event for user: {} (email: {})",
                     event.getUserId(), event.getEmail());
-            // Profile service creates doctor profile
-            // TODO: Implement based on entity structure
+
+            // Create a new doctor profile with the user's basic info
+            DoctorProfile doctorProfile = new DoctorProfile();
+            doctorProfile.setUserId(event.getUserId());
+
+            // Set default specialty (doctor can update later)
+            doctorProfile.setSpecialty("General");
+
+            // Set default consultation fee (can be updated by doctor later)
+            doctorProfile.setConsultationFee(java.math.BigDecimal.ZERO);
+            doctorProfile.setVerified(false);
+
+            // Save the doctor profile
+            DoctorProfile savedProfile = doctorRepo.save(doctorProfile);
+            logger.info("Successfully created doctor profile with ID: {} for user: {}",
+                    savedProfile.getId(), event.getUserId());
         } catch (Exception e) {
             logger.error("Failed to create doctor profile from event: {}", e.getMessage(), e);
         }
@@ -289,8 +318,30 @@ public class ProfileService {
         try {
             logger.info("Processing pharmacist registration event for user: {} (email: {})",
                     event.getUserId(), event.getEmail());
-            // Profile service creates pharmacist/pharmacy profile
-            // TODO: Implement based on entity structure
+
+            // Create a new pharmacy profile for the pharmacist
+            Pharmacy pharmacy = new Pharmacy();
+            pharmacy.setPharmacistUserId(event.getUserId());
+
+            // Set basic info if available
+            if (!event.getFirstName().isEmpty()) {
+                pharmacy.setName(event.getFirstName() + " Pharmacy");
+            } else {
+                pharmacy.setName("Pharmacy");
+            }
+
+            if (!event.getPhoneNumber().isEmpty()) {
+                pharmacy.setContactPhone(event.getPhoneNumber());
+            }
+
+            // Set a default license number (pharmacist must provide this later)
+            pharmacy.setLicenseNumber("PENDING");
+            pharmacy.setVerified(false);
+
+            // Save the pharmacy profile
+            Pharmacy savedPharmacy = pharmacyRepo.save(pharmacy);
+            logger.info("Successfully created pharmacy profile with ID: {} for pharmacist user: {}",
+                    savedPharmacy.getId(), event.getUserId());
         } catch (Exception e) {
             logger.error("Failed to create pharmacist profile from event: {}", e.getMessage(), e);
         }

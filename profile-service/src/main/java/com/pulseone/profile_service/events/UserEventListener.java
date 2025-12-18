@@ -89,27 +89,4 @@ public class UserEventListener {
                 logger.info("User registration for role: {} - email: {}", role, email);
         }
     }
-
-    /**
-     * Listen for clinic created events from the profile service itself
-     * This handles clinic creation events that may be published by other services
-     */
-    @RabbitListener(queues = RabbitMQConfig.CLINIC_UPDATE_QUEUE)
-    @Transactional
-    public void handleClinicCreatedEvent(byte[] message) {
-        try {
-            // Parse the protobuf message
-            UserEvents.ClinicCreatedEvent event = UserEvents.ClinicCreatedEvent.parseFrom(message);
-
-            logger.info("Received clinic created event: clinic_id={}, admin_user_id={}, clinic_name={}",
-                    event.getClinicId(), event.getAdminUserId(), event.getName());
-
-            // The clinic should already be created by the admin registration event,
-            // but this event can be used for any additional processing or integration
-            logger.info("Clinic created event processed for clinic: {}", event.getName());
-
-        } catch (Exception e) {
-            logger.error("Error processing clinic created event: {}", e.getMessage(), e);
-        }
-    }
 }

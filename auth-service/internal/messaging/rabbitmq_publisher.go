@@ -103,31 +103,6 @@ func (p *RabbitMQPublisher) DeclareQueuesAndExchanges() error {
 		return fmt.Errorf("failed to bind clinic queue: %w", err)
 	}
 
-	// Declare the queue for clinic created events (durable)
-	_, err = p.channel.QueueDeclare(
-		"clinic-created-events", // queue name
-		true,                    // durable
-		false,                   // auto-deleted
-		false,                   // exclusive
-		false,                   // no-wait
-		nil,                     // arguments
-	)
-	if err != nil {
-		return fmt.Errorf("failed to declare clinic created queue: %w", err)
-	}
-
-	// Bind the clinic created queue to the exchange
-	err = p.channel.QueueBind(
-		"clinic-created-events", // queue name
-		"clinic.created",        // routing key
-		"user-events-exchange",  // exchange name
-		false,                   // no-wait
-		nil,                     // arguments
-	)
-	if err != nil {
-		return fmt.Errorf("failed to bind clinic created queue: %w", err)
-	}
-
 	log.Println("RabbitMQ queues and exchanges configured successfully")
 	return nil
 }

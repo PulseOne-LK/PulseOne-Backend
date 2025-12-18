@@ -83,21 +83,6 @@ func main() {
 		}
 	}
 
-	// Initialize Clinic Event Listener to listen for clinic created events
-	clinicListener, err := messaging.NewClinicEventListener(rabbitMQURL, dbConn)
-	if err != nil {
-		log.Printf("⚠️  Warning: Failed to create clinic event listener: %v\n", err)
-	} else {
-		defer clinicListener.Close()
-		// Start listening for clinic created events in a goroutine
-		go func() {
-			if err := clinicListener.StartListening(); err != nil {
-				log.Printf("⚠️  Error in clinic event listener: %v\n", err)
-			}
-		}()
-		log.Println("✓ Clinic event listener started successfully")
-	}
-
 	// Initialize service clients
 	profileClient := service.NewProfileServiceClient()
 	appointmentsClient := service.NewAppointmentsServiceClient()
