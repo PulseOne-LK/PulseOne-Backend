@@ -23,6 +23,20 @@ import java.util.List;
  */
 @Service
 public class ProfileService {
+    /**
+     * Retrieves doctors by clinic ID.
+     */
+    public List<DoctorProfile> getDoctorsByClinicId(Long clinicId) {
+        Clinic clinic = getClinicById(clinicId);
+        List<String> doctorUuids = clinic.getDoctorUuids();
+        if (doctorUuids == null || doctorUuids.isEmpty()) {
+            return List.of();
+        }
+        return doctorUuids.stream()
+                .map(uuid -> doctorRepo.findByUserId(uuid).orElse(null))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(ProfileService.class);
 
@@ -248,6 +262,15 @@ public class ProfileService {
     public Clinic getClinicById(Long clinicId) {
         return clinicRepo.findById(clinicId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found."));
+    }
+
+    /**
+     * Retrieves a clinic by the admin user ID.
+     */
+    public Clinic getClinicByAdminUserId(String adminUserId) {
+        return clinicRepo.findByAdminUserId(adminUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Clinic not found for this admin user."));
     }
 
     // -------------------------------------------------------------------

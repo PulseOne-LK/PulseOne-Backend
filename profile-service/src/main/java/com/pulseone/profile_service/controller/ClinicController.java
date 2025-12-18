@@ -84,4 +84,18 @@ public class ClinicController {
             @Parameter(description = "Clinic ID", required = true) @PathVariable Long clinicId) {
         return profileService.getClinicById(clinicId);
     }
+
+    /**
+     * GET /clinic/admin/{adminUserId} - Get clinic by admin user ID
+     */
+    @Operation(summary = "Get clinic by admin user ID", description = "Retrieve clinic details by the clinic admin's user ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Clinic found"),
+            @ApiResponse(responseCode = "404", description = "Clinic not found for this admin")
+    })
+    @GetMapping("/admin/{adminUserId}")
+    public Clinic getClinicByAdminUserId(
+            @Parameter(description = "Admin User ID", required = true) @PathVariable String adminUserId) {
+        return profileService.getClinicByAdminUserId(adminUserId);
+    }
 }

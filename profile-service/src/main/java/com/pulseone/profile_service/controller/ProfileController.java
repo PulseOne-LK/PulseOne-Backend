@@ -123,6 +123,22 @@ public class ProfileController {
     // --- 2. DOCTOR PROFILE ENDPOINTS ---
 
     /**
+     * GET /doctors?clinicId=4 - Retrieves doctors by clinic ID.
+     */
+    @Operation(summary = "Get doctors by clinic ID", description = "Retrieve list of doctors for a given clinic ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of doctors retrieved successfully", content = @Content(schema = @Schema(implementation = DoctorProfile.class)))
+    })
+    @GetMapping("/doctors")
+    public List<DoctorProfile> getDoctorsByClinicId(@RequestParam(value = "clinicId", required = false) Long clinicId) {
+        if (clinicId != null) {
+            return profileService.getDoctorsByClinicId(clinicId);
+        } else {
+            return profileService.getAllDoctors();
+        }
+    }
+
+    /**
      * POST /profiles/doctor - Creates the doctor's professional profile.
      * Accessible by DOCTOR role only.
      */
@@ -185,19 +201,6 @@ public class ProfileController {
             @Parameter(description = "User ID of the doctor", required = true) @PathVariable String userId) {
         // Any PATIENT can view any DOCTOR profile (read-only directory view)
         return profileService.getDoctorProfileByUserId(userId);
-    }
-
-    /**
-     * GET /profiles/doctors - Retrieves the list of all doctors (for the
-     * directory).
-     */
-    @Operation(summary = "Get all doctors", description = "Retrieve list of all doctor profiles for directory display")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of doctors retrieved successfully", content = @Content(schema = @Schema(implementation = DoctorProfile.class)))
-    })
-    @GetMapping("/doctors")
-    public List<DoctorProfile> getAllDoctorsPublic() {
-        return profileService.getAllDoctors();
     }
 
     // --- 3. PHARMACY ENDPOINTS ---
