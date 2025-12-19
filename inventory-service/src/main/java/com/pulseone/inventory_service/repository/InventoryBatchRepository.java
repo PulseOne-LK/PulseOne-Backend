@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,4 +27,11 @@ public interface InventoryBatchRepository extends JpaRepository<InventoryBatch, 
      * Find all batches for a catalog item
      */
     List<InventoryBatch> findByCatalogItem(CatalogItem catalogItem);
+
+    /**
+     * Find batches expiring before specified date
+     */
+    @Query("SELECT b FROM InventoryBatch b WHERE b.catalogItem.clinicId = :clinicId AND b.expiryDate > CURRENT_DATE AND b.expiryDate <= :expiryBeforeDate ORDER BY b.expiryDate ASC")
+    List<InventoryBatch> findExpiringBatches(@Param("clinicId") Long clinicId,
+            @Param("expiryBeforeDate") LocalDate expiryBeforeDate);
 }

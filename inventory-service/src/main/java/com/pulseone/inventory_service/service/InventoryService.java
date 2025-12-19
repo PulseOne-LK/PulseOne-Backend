@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -222,5 +223,426 @@ public class InventoryService {
 
                 stockTransactionRepository.save(transaction);
                 logger.debug("Transaction logged - Type: {}, Quantity: {}", type, quantity);
+        }
+
+        /**
+         * Get all catalog items for a clinic
+         */
+        public List<CatalogItemResponse> getAllCatalogItems(Long clinicId) {
+                logger.info("Fetching all catalog items for clinic: {}", clinicId);
+                List<CatalogItem> items = catalogItemRepository.findByClinicId(clinicId);
+                return items.stream()
+                                .map(item -> new CatalogItemResponse(
+                                                item.getId(),
+                                                item.getClinicId(),
+                                                item.getDrugName(),
+                                                item.getGenericName(),
+                                                item.getUnitType(),
+                                                item.getReorderLevel(),
+                                                getTotalQuantityForItem(item),
+                                                item.getIsActive()))
+                                .toList();
+        }
+
+        /**
+         * Get a specific catalog item by ID
+         */
+        public CatalogItemResponse getCatalogItemById(UUID catalogItemId) {
+                logger.info("Fetching catalog item: {}", catalogItemId);
+                CatalogItem item = catalogItemRepository.findById(catalogItemId)
+                                .orElseThrow(() -> new CatalogItemNotFoundException(
+                                                "Catalog item not found with ID: " + catalogItemId));
+
+                return new CatalogItemResponse(
+                                item.getId(),
+                                item.getClinicId(),
+                                item.getDrugName(),
+                                item.getGenericName(),
+                                item.getUnitType(),
+                                item.getReorderLevel(),
+                                getTotalQuantityForItem(item),
+                                item.getIsActive());
+        }
+
+        /**
+         * Update a catalog item
+         */
+        @Transactional
+        public CatalogItem updateCatalogItem(UUID catalogItemId, UpdateCatalogItemRequest request) {
+                logger.info("Updating catalog item: {}", catalogItemId);
+                CatalogItem item = catalogItemRepository.findById(catalogItemId)
+                                .orElseThrow(() -> new CatalogItemNotFoundException(
+                                                "Catalog item not found with ID: " + catalogItemId));
+
+                if (request.getDrugName() != null) {
+                        item.setDrugName(request.getDrugName());
+                }
+                if (request.getGenericName() != null) {
+                        item.setGenericName(request.getGenericName());
+                }
+                if (request.getUnitType() != null) {
+                        item.setUnitType(request.getUnitType());
+                }
+                if (request.getReorderLevel() != null) {
+                        item.setReorderLevel(request.getReorderLevel());
+                }
+                if (request.getIsActive() != null) {
+                        item.setIsActive(request.getIsActive());
+                }
+
+                return catalogItemRepository.save(item);
+        }
+
+        /**
+         * Deactivate a catalog item
+         */
+        @Transactional
+        public void deactivateCatalogItem(UUID catalogItemId) {
+                logger.info("Deactivating catalog item: {}", catalogItemId);
+                CatalogItem item = catalogItemRepository.findById(catalogItemId)
+                                .orElseThrow(() -> new CatalogItemNotFoundException(
+                                                "Catalog item not found with ID: " + catalogItemId));
+
+                item.setIsActive(false);
+                catalogItemRepository.save(item);
+        }
+
+        /**
+         * Get all stock batches for a catalog item
+         */
+        public StockDetailResponse getStockByCatalogItem(UUID catalogItemId) {
+                logger.info("Fetching stock for catalog item: {}", catalogItemId);
+                CatalogItem item = catalogItemRepository.findById(catalogItemId)
+                                .orElseThrow(() -> new CatalogItemNotFoundException(
+                                                "Catalog item not found with ID: " + catalogItemId));
+
+                List<InventoryBatch> batches = inventoryBatchRepository.findByCatalogItem(item);
+                int totalQuantity = batches.stream()
+                                .mapToInt(InventoryBatch::getAvailableQuantity)
+                                .sum();
+
+                var batchDetails = batches.stream()
+                                .map(batch -> new BatchDetailResponse(
+                                                batch.getId(),
+                                                batch.getBatchNumber(),
+                                                batch.getExpiryDate(),
+                                                batch.getCostPrice(),
+                                                batch.getAvailableQuantity(),
+                                                java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(),
+                                                                batch.getExpiryDate())))
+                                .toList();
+
+                return new StockDetailResponse(
+                                item.getId(),
+                                item.getDrugName(),
+                                item.getGenericName(),
+                                item.getUnitType(),
+                                totalQuantity,
+                                item.getReorderLevel(),
+                                batches.size(),
+                                batchDetails);
+        }
+
+        /**
+         * Get complete inventory for a clinic
+         */
+        public List<StockDetailResponse> getClinicInventory(Long clinicId) {
+                logger.info("Fetching complete inventory for clinic: {}", clinicId);
+                List<CatalogItem> catalogItems = catalogItemRepository.findByClinicId(clinicId);
+
+                return catalogItems.stream()
+                                .map(item -> getStockByCatalogItem(item.getId()))
+                                .toList();
+        }
+
+        /**
+         * Get transaction history for a catalog item
+         */
+        public List<StockTransactionResponse> getTransactionHistory(UUID catalogItemId) {
+                logger.info("Fetching transaction history for catalog item: {}", catalogItemId);
+                CatalogItem item = catalogItemRepository.findById(catalogItemId)
+                                .orElseThrow(() -> new CatalogItemNotFoundException(
+                                                "Catalog item not found with ID: " + catalogItemId));
+
+                return stockTransactionRepository.findByCatalogItemOrderByTimestampDesc(item).stream()
+                                .map(t -> new StockTransactionResponse(
+                                                t.getId(),
+                                                item.getDrugName(),
+                                                t.getType(),
+                                                t.getQuantity(),
+                                                t.getReferenceId(),
+                                                t.getTimestamp()))
+                                .toList();
+        }
+
+        /**
+         * Get items expiring within specified days
+         */
+        public List<ExpiringItemResponse> getExpiringItems(Long clinicId, Integer days) {
+                logger.info("Fetching items expiring within {} days for clinic: {}", days, clinicId);
+                LocalDate expiryBeforeDate = LocalDate.now().plusDays(days);
+                List<InventoryBatch> expiringBatches = inventoryBatchRepository.findExpiringBatches(clinicId,
+                                expiryBeforeDate);
+
+                return expiringBatches.stream()
+                                .map(batch -> {
+                                        CatalogItem item = batch.getCatalogItem();
+                                        return new ExpiringItemResponse(
+                                                        batch.getId(),
+                                                        item.getDrugName(),
+                                                        item.getGenericName(),
+                                                        batch.getBatchNumber(),
+                                                        batch.getExpiryDate(),
+                                                        batch.getAvailableQuantity(),
+                                                        java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(),
+                                                                        batch.getExpiryDate()));
+                                })
+                                .toList();
+        }
+
+        /**
+         * Check if sufficient stock is available
+         */
+        public StockAvailabilityResponse checkStockAvailability(UUID catalogItemId, Integer requiredQuantity) {
+                logger.info("Checking stock availability - Item: {}, Required: {}", catalogItemId, requiredQuantity);
+                CatalogItem item = catalogItemRepository.findById(catalogItemId)
+                                .orElseThrow(() -> new CatalogItemNotFoundException(
+                                                "Catalog item not found with ID: " + catalogItemId));
+
+                int availableQuantity = getTotalQuantityForItem(item);
+                boolean isAvailable = availableQuantity >= requiredQuantity;
+
+                String message = isAvailable
+                                ? "Sufficient stock available"
+                                : "Insufficient stock available";
+
+                return new StockAvailabilityResponse(
+                                catalogItemId,
+                                item.getDrugName(),
+                                requiredQuantity,
+                                availableQuantity,
+                                isAvailable,
+                                message);
+        }
+
+        /**
+         * Update batch cost price
+         */
+        @Transactional
+        public InventoryBatch updateBatchCostPrice(UUID batchId, UpdateCostPriceRequest request) {
+                logger.info("Updating cost price for batch: {}", batchId);
+                InventoryBatch batch = inventoryBatchRepository.findById(batchId)
+                                .orElseThrow(() -> new IllegalArgumentException("Batch not found with ID: " + batchId));
+
+                batch.setCostPrice(request.getCostPrice());
+                return inventoryBatchRepository.save(batch);
+        }
+
+        /**
+         * Generate comprehensive inventory report for a clinic
+         */
+        public InventoryReportResponse generateInventoryReport(Long clinicId) {
+                logger.info("Generating inventory report for clinic: {}", clinicId);
+
+                List<CatalogItem> catalogItems = catalogItemRepository.findByClinicId(clinicId);
+                List<CatalogItem> activeItems = catalogItemRepository.findByClinicIdAndIsActiveTrue(clinicId);
+
+                int totalMedicationCount = catalogItems.size();
+                int activeMedicationCount = activeItems.size();
+                int totalQuantity = catalogItems.stream()
+                                .mapToInt(this::getTotalQuantityForItem)
+                                .sum();
+
+                BigDecimal totalInventoryValue = BigDecimal.ZERO;
+                for (CatalogItem item : catalogItems) {
+                        List<InventoryBatch> batches = inventoryBatchRepository.findByCatalogItem(item);
+                        for (InventoryBatch batch : batches) {
+                                BigDecimal batchValue = batch.getCostPrice()
+                                                .multiply(BigDecimal.valueOf(batch.getAvailableQuantity()));
+                                totalInventoryValue = totalInventoryValue.add(batchValue);
+                        }
+                }
+
+                List<LowStockItemResponse> lowStockItems = getLowStockItems(clinicId);
+                List<ExpiringItemResponse> expiringItems = getExpiringItems(clinicId, 30);
+
+                return new InventoryReportResponse(
+                                clinicId,
+                                totalMedicationCount,
+                                totalQuantity,
+                                totalInventoryValue,
+                                lowStockItems.size(),
+                                expiringItems.size(),
+                                activeMedicationCount,
+                                lowStockItems,
+                                expiringItems);
+        }
+
+        /**
+         * Get all batches for a specific medication
+         */
+        public List<BatchDetailResponse> getBatchesByCatalogItem(UUID catalogItemId) {
+                logger.info("Fetching all batches for catalog item: {}", catalogItemId);
+                CatalogItem item = catalogItemRepository.findById(catalogItemId)
+                                .orElseThrow(() -> new CatalogItemNotFoundException(
+                                                "Catalog item not found with ID: " + catalogItemId));
+
+                List<InventoryBatch> batches = inventoryBatchRepository.findByCatalogItem(item);
+                return batches.stream()
+                                .map(batch -> new BatchDetailResponse(
+                                                batch.getId(),
+                                                batch.getBatchNumber(),
+                                                batch.getExpiryDate(),
+                                                batch.getCostPrice(),
+                                                batch.getAvailableQuantity(),
+                                                java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(),
+                                                                batch.getExpiryDate())))
+                                .toList();
+        }
+
+        /**
+         * Get all batches for a clinic across all medications
+         */
+        public List<ClinicBatchesResponse> getAllBatchesByClinic(Long clinicId) {
+                logger.info("Fetching all batches for clinic: {}", clinicId);
+                List<CatalogItem> catalogItems = catalogItemRepository.findByClinicId(clinicId);
+
+                return catalogItems.stream()
+                                .map(item -> {
+                                        List<InventoryBatch> batches = inventoryBatchRepository.findByCatalogItem(item);
+                                        int totalQty = batches.stream()
+                                                        .mapToInt(InventoryBatch::getAvailableQuantity)
+                                                        .sum();
+
+                                        var batchDetails = batches.stream()
+                                                        .map(batch -> new BatchDetailResponse(
+                                                                        batch.getId(),
+                                                                        batch.getBatchNumber(),
+                                                                        batch.getExpiryDate(),
+                                                                        batch.getCostPrice(),
+                                                                        batch.getAvailableQuantity(),
+                                                                        java.time.temporal.ChronoUnit.DAYS.between(
+                                                                                        LocalDate.now(),
+                                                                                        batch.getExpiryDate())))
+                                                        .toList();
+
+                                        return new ClinicBatchesResponse(
+                                                        item.getId(),
+                                                        item.getDrugName(),
+                                                        item.getGenericName(),
+                                                        totalQty,
+                                                        batchDetails);
+                                })
+                                .toList();
+        }
+
+        /**
+         * Get batch by ID
+         */
+        public BatchDetailResponse getBatchById(UUID batchId) {
+                logger.info("Fetching batch: {}", batchId);
+                InventoryBatch batch = inventoryBatchRepository.findById(batchId)
+                                .orElseThrow(() -> new IllegalArgumentException("Batch not found with ID: " + batchId));
+
+                return new BatchDetailResponse(
+                                batch.getId(),
+                                batch.getBatchNumber(),
+                                batch.getExpiryDate(),
+                                batch.getCostPrice(),
+                                batch.getAvailableQuantity(),
+                                java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), batch.getExpiryDate()));
+        }
+
+        /**
+         * Update batch details
+         */
+        @Transactional
+        public InventoryBatch updateBatch(UUID batchId, UpdateBatchRequest request) {
+                logger.info("Updating batch: {}", batchId);
+                InventoryBatch batch = inventoryBatchRepository.findById(batchId)
+                                .orElseThrow(() -> new IllegalArgumentException("Batch not found with ID: " + batchId));
+
+                if (request.getAvailableQuantity() != null) {
+                        batch.setAvailableQuantity(request.getAvailableQuantity());
+                }
+                if (request.getExpiryDate() != null) {
+                        batch.setExpiryDate(request.getExpiryDate());
+                }
+                if (request.getCostPrice() != null) {
+                        batch.setCostPrice(request.getCostPrice());
+                }
+
+                return inventoryBatchRepository.save(batch);
+        }
+
+        /**
+         * Adjust batch quantity (with reason tracking)
+         */
+        @Transactional
+        public InventoryBatch adjustBatchQuantity(UUID batchId, AdjustStockRequest request) {
+                logger.info("Adjusting batch {} quantity by: {}, Reason: {}",
+                                batchId, request.getAdjustmentQuantity(), request.getReason());
+
+                InventoryBatch batch = inventoryBatchRepository.findById(batchId)
+                                .orElseThrow(() -> new IllegalArgumentException("Batch not found with ID: " + batchId));
+
+                int newQuantity = batch.getAvailableQuantity() + request.getAdjustmentQuantity();
+
+                if (newQuantity < 0) {
+                        throw new InsufficientStockException(
+                                        "Adjustment would result in negative quantity. Current: " +
+                                                        batch.getAvailableQuantity() + ", Adjustment: "
+                                                        + request.getAdjustmentQuantity());
+                }
+
+                batch.setAvailableQuantity(newQuantity);
+                InventoryBatch updated = inventoryBatchRepository.save(batch);
+
+                // Log as STOCK_IN or implicit adjustment based on adjustment type
+                TransactionType type = request.getAdjustmentQuantity() > 0 ? TransactionType.STOCK_IN
+                                : TransactionType.DISPENSED;
+                logStockTransaction(batch.getCatalogItem(), type,
+                                Math.abs(request.getAdjustmentQuantity()),
+                                "ADJUSTMENT:" + request.getReason());
+
+                return updated;
+        }
+
+        /**
+         * Mark batch as expired/remove from stock
+         */
+        @Transactional
+        public void markBatchExpired(UUID batchId) {
+                logger.info("Marking batch as expired: {}", batchId);
+                InventoryBatch batch = inventoryBatchRepository.findById(batchId)
+                                .orElseThrow(() -> new IllegalArgumentException("Batch not found with ID: " + batchId));
+
+                int quantityExpired = batch.getAvailableQuantity();
+                batch.setAvailableQuantity(0);
+                inventoryBatchRepository.save(batch);
+
+                // Log as expired transaction
+                logStockTransaction(batch.getCatalogItem(), TransactionType.DISPENSED,
+                                quantityExpired, "EXPIRED:" + batch.getBatchNumber());
+
+                logger.info("Batch marked as expired. Quantity removed: {}", quantityExpired);
+        }
+
+        /**
+         * Delete batch (hard delete)
+         */
+        @Transactional
+        public void deleteBatch(UUID batchId) {
+                logger.info("Deleting batch: {}", batchId);
+                InventoryBatch batch = inventoryBatchRepository.findById(batchId)
+                                .orElseThrow(() -> new IllegalArgumentException("Batch not found with ID: " + batchId));
+
+                if (batch.getAvailableQuantity() > 0) {
+                        throw new IllegalArgumentException(
+                                        "Cannot delete batch with available stock. Please mark as expired or adjust quantity first.");
+                }
+
+                inventoryBatchRepository.delete(batch);
+                logger.info("Batch deleted successfully");
         }
 }
