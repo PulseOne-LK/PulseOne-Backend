@@ -8,10 +8,15 @@ import java.time.LocalTime;
 
 /**
  * Request DTO for updating an existing session
+ * Note: clinicId should be the profile_clinic_id from the profile service, not the appointments service clinic ID
  */
 public class UpdateSessionRequest {
 
-    private Long clinicId; // Optional
+    /**
+     * Clinic ID from profile service (profile_clinic_id in appointments DB)
+     * Optional
+     */
+    private Long clinicId;
 
     private DayOfWeek dayOfWeek;
 

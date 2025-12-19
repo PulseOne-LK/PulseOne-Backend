@@ -9,13 +9,18 @@ import java.time.LocalTime;
 
 /**
  * Request DTO for creating a new session
+ * Note: clinicId should be the profile_clinic_id from the profile service, not the appointments service clinic ID
  */
 public class CreateSessionRequest {
 
     @NotBlank(message = "Doctor user ID is required")
     private String doctorUserId;
 
-    private Long clinicId; // Optional for virtual sessions
+    /**
+     * Clinic ID from profile service (profile_clinic_id in appointments DB)
+     * Optional for virtual sessions
+     */
+    private Long clinicId;
 
     @NotNull(message = "Day of week is required")
     private DayOfWeek dayOfWeek;

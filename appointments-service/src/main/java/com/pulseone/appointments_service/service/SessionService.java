@@ -71,7 +71,11 @@ public class SessionService {
         // Create and save session
         Session session = new Session();
         session.setDoctor(doctor);
+        session.setDoctorUserId(request.getDoctorUserId());  // Store actual doctor user ID
         session.setClinic(clinic);
+        if (clinic != null) {
+            session.setClinicProfileId(request.getClinicId());  // Store actual clinic profile ID
+        }
         session.setDayOfWeek(request.getDayOfWeek());
         session.setSessionStartTime(request.getSessionStartTime());
         session.setSessionEndTime(request.getSessionEndTime());
@@ -109,6 +113,7 @@ public class SessionService {
             Clinic clinic = clinicRepository.findByProfileClinicId(request.getClinicId())
                     .orElseThrow(() -> new IllegalArgumentException("Clinic not found with profile clinic id: " + request.getClinicId()));
             session.setClinic(clinic);
+            session.setClinicProfileId(request.getClinicId());  // Store actual clinic profile ID
         }
 
         // Validate and update times if provided

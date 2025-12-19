@@ -86,6 +86,9 @@ public class AppointmentService {
         appointment.setDoctorId(request.getDoctorId());
         appointment.setSession(session);
         appointment.setClinic(session.getClinic());
+        if (session.getClinicProfileId() != null) {
+            appointment.setClinicProfileId(session.getClinicProfileId());  // Store actual clinic profile ID
+        }
         appointment.setAppointmentDate(request.getAppointmentDate());
         appointment.setQueueNumber(queueNumber);
         appointment.setAppointmentType(request.getAppointmentType());

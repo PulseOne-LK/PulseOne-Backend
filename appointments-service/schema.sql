@@ -54,7 +54,9 @@ CREATE INDEX IF NOT EXISTS idx_clinics_active ON clinics(is_active);
 CREATE TABLE IF NOT EXISTS sessions (
     id BIGSERIAL PRIMARY KEY,
     doctor_id BIGINT NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
+    doctor_user_id VARCHAR(255) NOT NULL,                         -- Actual doctor user ID from auth service
     clinic_id BIGINT REFERENCES clinics(id) ON DELETE SET NULL,  -- NULL for virtual sessions
+    clinic_profile_id BIGINT,                                     -- Actual clinic ID from profile service (NULL for virtual)
     day_of_week VARCHAR(20) NOT NULL,              -- MONDAY, TUESDAY, etc.
     session_start_time TIME NOT NULL,              -- Start time (e.g., 09:00)
     session_end_time TIME NOT NULL,                -- End time (e.g., 12:00)
@@ -76,7 +78,9 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_sessions_doctor ON sessions(doctor_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_doctor_user_id ON sessions(doctor_user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_clinic ON sessions(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_clinic_profile_id ON sessions(clinic_profile_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_day ON sessions(day_of_week);
 CREATE INDEX IF NOT EXISTS idx_sessions_active ON sessions(is_active);
 CREATE INDEX IF NOT EXISTS idx_sessions_effective_dates ON sessions(effective_from, effective_until);
@@ -245,6 +249,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     patient_id VARCHAR(255) NOT NULL,              -- Foreign key to auth service
     doctor_id VARCHAR(255) NOT NULL,               -- Foreign key to auth service  
     clinic_id BIGINT REFERENCES clinics(id) ON DELETE SET NULL,
+    clinic_profile_id BIGINT,                      -- Actual clinic ID from profile service (denormalized for easy access)
     session_id BIGINT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     appointment_date DATE NOT NULL,                -- Date of the appointment
     queue_number INTEGER NOT NULL,                 -- Position in queue for that session/date
@@ -276,6 +281,7 @@ CREATE TABLE IF NOT EXISTS appointments (
 -- Indexes for appointments table
 CREATE INDEX IF NOT EXISTS idx_appointments_patient ON appointments(patient_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_doctor ON appointments(doctor_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_clinic_profile_id ON appointments(clinic_profile_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_session ON appointments(session_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date);
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);

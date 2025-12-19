@@ -45,6 +45,13 @@ public class Appointment {
     private Clinic clinic;
 
     /**
+     * Actual clinic ID from profile service (denormalized for easy access)
+     * Nullable for virtual appointments
+     */
+    @Column(name = "clinic_profile_id")
+    private Long clinicProfileId;
+
+    /**
      * Reference to the session this appointment belongs to
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -169,6 +176,14 @@ public class Appointment {
 
     public void setClinic(Clinic clinic) {
         this.clinic = clinic;
+    }
+
+    public Long getClinicProfileId() {
+        return clinicProfileId;
+    }
+
+    public void setClinicProfileId(Long clinicProfileId) {
+        this.clinicProfileId = clinicProfileId;
     }
 
     public Session getSession() {

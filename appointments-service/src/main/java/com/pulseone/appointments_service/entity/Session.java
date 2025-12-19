@@ -27,12 +27,25 @@ public class Session {
     private Doctor doctor;
 
     /**
+     * Actual doctor user ID from auth service (denormalized for easy access)
+     */
+    @Column(name = "doctor_user_id", nullable = false)
+    private String doctorUserId;
+
+    /**
      * Reference to the clinic where the session takes place.
      * Nullable for virtual-only sessions.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "clinic_id")
     private Clinic clinic;
+
+    /**
+     * Actual clinic profile ID from profile service (denormalized for easy access)
+     * Nullable for virtual sessions
+     */
+    @Column(name = "clinic_profile_id")
+    private Long clinicProfileId;
 
     /**
      * Day of the week when this session occurs (e.g., MONDAY, TUESDAY)
@@ -117,6 +130,22 @@ public class Session {
 
     public void setClinic(Clinic clinic) {
         this.clinic = clinic;
+    }
+
+    public String getDoctorUserId() {
+        return doctorUserId;
+    }
+
+    public void setDoctorUserId(String doctorUserId) {
+        this.doctorUserId = doctorUserId;
+    }
+
+    public Long getClinicProfileId() {
+        return clinicProfileId;
+    }
+
+    public void setClinicProfileId(Long clinicProfileId) {
+        this.clinicProfileId = clinicProfileId;
     }
 
     public DayOfWeek getDayOfWeek() {

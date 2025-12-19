@@ -8,12 +8,16 @@ import java.time.LocalDate;
 
 /**
  * Request DTO for booking a new appointment
+ * Note: doctorId should be the user_id from auth service, not the appointments service doctor ID
  */
 public class BookAppointmentRequest {
 
     @NotBlank(message = "Patient ID is required")
     private String patientId;
 
+    /**
+     * Doctor user ID from auth service (stored in doctor.user_id)
+     */
     @NotBlank(message = "Doctor ID is required")
     private String doctorId;
 
