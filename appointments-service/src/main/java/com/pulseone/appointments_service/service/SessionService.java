@@ -102,6 +102,17 @@ public class SessionService {
     }
 
     /**
+     * Get all sessions for a specific clinic
+     */
+    @Transactional(readOnly = true)
+    public List<SessionResponse> getSessionsByClinicId(Long clinicId) {
+        List<Session> sessions = sessionRepository.findByClinicIdAndIsActiveTrue(clinicId);
+        return sessions.stream()
+                .map(this::convertToSessionResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Update an existing session
      */
     public SessionResponse updateSession(Long sessionId, UpdateSessionRequest request) {

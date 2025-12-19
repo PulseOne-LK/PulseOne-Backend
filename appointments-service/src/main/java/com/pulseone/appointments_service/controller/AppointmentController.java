@@ -291,4 +291,31 @@ public class AppointmentController {
                     .body(Map.of("error", "An unexpected error occurred while retrieving statistics"));
         }
     }
+
+    /**
+     * Get all appointments for a specific clinic
+     */
+    @GetMapping("/clinic/{clinicId}")
+    @Operation(summary = "Get clinic appointments", description = "Retrieve all appointments for a specific clinic")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Clinic appointments retrieved successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json"))
+    })
+    public ResponseEntity<?> getClinicAppointments(
+            @Parameter(description = "Clinic ID", required = true)
+            @PathVariable Long clinicId) {
+        try {
+            List<AppointmentResponse> appointments = appointmentService.getClinicAppointments(clinicId);
+            return ResponseEntity.ok(Map.of(
+                    "clinicId", clinicId,
+                    "appointments", appointments,
+                    "count", appointments.size()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred while retrieving clinic appointments"));
+        }
+    }
 }

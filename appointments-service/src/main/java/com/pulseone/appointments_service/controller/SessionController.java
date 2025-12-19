@@ -83,6 +83,29 @@ public class SessionController {
     }
 
     /**
+     * Get all sessions for a specific clinic
+     */
+    @GetMapping("/clinic/{clinicId}")
+    @Operation(summary = "Get sessions by clinic", description = "Retrieve all active sessions for a specific clinic")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Sessions retrieved successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "Clinic not found",
+                    content = @Content(mediaType = "application/json"))
+    })
+    public ResponseEntity<?> getSessionsByClinic(
+            @Parameter(description = "Clinic ID", required = true)
+            @PathVariable Long clinicId) {
+        try {
+            List<SessionResponse> sessions = sessionService.getSessionsByClinicId(clinicId);
+            return ResponseEntity.ok(sessions);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred"));
+        }
+    }
+
+    /**
      * Get a specific session by ID
      */
     @GetMapping("/{sessionId}")

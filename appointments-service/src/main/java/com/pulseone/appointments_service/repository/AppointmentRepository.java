@@ -101,4 +101,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
      */
     @Query("SELECT a FROM Appointment a WHERE a.clinic.profileClinicId = :clinicId AND a.appointmentDate = :today AND a.status NOT IN ('CANCELLED', 'NO_SHOW') ORDER BY a.queueNumber ASC")
     List<Appointment> findTodayAppointmentsByClinicId(@Param("clinicId") Long clinicId, @Param("today") LocalDate today);
+
+    /**
+     * Find all appointments for a specific clinic
+     */
+    @Query("SELECT a FROM Appointment a WHERE a.clinic.profileClinicId = :clinicId ORDER BY a.appointmentDate DESC, a.queueNumber ASC")
+    List<Appointment> findByClinicId(@Param("clinicId") Long clinicId);
 }

@@ -62,6 +62,6 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     /**
      * Find all active sessions at a specific clinic
      */
-    @Query("SELECT s FROM Session s WHERE s.clinic.id = :clinicId AND s.isActive = true ORDER BY s.dayOfWeek ASC, s.sessionStartTime ASC")
+    @Query("SELECT s FROM Session s WHERE s.clinic.profileClinicId = :clinicId AND s.isActive = true ORDER BY s.dayOfWeek ASC, s.sessionStartTime ASC")
     List<Session> findByClinicIdAndIsActiveTrue(@Param("clinicId") Long clinicId);
 }

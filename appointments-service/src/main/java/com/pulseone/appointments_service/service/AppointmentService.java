@@ -42,6 +42,20 @@ public class AppointmentService {
     @Autowired
     private DoctorRepository doctorRepository;
 
+    @Autowired
+    private ClinicRepository clinicRepository;
+
+    /**
+     * Get all appointments for a specific clinic
+     */
+    @Transactional(readOnly = true)
+    public List<AppointmentResponse> getClinicAppointments(Long clinicId) {
+        List<Appointment> appointments = appointmentRepository.findByClinicId(clinicId);
+        return appointments.stream()
+                .map(this::convertToAppointmentResponse)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Book a new appointment with comprehensive validation and queue management
      */
