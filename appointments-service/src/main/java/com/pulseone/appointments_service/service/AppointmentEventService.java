@@ -13,6 +13,7 @@ import java.util.Optional;
 /**
  * Service to handle appointment-related entities creation from user registration events
  * Automatically creates Doctor records for users with role "DOCTOR"
+ * Clinic records are created via ClinicSyncService when profile service sends clinic events
  */
 @Service
 @Transactional
@@ -28,6 +29,7 @@ public class AppointmentEventService {
 
     /**
      * Processes user registration events and creates appropriate appointment-related entities
+     * Only creates Doctor records. Clinic records are managed via ClinicSyncService
      */
     public void processUserRegistrationEvent(UserRegistrationEventDTO event) {
         String userId = event.getUserId();
@@ -39,10 +41,12 @@ public class AppointmentEventService {
             case "DOCTOR":
                 createDoctorRecord(event);
                 break;
+            case "CLINIC_ADMIN":
+                logger.info("CLINIC_ADMIN registration acknowledged for user: {}. Clinic will be created via ClinicSyncService when profile service creates it.", userId);
+                break;
             case "PATIENT":
                 logger.info("Patient registration processed - no appointment entities needed for role: {} (user: {})", role, userId);
                 break;
-            case "CLINIC_ADMIN":
             case "PHARMACIST":
             case "SYS_ADMIN":
                 logger.info("No appointment entities needed for role: {} (user: {})", role, userId);

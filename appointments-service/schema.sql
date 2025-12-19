@@ -33,6 +33,7 @@ CREATE INDEX IF NOT EXISTS idx_doctors_active ON doctors(is_active);
 -- Full clinic details are maintained in the profile service
 CREATE TABLE IF NOT EXISTS clinics (
     id BIGSERIAL PRIMARY KEY,
+    profile_clinic_id BIGINT UNIQUE NOT NULL,      -- Foreign key to profile service clinic ID
     name VARCHAR(255) NOT NULL,                    -- Clinic display name
     address TEXT NOT NULL,                         -- Physical address
     is_active BOOLEAN DEFAULT TRUE,                -- Whether clinic is operational
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS clinics (
 );
 
 -- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_clinics_profile_clinic_id ON clinics(profile_clinic_id);
 CREATE INDEX IF NOT EXISTS idx_clinics_name ON clinics(name);
 CREATE INDEX IF NOT EXISTS idx_clinics_active ON clinics(is_active);
 

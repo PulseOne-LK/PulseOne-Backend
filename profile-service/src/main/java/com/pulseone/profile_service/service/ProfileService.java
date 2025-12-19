@@ -5,12 +5,15 @@ import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
+import com.pulseone.profile_service.messaging.RabbitMQPublisher;
 import com.pulseone.profile_service.repository.ClinicRepository;
 import com.pulseone.profile_service.repository.DoctorProfileRepository;
 import com.pulseone.profile_service.repository.PatientProfileRepository;
 import com.pulseone.profile_service.repository.PharmacyRepository;
+import events.v1.UserEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,6 +48,9 @@ public class ProfileService {
     private final PharmacyRepository pharmacyRepo;
     private final ClinicRepository clinicRepo;
     private final AppointmentsServiceClient appointmentsServiceClient;
+
+    @Autowired(required = false)
+    private RabbitMQPublisher rabbitMQPublisher;
 
     public ProfileService(
             PatientProfileRepository patientRepo,
@@ -239,20 +245,31 @@ public class ProfileService {
 
         Clinic savedClinic = clinicRepo.save(existing);
 
-        // Notify appointments service of clinic update
+        // Notify appointments service of clinic update via RabbitMQ
         try {
-            appointmentsServiceClient.notifyClinicUpdated(
-                    savedClinic.getId(),
-                    savedClinic.getName(),
-                    savedClinic.getPhysicalAddress(),
-                    savedClinic.getContactPhone(),
-                    savedClinic.getOperatingHours(),
-                    true // isActive
-            );
-            logger.info("Successfully notified appointments service of clinic update for clinic ID: {}",
-                    savedClinic.getId());
+            if (rabbitMQPublisher != null) {
+                // Create protobuf clinic update event
+                UserEvents.ClinicUpdateEvent clinicEvent = UserEvents.ClinicUpdateEvent.newBuilder()
+                        .setClinicId(savedClinic.getId())
+                        .setName(savedClinic.getName())
+                        .setAddress(savedClinic.getPhysicalAddress())
+                        .setContactPhone(savedClinic.getContactPhone() != null ? savedClinic.getContactPhone() : "")
+                        .setOperatingHours(
+                                savedClinic.getOperatingHours() != null ? savedClinic.getOperatingHours() : "")
+                        .setIsActive(true)
+                        .setTimestamp(System.currentTimeMillis() / 1000)
+                        .setEventType("CLINIC_UPDATED")
+                        .build();
+
+                // Publish to RabbitMQ
+                rabbitMQPublisher.publishClinicUpdateEvent(clinicEvent);
+                logger.info("Successfully published clinic update event to RabbitMQ for clinic ID: {}",
+                        savedClinic.getId());
+            } else {
+                logger.warn("RabbitMQPublisher not available, cannot notify appointments service");
+            }
         } catch (Exception e) {
-            logger.error("Failed to notify appointments service of clinic update: {}", e.getMessage(), e);
+            logger.error("Failed to publish clinic update event to RabbitMQ: {}", e.getMessage(), e);
             // Don't fail the update if notification fails
         }
 
@@ -392,6 +409,36 @@ public class ProfileService {
                 Clinic savedClinic = createClinic(clinic);
                 logger.info("Successfully created clinic with ID: {} for admin user: {}",
                         savedClinic.getId(), event.getUserId());
+
+                // Notify appointments service of clinic creation via RabbitMQ
+                try {
+                    if (rabbitMQPublisher != null) {
+                        // Create protobuf clinic update event
+                        UserEvents.ClinicUpdateEvent clinicEvent = UserEvents.ClinicUpdateEvent.newBuilder()
+                                .setClinicId(savedClinic.getId())
+                                .setName(savedClinic.getName())
+                                .setAddress(savedClinic.getPhysicalAddress())
+                                .setContactPhone(
+                                        savedClinic.getContactPhone() != null ? savedClinic.getContactPhone() : "")
+                                .setOperatingHours(
+                                        savedClinic.getOperatingHours() != null ? savedClinic.getOperatingHours() : "")
+                                .setIsActive(true)
+                                .setTimestamp(System.currentTimeMillis() / 1000)
+                                .setEventType("CLINIC_CREATED")
+                                .build();
+
+                        // Publish to RabbitMQ
+                        rabbitMQPublisher.publishClinicUpdateEvent(clinicEvent);
+                        logger.info("Successfully published clinic creation event to RabbitMQ for clinic ID: {}",
+                                savedClinic.getId());
+                    } else {
+                        logger.warn("RabbitMQPublisher not available, cannot notify appointments service");
+                    }
+                } catch (Exception notificationError) {
+                    logger.error("Failed to publish clinic creation event to RabbitMQ for clinic ID {}: {}",
+                            savedClinic.getId(), notificationError.getMessage(), notificationError);
+                    // Don't fail the clinic creation if notification fails
+                }
             } else {
                 logger.warn("Clinic data not provided in registration event for user: {}", event.getUserId());
             }

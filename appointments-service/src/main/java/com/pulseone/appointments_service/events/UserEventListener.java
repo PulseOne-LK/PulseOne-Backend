@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.pulseone.appointments_service.config.RabbitMQConfig;
 import com.pulseone.appointments_service.dto.UserRegistrationEventDTO;
+import com.pulseone.appointments_service.service.AppointmentEventService;
 import events.v1.UserEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,12 @@ import org.slf4j.LoggerFactory;
 public class UserEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(UserEventListener.class);
+
+    private final AppointmentEventService appointmentEventService;
+
+    public UserEventListener(AppointmentEventService appointmentEventService) {
+        this.appointmentEventService = appointmentEventService;
+    }
 
     /**
      * Listen for user registration events
@@ -49,36 +56,11 @@ public class UserEventListener {
                 dto.setClinicOperatingHours(clinicData.getOperatingHours());
             }
             
-            // Process the event based on role
-            processUserRegistration(dto);
+            // Process the event using AppointmentEventService
+            appointmentEventService.processUserRegistrationEvent(dto);
             
         } catch (Exception e) {
             logger.error("Error processing user registration event: {}", e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Process user registration based on their role
-     */
-    private void processUserRegistration(UserRegistrationEventDTO event) {
-        switch (event.getRole()) {
-            case "PATIENT":
-                logger.info("Creating appointment profile for patient: {}", event.getEmail());
-                // Appointments service would create a patient appointment record if needed
-                break;
-                
-            case "DOCTOR":
-                logger.info("Creating doctor profile for doctor: {}", event.getEmail());
-                // Could create doctor availability slots if needed
-                break;
-                
-            case "CLINIC_ADMIN":
-                logger.info("Creating clinic admin profile for: {}", event.getClinicName());
-                // Could create clinic-specific appointment templates
-                break;
-                
-            default:
-                logger.info("User registration for role: {} - email: {}", event.getRole(), event.getEmail());
         }
     }
 }
