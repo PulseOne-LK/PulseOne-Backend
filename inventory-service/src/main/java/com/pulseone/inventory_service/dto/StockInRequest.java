@@ -3,15 +3,26 @@ package com.pulseone.inventory_service.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * StockInRequest DTO - Request to add a new batch of drugs to inventory
  */
+@Schema(description = "Request to add a new batch of medication to inventory")
 public class StockInRequest {
+    @Schema(description = "Catalog item ID for the drug", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID catalogItemId;
+
+    @Schema(description = "Batch number for tracking and recall purposes", example = "BATCH-2024-001")
     private String batchNumber;
+
+    @Schema(description = "Expiry date of the batch", example = "2025-12-31")
     private LocalDate expiryDate;
+
+    @Schema(description = "Cost price per unit", example = "5.50")
     private BigDecimal costPrice;
+
+    @Schema(description = "Quantity of units in this batch", example = "500")
     private Integer quantity;
 
     public StockInRequest() {
