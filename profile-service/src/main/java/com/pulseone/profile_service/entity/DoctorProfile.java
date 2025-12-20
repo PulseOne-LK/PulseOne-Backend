@@ -19,6 +19,17 @@ public class DoctorProfile {
     @Column(name = "user_id", unique = true, nullable = false)
     private String userId;
 
+    // --- Personal Details ---
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    // --- Clinic Association ---
+    @Column(name = "clinic_id")
+    private Long clinicId;
+
     // --- Professional Details ---
     @Column(name = "specialty", nullable = false)
     private String specialty;
@@ -60,6 +71,30 @@ public class DoctorProfile {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public Long getClinicId() {
+        return clinicId;
+    }
+
+    public void setClinicId(Long clinicId) {
+        this.clinicId = clinicId;
     }
 
     public String getSpecialty() {

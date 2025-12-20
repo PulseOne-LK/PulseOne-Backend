@@ -56,12 +56,13 @@ public class Clinic {
     private String operatingHours;
 
     /**
-     * List of all Doctor User IDs associated with this clinic.
-     * Used to quickly filter which doctors report to this admin.
+     * Doctor associations are now managed through the ClinicDoctor entity.
+     * This allows for tracking confirmation status and timestamps.
+     * Previously stored as ElementCollection, now using dedicated entity.
+     * This field is transient (not persisted) and populated from ClinicDoctor
+     * table.
      */
-    @ElementCollection
-    @CollectionTable(name = "clinic_doctors", joinColumns = @JoinColumn(name = "clinic_id"))
-    @Column(name = "doctor_uuid")
+    @Transient
     private List<String> doctorUuids = new ArrayList<>();
 
     // Constructors
@@ -125,10 +126,18 @@ public class Clinic {
         this.operatingHours = operatingHours;
     }
 
+    /**
+     * Get all doctor associations for this clinic.
+     * This list is populated from the ClinicDoctor table.
+     */
     public List<String> getDoctorUuids() {
         return doctorUuids;
     }
 
+    /**
+     * Set the doctor associations for this clinic.
+     * Used to populate doctors fetched from ClinicDoctor table.
+     */
     public void setDoctorUuids(List<String> doctorUuids) {
         this.doctorUuids = doctorUuids;
     }

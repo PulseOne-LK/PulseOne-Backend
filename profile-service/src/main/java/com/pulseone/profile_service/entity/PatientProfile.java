@@ -21,6 +21,12 @@ public class PatientProfile {
     private String userId;
 
     // --- Personal Details ---
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
     @Column(name = "phone_number", nullable = true) // Allow null initially, user can update later
     private String phoneNumber;
 
@@ -55,6 +61,22 @@ public class PatientProfile {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getPhoneNumber() {

@@ -85,13 +85,18 @@ public class ProfileCreationService {
             PatientProfile profile = new PatientProfile();
             profile.setUserId(event.getUserId());
 
+            // Set personal details from event
+            profile.setFirstName(event.getFirstName());
+            profile.setLastName(event.getLastName());
+
             // Set basic fields - phone number can be null initially
             profile.setPhoneNumber(null); // User will update this later
             profile.setAddress("");
 
             // Save the profile
             patientProfileRepository.save(profile);
-            logger.info("Created patient profile for user: {}", event.getUserId());
+            logger.info("Created patient profile for user: {} ({} {})", event.getUserId(),
+                    event.getFirstName(), event.getLastName());
 
         } catch (Exception e) {
             logger.error("Error creating patient profile for user: {}", event.getUserId(), e);
@@ -112,16 +117,22 @@ public class ProfileCreationService {
             DoctorProfile profile = new DoctorProfile();
             profile.setUserId(event.getUserId());
 
+            // Set personal details from event
+            profile.setFirstName(event.getFirstName());
+            profile.setLastName(event.getLastName());
+
             // Set basic required fields with placeholder values
             profile.setSpecialty("General Medicine"); // Default specialty
             profile.setConsultationFee(BigDecimal.valueOf(50.00)); // Default fee
             profile.setYearsOfExperience(0);
             profile.setVirtual(true); // Default to virtual consultations
             profile.setVerified(false); // Requires admin verification
+            // clinicId will be set later when doctor confirms clinic association
 
             // Save the profile
             doctorProfileRepository.save(profile);
-            logger.info("Created doctor profile for user: {}", event.getUserId());
+            logger.info("Created doctor profile for user: {} ({} {})", event.getUserId(),
+                    event.getFirstName(), event.getLastName());
 
         } catch (Exception e) {
             logger.error("Error creating doctor profile for user: {}", event.getUserId(), e);

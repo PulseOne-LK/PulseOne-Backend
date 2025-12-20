@@ -2,10 +2,12 @@ package com.pulseone.profile_service.service;
 
 import com.pulseone.profile_service.client.AppointmentsServiceClient;
 import com.pulseone.profile_service.entity.Clinic;
+import com.pulseone.profile_service.entity.ClinicDoctor;
 import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
 import com.pulseone.profile_service.messaging.RabbitMQPublisher;
+import com.pulseone.profile_service.repository.ClinicDoctorRepository;
 import com.pulseone.profile_service.repository.ClinicRepository;
 import com.pulseone.profile_service.repository.DoctorProfileRepository;
 import com.pulseone.profile_service.repository.PatientProfileRepository;
@@ -30,15 +32,34 @@ public class ProfileService {
      * Retrieves doctors by clinic ID.
      */
     public List<DoctorProfile> getDoctorsByClinicId(Long clinicId) {
-        Clinic clinic = getClinicById(clinicId);
-        List<String> doctorUuids = clinic.getDoctorUuids();
-        if (doctorUuids == null || doctorUuids.isEmpty()) {
+        // Get all confirmed doctor associations for this clinic
+        List<ClinicDoctor> clinicDoctors = clinicDoctorRepo.findByClinicIdAndIsConfirmedTrue(clinicId);
+
+        if (clinicDoctors == null || clinicDoctors.isEmpty()) {
             return List.of();
         }
-        return doctorUuids.stream()
-                .map(uuid -> doctorRepo.findByUserId(uuid).orElse(null))
+
+        return clinicDoctors.stream()
+                .map(cd -> doctorRepo.findByUserId(cd.getDoctorUserId()).orElse(null))
                 .filter(java.util.Objects::nonNull)
                 .toList();
+    }
+
+    /**
+     * Populates doctorUuids in clinic by fetching from ClinicDoctor table.
+     * Includes both confirmed and unconfirmed associations.
+     */
+    private void populateClinicDoctors(Clinic clinic) {
+        if (clinic == null) {
+            return;
+        }
+
+        List<ClinicDoctor> allDoctors = clinicDoctorRepo.findByClinicId(clinic.getId());
+        List<String> doctorUuids = allDoctors.stream()
+                .map(ClinicDoctor::getDoctorUserId)
+                .toList();
+
+        clinic.setDoctorUuids(new java.util.ArrayList<>(doctorUuids));
     }
 
     private static final Logger logger = LoggerFactory.getLogger(ProfileService.class);
@@ -47,6 +68,7 @@ public class ProfileService {
     private final DoctorProfileRepository doctorRepo;
     private final PharmacyRepository pharmacyRepo;
     private final ClinicRepository clinicRepo;
+    private final ClinicDoctorRepository clinicDoctorRepo;
     private final AppointmentsServiceClient appointmentsServiceClient;
 
     @Autowired(required = false)
@@ -57,11 +79,13 @@ public class ProfileService {
             DoctorProfileRepository doctorRepo,
             PharmacyRepository pharmacyRepo,
             ClinicRepository clinicRepo,
+            ClinicDoctorRepository clinicDoctorRepo,
             AppointmentsServiceClient appointmentsServiceClient) {
         this.patientRepo = patientRepo;
         this.doctorRepo = doctorRepo;
         this.pharmacyRepo = pharmacyRepo;
         this.clinicRepo = clinicRepo;
+        this.clinicDoctorRepo = clinicDoctorRepo;
         this.appointmentsServiceClient = appointmentsServiceClient;
     }
 
@@ -88,12 +112,30 @@ public class ProfileService {
      */
     public PatientProfile updatePatientProfile(String userId, PatientProfile updates) {
         PatientProfile existing = getPatientProfileByUserId(userId);
-        existing.setPhoneNumber(updates.getPhoneNumber());
-        existing.setAddress(updates.getAddress());
-        existing.setDob(updates.getDob());
-        existing.setInsuranceProvider(updates.getInsuranceProvider());
-        existing.setEmergencyContact(updates.getEmergencyContact());
-        existing.setKnownAllergies(updates.getKnownAllergies());
+        if (updates.getFirstName() != null) {
+            existing.setFirstName(updates.getFirstName());
+        }
+        if (updates.getLastName() != null) {
+            existing.setLastName(updates.getLastName());
+        }
+        if (updates.getPhoneNumber() != null) {
+            existing.setPhoneNumber(updates.getPhoneNumber());
+        }
+        if (updates.getAddress() != null) {
+            existing.setAddress(updates.getAddress());
+        }
+        if (updates.getDob() != null) {
+            existing.setDob(updates.getDob());
+        }
+        if (updates.getInsuranceProvider() != null) {
+            existing.setInsuranceProvider(updates.getInsuranceProvider());
+        }
+        if (updates.getEmergencyContact() != null) {
+            existing.setEmergencyContact(updates.getEmergencyContact());
+        }
+        if (updates.getKnownAllergies() != null) {
+            existing.setKnownAllergies(updates.getKnownAllergies());
+        }
         return savePatientProfile(existing);
     }
 
@@ -127,13 +169,33 @@ public class ProfileService {
      */
     public DoctorProfile updateDoctorProfile(String userId, DoctorProfile updates) {
         DoctorProfile existing = getDoctorProfileByUserId(userId);
-        existing.setSpecialty(updates.getSpecialty());
-        existing.setConsultationFee(updates.getConsultationFee());
-        existing.setYearsOfExperience(updates.getYearsOfExperience());
-        existing.setBio(updates.getBio());
-        existing.setTelecomUrl(updates.getTelecomUrl());
-        existing.setLicensePhotoUrl(updates.getLicensePhotoUrl());
-        existing.setVirtual(updates.getVirtual());
+        if (updates.getFirstName() != null) {
+            existing.setFirstName(updates.getFirstName());
+        }
+        if (updates.getLastName() != null) {
+            existing.setLastName(updates.getLastName());
+        }
+        if (updates.getSpecialty() != null) {
+            existing.setSpecialty(updates.getSpecialty());
+        }
+        if (updates.getConsultationFee() != null) {
+            existing.setConsultationFee(updates.getConsultationFee());
+        }
+        if (updates.getYearsOfExperience() != null) {
+            existing.setYearsOfExperience(updates.getYearsOfExperience());
+        }
+        if (updates.getBio() != null) {
+            existing.setBio(updates.getBio());
+        }
+        if (updates.getTelecomUrl() != null) {
+            existing.setTelecomUrl(updates.getTelecomUrl());
+        }
+        if (updates.getLicensePhotoUrl() != null) {
+            existing.setLicensePhotoUrl(updates.getLicensePhotoUrl());
+        }
+        if (updates.getVirtual() != null) {
+            existing.setVirtual(updates.getVirtual());
+        }
         return saveDoctorProfile(existing);
     }
 
@@ -225,7 +287,9 @@ public class ProfileService {
      * Creates a clinic for a clinic admin.
      */
     public Clinic createClinic(Clinic clinic) {
-        return clinicRepo.save(clinic);
+        Clinic saved = clinicRepo.save(clinic);
+        populateClinicDoctors(saved);
+        return saved;
     }
 
     /**
@@ -241,9 +305,9 @@ public class ProfileService {
         existing.setContactPhone(updates.getContactPhone());
         existing.setTaxId(updates.getTaxId());
         existing.setOperatingHours(updates.getOperatingHours());
-        existing.setDoctorUuids(updates.getDoctorUuids());
 
         Clinic savedClinic = clinicRepo.save(existing);
+        populateClinicDoctors(savedClinic);
 
         // Notify appointments service of clinic update via RabbitMQ
         try {
@@ -277,17 +341,21 @@ public class ProfileService {
     }
 
     public Clinic getClinicById(Long clinicId) {
-        return clinicRepo.findById(clinicId)
+        Clinic clinic = clinicRepo.findById(clinicId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Clinic not found."));
+        populateClinicDoctors(clinic);
+        return clinic;
     }
 
     /**
      * Retrieves a clinic by the admin user ID.
      */
     public Clinic getClinicByAdminUserId(String adminUserId) {
-        return clinicRepo.findByAdminUserId(adminUserId)
+        Clinic clinic = clinicRepo.findByAdminUserId(adminUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Clinic not found for this admin user."));
+        populateClinicDoctors(clinic);
+        return clinic;
     }
 
     // -------------------------------------------------------------------

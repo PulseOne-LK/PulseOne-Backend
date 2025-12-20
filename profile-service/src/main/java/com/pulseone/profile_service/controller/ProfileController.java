@@ -4,6 +4,7 @@ import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
 import com.pulseone.profile_service.service.ProfileService;
+import com.pulseone.profile_service.service.DoctorDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,10 +34,12 @@ import java.util.List;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final DoctorDashboardService doctorDashboardService;
 
     @Autowired
-    public ProfileController(ProfileService profileService) {
+    public ProfileController(ProfileService profileService, DoctorDashboardService doctorDashboardService) {
         this.profileService = profileService;
+        this.doctorDashboardService = doctorDashboardService;
     }
 
     // Utility to check if the caller's role matches the required role
@@ -201,6 +204,89 @@ public class ProfileController {
             @Parameter(description = "User ID of the doctor", required = true) @PathVariable String userId) {
         // Any PATIENT can view any DOCTOR profile (read-only directory view)
         return profileService.getDoctorProfileByUserId(userId);
+    }
+
+    /**
+     * GET /doctor/me - Retrieves the doctor's own profile.
+     */
+    @Operation(summary = "Get own doctor profile", description = "Retrieve the authenticated doctor's own profile")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Doctor profile found", content = @Content(schema = @Schema(implementation = DoctorProfile.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            @ApiResponse(responseCode = "404", description = "Profile not found")
+    })
+    @GetMapping("/doctor/me")
+    public DoctorProfile getDoctorProfile(
+            @Parameter(description = "User ID from JWT token", required = true) @RequestHeader("X-User-ID") String authUserId,
+            @Parameter(description = "User role from JWT token", required = true) @RequestHeader("X-User-Role") String authUserRole) {
+
+        checkRole("DOCTOR", authUserRole);
+        return profileService.getDoctorProfileByUserId(authUserId);
+    }
+
+    // --- 2.5 DOCTOR DASHBOARD & CLINIC CONFIRMATION ENDPOINTS ---
+
+    /**
+     * GET /doctor/dashboard/pending-clinics - Retrieves all pending clinic
+     * confirmations for a doctor.
+     * Used when doctor logs into their dashboard to see which clinics have added
+     * them.
+     */
+    @Operation(summary = "Get pending clinic confirmations", description = "Retrieve list of clinics that have added the authenticated doctor, awaiting confirmation")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pending clinics retrieved successfully"),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    })
+    @GetMapping("/doctor/dashboard/pending-clinics")
+    public List<DoctorDashboardService.PendingClinicDTO> getPendingClinics(
+            @Parameter(description = "User ID from JWT token", required = true) @RequestHeader("X-User-ID") String authUserId,
+            @Parameter(description = "User role from JWT token", required = true) @RequestHeader("X-User-Role") String authUserRole) {
+
+        checkRole("DOCTOR", authUserRole);
+        return doctorDashboardService.getPendingClinicConfirmations(authUserId);
+    }
+
+    /**
+     * POST /doctor/dashboard/confirm-clinic/{clinicDoctorId} - Doctor confirms
+     * clinic association.
+     * When the doctor confirms, the clinic ID is saved to their doctor profile.
+     */
+    @Operation(summary = "Confirm clinic association", description = "Confirm and associate the clinic with the authenticated doctor's profile")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Clinic association confirmed successfully", content = @Content(schema = @Schema(implementation = DoctorProfile.class))),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            @ApiResponse(responseCode = "404", description = "Clinic association not found")
+    })
+    @PostMapping("/doctor/dashboard/confirm-clinic/{clinicDoctorId}")
+    public DoctorProfile confirmClinicAssociation(
+            @Parameter(description = "User ID from JWT token", required = true) @RequestHeader("X-User-ID") String authUserId,
+            @Parameter(description = "User role from JWT token", required = true) @RequestHeader("X-User-Role") String authUserRole,
+            @Parameter(description = "Clinic-doctor association ID", required = true) @PathVariable Long clinicDoctorId) {
+
+        checkRole("DOCTOR", authUserRole);
+        return doctorDashboardService.confirmClinicAssociation(authUserId, clinicDoctorId);
+    }
+
+    /**
+     * DELETE /doctor/dashboard/reject-clinic/{clinicDoctorId} - Doctor rejects
+     * clinic association.
+     * Removes the clinic from the pending list without saving clinic ID to profile.
+     */
+    @Operation(summary = "Reject clinic association", description = "Reject and remove clinic association for the authenticated doctor")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Clinic association rejected successfully"),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            @ApiResponse(responseCode = "404", description = "Clinic association not found")
+    })
+    @DeleteMapping("/doctor/dashboard/reject-clinic/{clinicDoctorId}")
+    public ResponseEntity<Void> rejectClinicAssociation(
+            @Parameter(description = "User ID from JWT token", required = true) @RequestHeader("X-User-ID") String authUserId,
+            @Parameter(description = "User role from JWT token", required = true) @RequestHeader("X-User-Role") String authUserRole,
+            @Parameter(description = "Clinic-doctor association ID", required = true) @PathVariable Long clinicDoctorId) {
+
+        checkRole("DOCTOR", authUserRole);
+        doctorDashboardService.rejectClinicAssociation(authUserId, clinicDoctorId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     // --- 3. PHARMACY ENDPOINTS ---
