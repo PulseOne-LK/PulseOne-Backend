@@ -1,6 +1,7 @@
 package com.pulseone.appointments_service.service;
 
 import com.pulseone.appointments_service.dto.request.BookAppointmentRequest;
+import com.pulseone.appointments_service.dto.request.UpdateAppointmentRequest;
 import com.pulseone.appointments_service.dto.response.AppointmentResponse;
 import com.pulseone.appointments_service.dto.response.BookingResponse;
 import com.pulseone.appointments_service.entity.*;
@@ -216,6 +217,81 @@ public class AppointmentService {
         createAppointmentHistory(savedAppointment, previousStatus, AppointmentStatus.CANCELLED, 
                 reason != null ? reason : "Appointment cancelled", cancelledBy, cancelledByType);
 
+        return convertToAppointmentResponse(savedAppointment);
+    }
+
+    /**
+     * Update an appointment with new values
+     * Only non-null fields from the request will be updated
+     */
+    public AppointmentResponse updateAppointment(UUID appointmentId, UpdateAppointmentRequest updateRequest) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+
+        // Cannot update cancelled or completed appointments
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new IllegalArgumentException("Cannot update a cancelled appointment");
+        }
+
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED) {
+            throw new IllegalArgumentException("Cannot update a completed appointment");
+        }
+
+        // Update fields if provided (non-null)
+        if (updateRequest.getAppointmentDate() != null) {
+            // Validate the new appointment date
+            Session session = appointment.getSession();
+            validateAppointmentDate(updateRequest.getAppointmentDate(), session);
+            
+            // Check if patient already has appointment with this doctor on the new date
+            Optional<Appointment> existingAppointment = appointmentRepository
+                    .findActiveAppointmentByPatientDoctorAndDate(
+                            appointment.getPatientId(), 
+                            appointment.getDoctorId(), 
+                            updateRequest.getAppointmentDate());
+            
+            if (existingAppointment.isPresent() && !existingAppointment.get().getAppointmentId().equals(appointmentId)) {
+                throw new IllegalArgumentException("Patient already has an appointment with this doctor on " + updateRequest.getAppointmentDate());
+            }
+            
+            appointment.setAppointmentDate(updateRequest.getAppointmentDate());
+        }
+
+        if (updateRequest.getAppointmentType() != null) {
+            appointment.setAppointmentType(updateRequest.getAppointmentType());
+        }
+
+        if (updateRequest.getChiefComplaint() != null) {
+            appointment.setChiefComplaint(updateRequest.getChiefComplaint());
+        }
+
+        if (updateRequest.getConsultationFee() != null) {
+            appointment.setConsultationFee(updateRequest.getConsultationFee());
+        }
+
+        if (updateRequest.getDoctorNotes() != null) {
+            appointment.setDoctorNotes(updateRequest.getDoctorNotes());
+        }
+
+        if (updateRequest.getActualStartTime() != null) {
+            appointment.setActualStartTime(updateRequest.getActualStartTime());
+        }
+
+        if (updateRequest.getActualEndTime() != null) {
+            appointment.setActualEndTime(updateRequest.getActualEndTime());
+        }
+
+        // Status update with validation
+        if (updateRequest.getStatus() != null && !updateRequest.getStatus().equals(appointment.getStatus())) {
+            AppointmentStatus previousStatus = appointment.getStatus();
+            appointment.setStatus(updateRequest.getStatus());
+            
+            // Create history record for status change
+            createAppointmentHistory(appointment, previousStatus, updateRequest.getStatus(), 
+                    "Appointment updated", "system", "SYSTEM");
+        }
+
+        Appointment savedAppointment = appointmentRepository.save(appointment);
         return convertToAppointmentResponse(savedAppointment);
     }
 

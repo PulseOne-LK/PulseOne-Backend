@@ -97,8 +97,14 @@ func main() {
 	// Prescription routes
 	api.Post("/prescriptions", prescriptionHandlers.CreatePrescription)
 	api.Get("/prescriptions", prescriptionHandlers.GetPrescriptionsForDashboard)
+	api.Get("/prescriptions/active", prescriptionHandlers.GetActivePrescriptions)
+	api.Get("/prescriptions/stats", prescriptionHandlers.GetPrescriptionStats)
+	api.Get("/prescriptions/:id", prescriptionHandlers.GetPrescriptionById)
+	api.Get("/prescriptions/appointment/:appointment_id", prescriptionHandlers.GetPrescriptionByAppointment)
 	api.Get("/prescriptions/patient/:patient_id", prescriptionHandlers.GetPatientHistory)
+	api.Get("/prescriptions/doctor/:doctor_id", prescriptionHandlers.GetDoctorPrescriptions)
 	api.Patch("/prescriptions/:id/status", prescriptionHandlers.UpdateStatus)
+	api.Delete("/prescriptions/:id", prescriptionHandlers.DeletePrescription)
 
 	// Start server
 	addr := fmt.Sprintf(":%s", port)

@@ -272,3 +272,242 @@ func (h *PrescriptionHandler) UpdateStatus(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(prescription)
 }
+
+// GetPrescriptionByAppointment godoc
+// @Summary      Get prescription by appointment ID
+// @Description  Retrieve prescription details for a specific appointment
+// @Tags         Prescriptions
+// @Produce      json
+// @Param        appointment_id  path     string  true  "Appointment ID"
+// @Success      200             {object} model.Prescription
+// @Failure      400             {object} map[string]string
+// @Failure      404             {object} map[string]string
+// @Failure      500             {object} map[string]string
+// @Router       /prescriptions/appointment/{appointment_id} [get]
+func (h *PrescriptionHandler) GetPrescriptionByAppointment(c *fiber.Ctx) error {
+	appointmentID := c.Params("appointment_id")
+
+	if appointmentID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "appointment_id is required",
+		})
+	}
+
+	var prescription model.Prescription
+	if err := h.db.Preload("Items").
+		Where("appointment_id = ?", appointmentID).
+		First(&prescription).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Prescription not found for this appointment",
+			})
+		}
+		log.Printf("Failed to fetch prescription: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch prescription",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(prescription)
+}
+
+// GetDoctorPrescriptions godoc
+// @Summary      Get prescriptions by doctor
+// @Description  Retrieve all prescriptions issued by a specific doctor
+// @Tags         Prescriptions
+// @Produce      json
+// @Param        doctor_id  path     string  true  "Doctor ID"
+// @Param        status     query    string  false "Status filter: ACTIVE, FILLED, CANCELLED"
+// @Success      200        {array}  model.Prescription
+// @Failure      400        {object} map[string]string
+// @Failure      500        {object} map[string]string
+// @Router       /prescriptions/doctor/{doctor_id} [get]
+func (h *PrescriptionHandler) GetDoctorPrescriptions(c *fiber.Ctx) error {
+	doctorID := c.Params("doctor_id")
+	status := c.Query("status")
+
+	if doctorID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "doctor_id is required",
+		})
+	}
+
+	var prescriptions []model.Prescription
+	query := h.db.Preload("Items").Where("doctor_id = ?", doctorID)
+
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	if err := query.Order("issued_at DESC").Find(&prescriptions).Error; err != nil {
+		log.Printf("Failed to fetch doctor prescriptions: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch prescriptions",
+		})
+	}
+
+	if prescriptions == nil {
+		prescriptions = []model.Prescription{}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(prescriptions)
+}
+
+// GetActivePrescriptions godoc
+// @Summary      Get all active prescriptions
+// @Description  Retrieve all active prescriptions system-wide, useful for pharmacy operations
+// @Tags         Prescriptions
+// @Produce      json
+// @Param        clinic_id  query    string false "Filter by clinic ID"
+// @Success      200        {array}  model.Prescription
+// @Failure      500        {object} map[string]string
+// @Router       /prescriptions/active [get]
+func (h *PrescriptionHandler) GetActivePrescriptions(c *fiber.Ctx) error {
+	clinicID := c.Query("clinic_id")
+
+	var prescriptions []model.Prescription
+	query := h.db.Preload("Items").Where("status = ?", "ACTIVE")
+
+	if clinicID != "" {
+		query = query.Where("clinic_id = ?", clinicID)
+	}
+
+	if err := query.Order("issued_at DESC").Find(&prescriptions).Error; err != nil {
+		log.Printf("Failed to fetch active prescriptions: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch prescriptions",
+		})
+	}
+
+	if prescriptions == nil {
+		prescriptions = []model.Prescription{}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(prescriptions)
+}
+
+// GetPrescriptionById godoc
+// @Summary      Get prescription by ID
+// @Description  Retrieve detailed prescription information by prescription ID
+// @Tags         Prescriptions
+// @Produce      json
+// @Param        id  path     string  true  "Prescription ID"
+// @Success      200 {object} model.Prescription
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /prescriptions/{id} [get]
+func (h *PrescriptionHandler) GetPrescriptionById(c *fiber.Ctx) error {
+	prescriptionID := c.Params("id")
+
+	if prescriptionID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "prescription_id is required",
+		})
+	}
+
+	var prescription model.Prescription
+	if err := h.db.Preload("Items").First(&prescription, "id = ?", prescriptionID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Prescription not found",
+			})
+		}
+		log.Printf("Failed to fetch prescription: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch prescription",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(prescription)
+}
+
+// DeletePrescription godoc
+// @Summary      Delete prescription
+// @Description  Delete a prescription (soft delete by cancelling it)
+// @Tags         Prescriptions
+// @Produce      json
+// @Param        id  path     string  true  "Prescription ID"
+// @Success      200 {object} map[string]string
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /prescriptions/{id} [delete]
+func (h *PrescriptionHandler) DeletePrescription(c *fiber.Ctx) error {
+	prescriptionID := c.Params("id")
+
+	if prescriptionID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "prescription_id is required",
+		})
+	}
+
+	var prescription model.Prescription
+	if err := h.db.First(&prescription, "id = ?", prescriptionID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Prescription not found",
+			})
+		}
+		log.Printf("Failed to find prescription: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete prescription",
+		})
+	}
+
+	// Soft delete by cancelling the prescription
+	if err := h.db.Model(&prescription).Update("status", "CANCELLED").Error; err != nil {
+		log.Printf("Failed to delete prescription: %v\n", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete prescription",
+		})
+	}
+
+	log.Printf("✓ Prescription %s cancelled\n", prescriptionID)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Prescription deleted successfully",
+		"id":      prescriptionID,
+	})
+}
+
+// GetPrescriptionStats godoc
+// @Summary      Get prescription statistics
+// @Description  Get prescription statistics for a clinic or doctor
+// @Tags         Prescriptions
+// @Produce      json
+// @Param        clinic_id  query    string false "Clinic ID"
+// @Param        doctor_id  query    string false "Doctor ID"
+// @Success      200        {object} map[string]interface{}
+// @Failure      500        {object} map[string]string
+// @Router       /prescriptions/stats [get]
+func (h *PrescriptionHandler) GetPrescriptionStats(c *fiber.Ctx) error {
+	clinicID := c.Query("clinic_id")
+	doctorID := c.Query("doctor_id")
+
+	var totalCount int64
+	var activeCount int64
+	var filledCount int64
+	var cancelledCount int64
+
+	query := h.db
+
+	if clinicID != "" {
+		query = query.Where("clinic_id = ?", clinicID)
+	}
+	if doctorID != "" {
+		query = query.Where("doctor_id = ?", doctorID)
+	}
+
+	query.Model(&model.Prescription{}).Count(&totalCount)
+	query.Where("status = ?", "ACTIVE").Count(&activeCount)
+	query.Where("status = ?", "FILLED").Count(&filledCount)
+	query.Where("status = ?", "CANCELLED").Count(&cancelledCount)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"total":     totalCount,
+		"active":    activeCount,
+		"filled":    filledCount,
+		"cancelled": cancelledCount,
+	})
+}

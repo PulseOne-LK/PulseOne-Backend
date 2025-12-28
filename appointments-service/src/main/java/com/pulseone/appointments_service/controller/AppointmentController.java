@@ -1,6 +1,7 @@
 package com.pulseone.appointments_service.controller;
 
 import com.pulseone.appointments_service.dto.request.BookAppointmentRequest;
+import com.pulseone.appointments_service.dto.request.UpdateAppointmentRequest;
 import com.pulseone.appointments_service.dto.response.AppointmentResponse;
 import com.pulseone.appointments_service.dto.response.BookingResponse;
 import com.pulseone.appointments_service.service.AppointmentService;
@@ -174,6 +175,43 @@ public class AppointmentController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "An unexpected error occurred while retrieving the appointment"));
+        }
+    }
+
+    /**
+     * Update an appointment
+     */
+    @PutMapping("/{appointmentId}")
+    @Operation(summary = "Update appointment", description = "Update an existing appointment with new details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Appointment updated successfully",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = AppointmentResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid update request",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "404", description = "Appointment not found",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(mediaType = "application/json"))
+    })
+    public ResponseEntity<?> updateAppointment(
+            @Parameter(description = "Appointment ID", required = true)
+            @PathVariable UUID appointmentId,
+            
+            @Parameter(description = "Updated appointment data", required = true)
+            @Valid @RequestBody UpdateAppointmentRequest updateRequest) {
+        
+        try {
+            AppointmentResponse response = appointmentService.updateAppointment(appointmentId, updateRequest);
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            HttpStatus status = e.getMessage().contains("not found") ? 
+                               HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(Map.of("error", e.getMessage()));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred while updating the appointment"));
         }
     }
 

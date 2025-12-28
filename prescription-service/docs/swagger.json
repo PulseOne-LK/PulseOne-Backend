@@ -134,6 +134,158 @@
                 }
             }
         },
+        "/prescriptions/active": {
+            "get": {
+                "description": "Retrieve all active prescriptions system-wide, useful for pharmacy operations",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescriptions"
+                ],
+                "summary": "Get all active prescriptions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by clinic ID",
+                        "name": "clinic_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Prescription"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/prescriptions/appointment/{appointment_id}": {
+            "get": {
+                "description": "Retrieve prescription details for a specific appointment",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescriptions"
+                ],
+                "summary": "Get prescription by appointment ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Appointment ID",
+                        "name": "appointment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Prescription"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/prescriptions/doctor/{doctor_id}": {
+            "get": {
+                "description": "Retrieve all prescriptions issued by a specific doctor",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescriptions"
+                ],
+                "summary": "Get prescriptions by doctor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Doctor ID",
+                        "name": "doctor_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status filter: ACTIVE, FILLED, CANCELLED",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Prescription"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/prescriptions/patient/{patient_id}": {
             "get": {
                 "description": "Retrieve complete prescription history for a specific patient",
@@ -165,6 +317,163 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/prescriptions/stats": {
+            "get": {
+                "description": "Get prescription statistics for a clinic or doctor",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescriptions"
+                ],
+                "summary": "Get prescription statistics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Clinic ID",
+                        "name": "clinic_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Doctor ID",
+                        "name": "doctor_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/prescriptions/{id}": {
+            "get": {
+                "description": "Retrieve detailed prescription information by prescription ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescriptions"
+                ],
+                "summary": "Get prescription by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prescription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Prescription"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a prescription (soft delete by cancelling it)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescriptions"
+                ],
+                "summary": "Delete prescription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prescription ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {

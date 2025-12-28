@@ -167,6 +167,81 @@ paths:
       summary: Create a new prescription
       tags:
       - Prescriptions
+  /prescriptions/{id}:
+    delete:
+      description: Delete a prescription (soft delete by cancelling it)
+      parameters:
+      - description: Prescription ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete prescription
+      tags:
+      - Prescriptions
+    get:
+      description: Retrieve detailed prescription information by prescription ID
+      parameters:
+      - description: Prescription ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Prescription'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get prescription by ID
+      tags:
+      - Prescriptions
   /prescriptions/{id}/status:
     patch:
       consumes:
@@ -213,6 +288,107 @@ paths:
       summary: Update prescription status
       tags:
       - Prescriptions
+  /prescriptions/active:
+    get:
+      description: Retrieve all active prescriptions system-wide, useful for pharmacy
+        operations
+      parameters:
+      - description: Filter by clinic ID
+        in: query
+        name: clinic_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Prescription'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all active prescriptions
+      tags:
+      - Prescriptions
+  /prescriptions/appointment/{appointment_id}:
+    get:
+      description: Retrieve prescription details for a specific appointment
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: appointment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Prescription'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get prescription by appointment ID
+      tags:
+      - Prescriptions
+  /prescriptions/doctor/{doctor_id}:
+    get:
+      description: Retrieve all prescriptions issued by a specific doctor
+      parameters:
+      - description: Doctor ID
+        in: path
+        name: doctor_id
+        required: true
+        type: string
+      - description: 'Status filter: ACTIVE, FILLED, CANCELLED'
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Prescription'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get prescriptions by doctor
+      tags:
+      - Prescriptions
   /prescriptions/patient/{patient_id}:
     get:
       description: Retrieve complete prescription history for a specific patient
@@ -244,6 +420,35 @@ paths:
               type: string
             type: object
       summary: Get patient prescription history
+      tags:
+      - Prescriptions
+  /prescriptions/stats:
+    get:
+      description: Get prescription statistics for a clinic or doctor
+      parameters:
+      - description: Clinic ID
+        in: query
+        name: clinic_id
+        type: string
+      - description: Doctor ID
+        in: query
+        name: doctor_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get prescription statistics
       tags:
       - Prescriptions
 schemes:

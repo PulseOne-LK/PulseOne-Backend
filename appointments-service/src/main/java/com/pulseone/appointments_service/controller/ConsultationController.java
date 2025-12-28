@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -44,20 +45,22 @@ public class ConsultationController {
             @ApiResponse(responseCode = "409", description = "Consultation notes already exist for this appointment"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<ConsultationNotesResponse> createConsultationNotes(
+    public ResponseEntity<String> createConsultationNotes(
             @Parameter(description = "Consultation notes details", required = true)
             @RequestBody @Valid ConsultationNotesRequest request) {
         
         try {
             ConsultationNotesResponse response = consultationService.createConsultationNotes(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Consultation notes created successfully");
         } catch (RuntimeException e) {
-            if (e.getMessage().contains("already exist")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
-            } else if (e.getMessage().contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            if (e.getMessage() != null && e.getMessage().contains("already exist")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            } else if (e.getMessage() != null && e.getMessage().contains("not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            } else if (e.getMessage() != null && e.getMessage().contains("COMPLETED")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Appointment must be in COMPLETED status. " + e.getMessage());
             }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage() != null ? e.getMessage() : "Invalid request");
         }
     }
 
@@ -372,13 +375,22 @@ public class ConsultationController {
     // ERROR HANDLING
     // ========================================
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidationException(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("Validation failed");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage() != null ? e.getMessage() : "Internal error");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage() != null ? e.getMessage() : "Invalid argument");
     }
 }
