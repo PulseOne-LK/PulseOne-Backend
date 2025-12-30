@@ -5801,6 +5801,1523 @@ public final class UserEvents {
 
   }
 
+  public interface PrescriptionDispensedEventOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:events.v1.PrescriptionDispensedEvent)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Prescription ID that was dispensed
+     * </pre>
+     *
+     * <code>string prescription_id = 1;</code>
+     * @return The prescriptionId.
+     */
+    java.lang.String getPrescriptionId();
+    /**
+     * <pre>
+     * Prescription ID that was dispensed
+     * </pre>
+     *
+     * <code>string prescription_id = 1;</code>
+     * @return The bytes for prescriptionId.
+     */
+    com.google.protobuf.ByteString
+        getPrescriptionIdBytes();
+
+    /**
+     * <pre>
+     * Clinic ID where dispensing occurred
+     * </pre>
+     *
+     * <code>string clinic_id = 2;</code>
+     * @return The clinicId.
+     */
+    java.lang.String getClinicId();
+    /**
+     * <pre>
+     * Clinic ID where dispensing occurred
+     * </pre>
+     *
+     * <code>string clinic_id = 2;</code>
+     * @return The bytes for clinicId.
+     */
+    com.google.protobuf.ByteString
+        getClinicIdBytes();
+
+    /**
+     * <pre>
+     * Catalog item ID that was dispensed
+     * </pre>
+     *
+     * <code>string catalog_item_id = 3;</code>
+     * @return The catalogItemId.
+     */
+    java.lang.String getCatalogItemId();
+    /**
+     * <pre>
+     * Catalog item ID that was dispensed
+     * </pre>
+     *
+     * <code>string catalog_item_id = 3;</code>
+     * @return The bytes for catalogItemId.
+     */
+    com.google.protobuf.ByteString
+        getCatalogItemIdBytes();
+
+    /**
+     * <pre>
+     * Quantity dispensed
+     * </pre>
+     *
+     * <code>int32 quantity_dispensed = 4;</code>
+     * @return The quantityDispensed.
+     */
+    int getQuantityDispensed();
+
+    /**
+     * <pre>
+     * Total cost of dispensing
+     * </pre>
+     *
+     * <code>string total_cost = 5;</code>
+     * @return The totalCost.
+     */
+    java.lang.String getTotalCost();
+    /**
+     * <pre>
+     * Total cost of dispensing
+     * </pre>
+     *
+     * <code>string total_cost = 5;</code>
+     * @return The bytes for totalCost.
+     */
+    com.google.protobuf.ByteString
+        getTotalCostBytes();
+
+    /**
+     * <pre>
+     * Event timestamp (Unix timestamp in seconds)
+     * </pre>
+     *
+     * <code>int64 timestamp = 6;</code>
+     * @return The timestamp.
+     */
+    long getTimestamp();
+
+    /**
+     * <pre>
+     * Event type identifier
+     * </pre>
+     *
+     * <code>string event_type = 7;</code>
+     * @return The eventType.
+     */
+    java.lang.String getEventType();
+    /**
+     * <pre>
+     * Event type identifier
+     * </pre>
+     *
+     * <code>string event_type = 7;</code>
+     * @return The bytes for eventType.
+     */
+    com.google.protobuf.ByteString
+        getEventTypeBytes();
+  }
+  /**
+   * <pre>
+   * Prescription dispensed event message
+   * </pre>
+   *
+   * Protobuf type {@code events.v1.PrescriptionDispensedEvent}
+   */
+  public static final class PrescriptionDispensedEvent extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:events.v1.PrescriptionDispensedEvent)
+      PrescriptionDispensedEventOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PrescriptionDispensedEvent.newBuilder() to construct.
+    private PrescriptionDispensedEvent(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PrescriptionDispensedEvent() {
+      prescriptionId_ = "";
+      clinicId_ = "";
+      catalogItemId_ = "";
+      totalCost_ = "";
+      eventType_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new PrescriptionDispensedEvent();
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return events.v1.UserEvents.internal_static_events_v1_PrescriptionDispensedEvent_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return events.v1.UserEvents.internal_static_events_v1_PrescriptionDispensedEvent_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              events.v1.UserEvents.PrescriptionDispensedEvent.class, events.v1.UserEvents.PrescriptionDispensedEvent.Builder.class);
+    }
+
+    public static final int PRESCRIPTION_ID_FIELD_NUMBER = 1;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object prescriptionId_ = "";
+    /**
+     * <pre>
+     * Prescription ID that was dispensed
+     * </pre>
+     *
+     * <code>string prescription_id = 1;</code>
+     * @return The prescriptionId.
+     */
+    @java.lang.Override
+    public java.lang.String getPrescriptionId() {
+      java.lang.Object ref = prescriptionId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        prescriptionId_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Prescription ID that was dispensed
+     * </pre>
+     *
+     * <code>string prescription_id = 1;</code>
+     * @return The bytes for prescriptionId.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getPrescriptionIdBytes() {
+      java.lang.Object ref = prescriptionId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        prescriptionId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int CLINIC_ID_FIELD_NUMBER = 2;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object clinicId_ = "";
+    /**
+     * <pre>
+     * Clinic ID where dispensing occurred
+     * </pre>
+     *
+     * <code>string clinic_id = 2;</code>
+     * @return The clinicId.
+     */
+    @java.lang.Override
+    public java.lang.String getClinicId() {
+      java.lang.Object ref = clinicId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        clinicId_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Clinic ID where dispensing occurred
+     * </pre>
+     *
+     * <code>string clinic_id = 2;</code>
+     * @return The bytes for clinicId.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getClinicIdBytes() {
+      java.lang.Object ref = clinicId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        clinicId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int CATALOG_ITEM_ID_FIELD_NUMBER = 3;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object catalogItemId_ = "";
+    /**
+     * <pre>
+     * Catalog item ID that was dispensed
+     * </pre>
+     *
+     * <code>string catalog_item_id = 3;</code>
+     * @return The catalogItemId.
+     */
+    @java.lang.Override
+    public java.lang.String getCatalogItemId() {
+      java.lang.Object ref = catalogItemId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        catalogItemId_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Catalog item ID that was dispensed
+     * </pre>
+     *
+     * <code>string catalog_item_id = 3;</code>
+     * @return The bytes for catalogItemId.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getCatalogItemIdBytes() {
+      java.lang.Object ref = catalogItemId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        catalogItemId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int QUANTITY_DISPENSED_FIELD_NUMBER = 4;
+    private int quantityDispensed_ = 0;
+    /**
+     * <pre>
+     * Quantity dispensed
+     * </pre>
+     *
+     * <code>int32 quantity_dispensed = 4;</code>
+     * @return The quantityDispensed.
+     */
+    @java.lang.Override
+    public int getQuantityDispensed() {
+      return quantityDispensed_;
+    }
+
+    public static final int TOTAL_COST_FIELD_NUMBER = 5;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object totalCost_ = "";
+    /**
+     * <pre>
+     * Total cost of dispensing
+     * </pre>
+     *
+     * <code>string total_cost = 5;</code>
+     * @return The totalCost.
+     */
+    @java.lang.Override
+    public java.lang.String getTotalCost() {
+      java.lang.Object ref = totalCost_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        totalCost_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Total cost of dispensing
+     * </pre>
+     *
+     * <code>string total_cost = 5;</code>
+     * @return The bytes for totalCost.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getTotalCostBytes() {
+      java.lang.Object ref = totalCost_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        totalCost_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int TIMESTAMP_FIELD_NUMBER = 6;
+    private long timestamp_ = 0L;
+    /**
+     * <pre>
+     * Event timestamp (Unix timestamp in seconds)
+     * </pre>
+     *
+     * <code>int64 timestamp = 6;</code>
+     * @return The timestamp.
+     */
+    @java.lang.Override
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
+    public static final int EVENT_TYPE_FIELD_NUMBER = 7;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object eventType_ = "";
+    /**
+     * <pre>
+     * Event type identifier
+     * </pre>
+     *
+     * <code>string event_type = 7;</code>
+     * @return The eventType.
+     */
+    @java.lang.Override
+    public java.lang.String getEventType() {
+      java.lang.Object ref = eventType_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        eventType_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Event type identifier
+     * </pre>
+     *
+     * <code>string event_type = 7;</code>
+     * @return The bytes for eventType.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getEventTypeBytes() {
+      java.lang.Object ref = eventType_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        eventType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(prescriptionId_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, prescriptionId_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(clinicId_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, clinicId_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(catalogItemId_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, catalogItemId_);
+      }
+      if (quantityDispensed_ != 0) {
+        output.writeInt32(4, quantityDispensed_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(totalCost_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, totalCost_);
+      }
+      if (timestamp_ != 0L) {
+        output.writeInt64(6, timestamp_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(eventType_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, eventType_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(prescriptionId_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, prescriptionId_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(clinicId_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, clinicId_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(catalogItemId_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, catalogItemId_);
+      }
+      if (quantityDispensed_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(4, quantityDispensed_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(totalCost_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, totalCost_);
+      }
+      if (timestamp_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(6, timestamp_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(eventType_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, eventType_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof events.v1.UserEvents.PrescriptionDispensedEvent)) {
+        return super.equals(obj);
+      }
+      events.v1.UserEvents.PrescriptionDispensedEvent other = (events.v1.UserEvents.PrescriptionDispensedEvent) obj;
+
+      if (!getPrescriptionId()
+          .equals(other.getPrescriptionId())) return false;
+      if (!getClinicId()
+          .equals(other.getClinicId())) return false;
+      if (!getCatalogItemId()
+          .equals(other.getCatalogItemId())) return false;
+      if (getQuantityDispensed()
+          != other.getQuantityDispensed()) return false;
+      if (!getTotalCost()
+          .equals(other.getTotalCost())) return false;
+      if (getTimestamp()
+          != other.getTimestamp()) return false;
+      if (!getEventType()
+          .equals(other.getEventType())) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + PRESCRIPTION_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getPrescriptionId().hashCode();
+      hash = (37 * hash) + CLINIC_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getClinicId().hashCode();
+      hash = (37 * hash) + CATALOG_ITEM_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getCatalogItemId().hashCode();
+      hash = (37 * hash) + QUANTITY_DISPENSED_FIELD_NUMBER;
+      hash = (53 * hash) + getQuantityDispensed();
+      hash = (37 * hash) + TOTAL_COST_FIELD_NUMBER;
+      hash = (53 * hash) + getTotalCost().hashCode();
+      hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getTimestamp());
+      hash = (37 * hash) + EVENT_TYPE_FIELD_NUMBER;
+      hash = (53 * hash) + getEventType().hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static events.v1.UserEvents.PrescriptionDispensedEvent parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(events.v1.UserEvents.PrescriptionDispensedEvent prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Prescription dispensed event message
+     * </pre>
+     *
+     * Protobuf type {@code events.v1.PrescriptionDispensedEvent}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:events.v1.PrescriptionDispensedEvent)
+        events.v1.UserEvents.PrescriptionDispensedEventOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return events.v1.UserEvents.internal_static_events_v1_PrescriptionDispensedEvent_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return events.v1.UserEvents.internal_static_events_v1_PrescriptionDispensedEvent_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                events.v1.UserEvents.PrescriptionDispensedEvent.class, events.v1.UserEvents.PrescriptionDispensedEvent.Builder.class);
+      }
+
+      // Construct using events.v1.UserEvents.PrescriptionDispensedEvent.newBuilder()
+      private Builder() {
+
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bitField0_ = 0;
+        prescriptionId_ = "";
+        clinicId_ = "";
+        catalogItemId_ = "";
+        quantityDispensed_ = 0;
+        totalCost_ = "";
+        timestamp_ = 0L;
+        eventType_ = "";
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return events.v1.UserEvents.internal_static_events_v1_PrescriptionDispensedEvent_descriptor;
+      }
+
+      @java.lang.Override
+      public events.v1.UserEvents.PrescriptionDispensedEvent getDefaultInstanceForType() {
+        return events.v1.UserEvents.PrescriptionDispensedEvent.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public events.v1.UserEvents.PrescriptionDispensedEvent build() {
+        events.v1.UserEvents.PrescriptionDispensedEvent result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public events.v1.UserEvents.PrescriptionDispensedEvent buildPartial() {
+        events.v1.UserEvents.PrescriptionDispensedEvent result = new events.v1.UserEvents.PrescriptionDispensedEvent(this);
+        if (bitField0_ != 0) { buildPartial0(result); }
+        onBuilt();
+        return result;
+      }
+
+      private void buildPartial0(events.v1.UserEvents.PrescriptionDispensedEvent result) {
+        int from_bitField0_ = bitField0_;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.prescriptionId_ = prescriptionId_;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.clinicId_ = clinicId_;
+        }
+        if (((from_bitField0_ & 0x00000004) != 0)) {
+          result.catalogItemId_ = catalogItemId_;
+        }
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.quantityDispensed_ = quantityDispensed_;
+        }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.totalCost_ = totalCost_;
+        }
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.timestamp_ = timestamp_;
+        }
+        if (((from_bitField0_ & 0x00000040) != 0)) {
+          result.eventType_ = eventType_;
+        }
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof events.v1.UserEvents.PrescriptionDispensedEvent) {
+          return mergeFrom((events.v1.UserEvents.PrescriptionDispensedEvent)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(events.v1.UserEvents.PrescriptionDispensedEvent other) {
+        if (other == events.v1.UserEvents.PrescriptionDispensedEvent.getDefaultInstance()) return this;
+        if (!other.getPrescriptionId().isEmpty()) {
+          prescriptionId_ = other.prescriptionId_;
+          bitField0_ |= 0x00000001;
+          onChanged();
+        }
+        if (!other.getClinicId().isEmpty()) {
+          clinicId_ = other.clinicId_;
+          bitField0_ |= 0x00000002;
+          onChanged();
+        }
+        if (!other.getCatalogItemId().isEmpty()) {
+          catalogItemId_ = other.catalogItemId_;
+          bitField0_ |= 0x00000004;
+          onChanged();
+        }
+        if (other.getQuantityDispensed() != 0) {
+          setQuantityDispensed(other.getQuantityDispensed());
+        }
+        if (!other.getTotalCost().isEmpty()) {
+          totalCost_ = other.totalCost_;
+          bitField0_ |= 0x00000010;
+          onChanged();
+        }
+        if (other.getTimestamp() != 0L) {
+          setTimestamp(other.getTimestamp());
+        }
+        if (!other.getEventType().isEmpty()) {
+          eventType_ = other.eventType_;
+          bitField0_ |= 0x00000040;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 10: {
+                prescriptionId_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000001;
+                break;
+              } // case 10
+              case 18: {
+                clinicId_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000002;
+                break;
+              } // case 18
+              case 26: {
+                catalogItemId_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000004;
+                break;
+              } // case 26
+              case 32: {
+                quantityDispensed_ = input.readInt32();
+                bitField0_ |= 0x00000008;
+                break;
+              } // case 32
+              case 42: {
+                totalCost_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000010;
+                break;
+              } // case 42
+              case 48: {
+                timestamp_ = input.readInt64();
+                bitField0_ |= 0x00000020;
+                break;
+              } // case 48
+              case 58: {
+                eventType_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000040;
+                break;
+              } // case 58
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.unwrapIOException();
+        } finally {
+          onChanged();
+        } // finally
+        return this;
+      }
+      private int bitField0_;
+
+      private java.lang.Object prescriptionId_ = "";
+      /**
+       * <pre>
+       * Prescription ID that was dispensed
+       * </pre>
+       *
+       * <code>string prescription_id = 1;</code>
+       * @return The prescriptionId.
+       */
+      public java.lang.String getPrescriptionId() {
+        java.lang.Object ref = prescriptionId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          prescriptionId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Prescription ID that was dispensed
+       * </pre>
+       *
+       * <code>string prescription_id = 1;</code>
+       * @return The bytes for prescriptionId.
+       */
+      public com.google.protobuf.ByteString
+          getPrescriptionIdBytes() {
+        java.lang.Object ref = prescriptionId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          prescriptionId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Prescription ID that was dispensed
+       * </pre>
+       *
+       * <code>string prescription_id = 1;</code>
+       * @param value The prescriptionId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPrescriptionId(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        prescriptionId_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Prescription ID that was dispensed
+       * </pre>
+       *
+       * <code>string prescription_id = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearPrescriptionId() {
+        prescriptionId_ = getDefaultInstance().getPrescriptionId();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Prescription ID that was dispensed
+       * </pre>
+       *
+       * <code>string prescription_id = 1;</code>
+       * @param value The bytes for prescriptionId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPrescriptionIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        prescriptionId_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object clinicId_ = "";
+      /**
+       * <pre>
+       * Clinic ID where dispensing occurred
+       * </pre>
+       *
+       * <code>string clinic_id = 2;</code>
+       * @return The clinicId.
+       */
+      public java.lang.String getClinicId() {
+        java.lang.Object ref = clinicId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          clinicId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Clinic ID where dispensing occurred
+       * </pre>
+       *
+       * <code>string clinic_id = 2;</code>
+       * @return The bytes for clinicId.
+       */
+      public com.google.protobuf.ByteString
+          getClinicIdBytes() {
+        java.lang.Object ref = clinicId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          clinicId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Clinic ID where dispensing occurred
+       * </pre>
+       *
+       * <code>string clinic_id = 2;</code>
+       * @param value The clinicId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setClinicId(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        clinicId_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Clinic ID where dispensing occurred
+       * </pre>
+       *
+       * <code>string clinic_id = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearClinicId() {
+        clinicId_ = getDefaultInstance().getClinicId();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Clinic ID where dispensing occurred
+       * </pre>
+       *
+       * <code>string clinic_id = 2;</code>
+       * @param value The bytes for clinicId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setClinicIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        clinicId_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object catalogItemId_ = "";
+      /**
+       * <pre>
+       * Catalog item ID that was dispensed
+       * </pre>
+       *
+       * <code>string catalog_item_id = 3;</code>
+       * @return The catalogItemId.
+       */
+      public java.lang.String getCatalogItemId() {
+        java.lang.Object ref = catalogItemId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          catalogItemId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Catalog item ID that was dispensed
+       * </pre>
+       *
+       * <code>string catalog_item_id = 3;</code>
+       * @return The bytes for catalogItemId.
+       */
+      public com.google.protobuf.ByteString
+          getCatalogItemIdBytes() {
+        java.lang.Object ref = catalogItemId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          catalogItemId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Catalog item ID that was dispensed
+       * </pre>
+       *
+       * <code>string catalog_item_id = 3;</code>
+       * @param value The catalogItemId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setCatalogItemId(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        catalogItemId_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Catalog item ID that was dispensed
+       * </pre>
+       *
+       * <code>string catalog_item_id = 3;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearCatalogItemId() {
+        catalogItemId_ = getDefaultInstance().getCatalogItemId();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Catalog item ID that was dispensed
+       * </pre>
+       *
+       * <code>string catalog_item_id = 3;</code>
+       * @param value The bytes for catalogItemId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setCatalogItemIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        catalogItemId_ = value;
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return this;
+      }
+
+      private int quantityDispensed_ ;
+      /**
+       * <pre>
+       * Quantity dispensed
+       * </pre>
+       *
+       * <code>int32 quantity_dispensed = 4;</code>
+       * @return The quantityDispensed.
+       */
+      @java.lang.Override
+      public int getQuantityDispensed() {
+        return quantityDispensed_;
+      }
+      /**
+       * <pre>
+       * Quantity dispensed
+       * </pre>
+       *
+       * <code>int32 quantity_dispensed = 4;</code>
+       * @param value The quantityDispensed to set.
+       * @return This builder for chaining.
+       */
+      public Builder setQuantityDispensed(int value) {
+
+        quantityDispensed_ = value;
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Quantity dispensed
+       * </pre>
+       *
+       * <code>int32 quantity_dispensed = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearQuantityDispensed() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        quantityDispensed_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object totalCost_ = "";
+      /**
+       * <pre>
+       * Total cost of dispensing
+       * </pre>
+       *
+       * <code>string total_cost = 5;</code>
+       * @return The totalCost.
+       */
+      public java.lang.String getTotalCost() {
+        java.lang.Object ref = totalCost_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          totalCost_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Total cost of dispensing
+       * </pre>
+       *
+       * <code>string total_cost = 5;</code>
+       * @return The bytes for totalCost.
+       */
+      public com.google.protobuf.ByteString
+          getTotalCostBytes() {
+        java.lang.Object ref = totalCost_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          totalCost_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Total cost of dispensing
+       * </pre>
+       *
+       * <code>string total_cost = 5;</code>
+       * @param value The totalCost to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTotalCost(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        totalCost_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Total cost of dispensing
+       * </pre>
+       *
+       * <code>string total_cost = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearTotalCost() {
+        totalCost_ = getDefaultInstance().getTotalCost();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Total cost of dispensing
+       * </pre>
+       *
+       * <code>string total_cost = 5;</code>
+       * @param value The bytes for totalCost to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTotalCostBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        totalCost_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+
+      private long timestamp_ ;
+      /**
+       * <pre>
+       * Event timestamp (Unix timestamp in seconds)
+       * </pre>
+       *
+       * <code>int64 timestamp = 6;</code>
+       * @return The timestamp.
+       */
+      @java.lang.Override
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <pre>
+       * Event timestamp (Unix timestamp in seconds)
+       * </pre>
+       *
+       * <code>int64 timestamp = 6;</code>
+       * @param value The timestamp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTimestamp(long value) {
+
+        timestamp_ = value;
+        bitField0_ |= 0x00000020;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Event timestamp (Unix timestamp in seconds)
+       * </pre>
+       *
+       * <code>int64 timestamp = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object eventType_ = "";
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 7;</code>
+       * @return The eventType.
+       */
+      public java.lang.String getEventType() {
+        java.lang.Object ref = eventType_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          eventType_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 7;</code>
+       * @return The bytes for eventType.
+       */
+      public com.google.protobuf.ByteString
+          getEventTypeBytes() {
+        java.lang.Object ref = eventType_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          eventType_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 7;</code>
+       * @param value The eventType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEventType(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        eventType_ = value;
+        bitField0_ |= 0x00000040;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearEventType() {
+        eventType_ = getDefaultInstance().getEventType();
+        bitField0_ = (bitField0_ & ~0x00000040);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Event type identifier
+       * </pre>
+       *
+       * <code>string event_type = 7;</code>
+       * @param value The bytes for eventType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setEventTypeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        eventType_ = value;
+        bitField0_ |= 0x00000040;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:events.v1.PrescriptionDispensedEvent)
+    }
+
+    // @@protoc_insertion_point(class_scope:events.v1.PrescriptionDispensedEvent)
+    private static final events.v1.UserEvents.PrescriptionDispensedEvent DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new events.v1.UserEvents.PrescriptionDispensedEvent();
+    }
+
+    public static events.v1.UserEvents.PrescriptionDispensedEvent getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<PrescriptionDispensedEvent>
+        PARSER = new com.google.protobuf.AbstractParser<PrescriptionDispensedEvent>() {
+      @java.lang.Override
+      public PrescriptionDispensedEvent parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
+      }
+    };
+
+    public static com.google.protobuf.Parser<PrescriptionDispensedEvent> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PrescriptionDispensedEvent> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public events.v1.UserEvents.PrescriptionDispensedEvent getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_events_v1_UserRegistrationEvent_descriptor;
   private static final 
@@ -5821,6 +7338,11 @@ public final class UserEvents {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_events_v1_UserRegistrationEventResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_events_v1_PrescriptionDispensedEvent_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_events_v1_PrescriptionDispensedEvent_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -5845,8 +7367,13 @@ public final class UserEvents {
       "s\030\005 \001(\t\022\021\n\tis_active\030\006 \001(\010\022\021\n\ttimestamp\030" +
       "\007 \001(\003\022\022\n\nevent_type\030\010 \001(\t\"U\n\035UserRegistr" +
       "ationEventResponse\022\017\n\007success\030\001 \001(\010\022\017\n\007m" +
-      "essage\030\002 \001(\t\022\022\n\nerror_code\030\003 \001(\tB\035Z\033auth" +
-      "-service/internal/protob\006proto3"
+      "essage\030\002 \001(\t\022\022\n\nerror_code\030\003 \001(\t\"\270\001\n\032Pre" +
+      "scriptionDispensedEvent\022\027\n\017prescription_" +
+      "id\030\001 \001(\t\022\021\n\tclinic_id\030\002 \001(\t\022\027\n\017catalog_i" +
+      "tem_id\030\003 \001(\t\022\032\n\022quantity_dispensed\030\004 \001(\005" +
+      "\022\022\n\ntotal_cost\030\005 \001(\t\022\021\n\ttimestamp\030\006 \001(\003\022" +
+      "\022\n\nevent_type\030\007 \001(\tB\035Z\033auth-service/inte" +
+      "rnal/protob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -5876,6 +7403,12 @@ public final class UserEvents {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_events_v1_UserRegistrationEventResponse_descriptor,
         new java.lang.String[] { "Success", "Message", "ErrorCode", });
+    internal_static_events_v1_PrescriptionDispensedEvent_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_events_v1_PrescriptionDispensedEvent_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_events_v1_PrescriptionDispensedEvent_descriptor,
+        new java.lang.String[] { "PrescriptionId", "ClinicId", "CatalogItemId", "QuantityDispensed", "TotalCost", "Timestamp", "EventType", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

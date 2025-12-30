@@ -231,7 +231,7 @@ func (h *PrescriptionHandler) UpdateStatus(c *fiber.Ctx) error {
 	}
 
 	// Validate status
-	validStatuses := []string{"ACTIVE", "FILLED", "CANCELLED"}
+	validStatuses := []string{"ACTIVE", "DISPENSED", "FILLED", "CANCELLED"}
 	isValidStatus := false
 	for _, valid := range validStatuses {
 		if req.Status == valid {
@@ -242,7 +242,7 @@ func (h *PrescriptionHandler) UpdateStatus(c *fiber.Ctx) error {
 
 	if !isValidStatus {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid status. Must be one of: ACTIVE, FILLED, CANCELLED",
+			"error": "Invalid status. Must be one of: ACTIVE, DISPENSED, FILLED, CANCELLED",
 		})
 	}
 
@@ -274,12 +274,12 @@ func (h *PrescriptionHandler) UpdateStatus(c *fiber.Ctx) error {
 }
 
 // GetPrescriptionByAppointment godoc
-// @Summary      Get prescription by appointment ID
-// @Description  Retrieve prescription details for a specific appointment
+// @Summary      Get all prescriptions by appointment ID
+// @Description  Retrieve all prescription details for a specific appointment (supports multiple prescriptions per appointment)
 // @Tags         Prescriptions
 // @Produce      json
 // @Param        appointment_id  path     string  true  "Appointment ID"
-// @Success      200             {object} model.Prescription
+// @Success      200             {array}  model.Prescription
 // @Failure      400             {object} map[string]string
 // @Failure      404             {object} map[string]string
 // @Failure      500             {object} map[string]string
@@ -293,22 +293,21 @@ func (h *PrescriptionHandler) GetPrescriptionByAppointment(c *fiber.Ctx) error {
 		})
 	}
 
-	var prescription model.Prescription
+	var prescriptions []model.Prescription
 	if err := h.db.Preload("Items").
 		Where("appointment_id = ?", appointmentID).
-		First(&prescription).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "Prescription not found for this appointment",
-			})
-		}
-		log.Printf("Failed to fetch prescription: %v\n", err)
+		Find(&prescriptions).Error; err != nil {
+		log.Printf("Failed to fetch prescriptions: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to fetch prescription",
+			"error": "Failed to fetch prescriptions",
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(prescription)
+	if prescriptions == nil {
+		prescriptions = []model.Prescription{}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(prescriptions)
 }
 
 // GetDoctorPrescriptions godoc

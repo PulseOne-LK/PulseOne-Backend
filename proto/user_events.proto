@@ -90,3 +90,27 @@ message UserRegistrationEventResponse {
   // Error code if processing failed
   string error_code = 3;
 }
+
+// Prescription dispensed event message
+message PrescriptionDispensedEvent {
+  // Prescription ID that was dispensed
+  string prescription_id = 1;
+  
+  // Clinic ID where dispensing occurred
+  string clinic_id = 2;
+  
+  // Catalog item ID that was dispensed
+  string catalog_item_id = 3;
+  
+  // Quantity dispensed
+  int32 quantity_dispensed = 4;
+  
+  // Total cost of dispensing
+  string total_cost = 5;
+  
+  // Event timestamp (Unix timestamp in seconds)
+  int64 timestamp = 6;
+  
+  // Event type identifier
+  string event_type = 7;
+}

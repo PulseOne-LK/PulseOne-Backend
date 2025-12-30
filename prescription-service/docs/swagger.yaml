@@ -47,7 +47,7 @@ definitions:
       patient_id:
         type: string
       status:
-        description: ACTIVE, FILLED, CANCELLED
+        description: ACTIVE, DISPENSED, FILLED, CANCELLED
         type: string
       updated_at:
         type: string
@@ -317,7 +317,8 @@ paths:
       - Prescriptions
   /prescriptions/appointment/{appointment_id}:
     get:
-      description: Retrieve prescription details for a specific appointment
+      description: Retrieve all prescription details for a specific appointment (supports
+        multiple prescriptions per appointment)
       parameters:
       - description: Appointment ID
         in: path
@@ -330,7 +331,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.Prescription'
+            items:
+              $ref: '#/definitions/model.Prescription'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -349,7 +352,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get prescription by appointment ID
+      summary: Get all prescriptions by appointment ID
       tags:
       - Prescriptions
   /prescriptions/doctor/{doctor_id}:

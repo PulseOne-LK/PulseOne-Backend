@@ -82,8 +82,8 @@ public class InventoryController {
         })
         @PostMapping("/dispense")
         public ResponseEntity<DispenseResponse> dispenseDrug(
-                        @Parameter(description = "Dispense request with appointment and medication details", required = true) @RequestBody DispenseRequest request) {
-                logger.info("Received request to dispense drug for appointment: {}", request.getAppointmentId());
+                        @Parameter(description = "Dispense request with prescription and medication details", required = true) @RequestBody DispenseRequest request) {
+                logger.info("Received request to dispense drug for prescription: {}", request.getPrescriptionId());
                 DispenseResponse response = inventoryService.dispenseDrug(request);
                 return ResponseEntity.ok(response);
         }

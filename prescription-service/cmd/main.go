@@ -8,6 +8,7 @@ import (
 	_ "prescription-service/docs"
 	"prescription-service/internal/database"
 	"prescription-service/internal/handlers"
+	"prescription-service/internal/messaging"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
@@ -62,6 +63,7 @@ func main() {
 	dbUser := getEnv("DB_USER", "postgres")
 	dbPassword := getEnv("DB_PASSWORD", "postgres")
 	dbName := getEnv("DB_NAME", "prescriptiondb")
+	rabbitMQURL := getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
 
 	// Initialize Database
 	db, err := database.InitDB(dbHost, dbPort, dbUser, dbPassword, dbName)
@@ -70,6 +72,28 @@ func main() {
 	}
 
 	log.Println("✓ Database connected and migrated successfully")
+
+	// Initialize RabbitMQ Consumer
+	rabbitConsumer, err := messaging.NewRabbitMQConsumer(rabbitMQURL, db)
+	if err != nil {
+		log.Printf("⚠️  Warning: Failed to initialize RabbitMQ consumer: %v\n", err)
+		log.Println("⚠️  Service will continue without event processing")
+	} else {
+		// Declare queues and exchanges
+		if err := rabbitConsumer.DeclareQueuesAndExchanges(); err != nil {
+			log.Printf("⚠️  Warning: Failed to declare RabbitMQ queues: %v\n", err)
+		}
+
+		// Start consuming events
+		if err := rabbitConsumer.StartConsuming(); err != nil {
+			log.Printf("⚠️  Warning: Failed to start consuming events: %v\n", err)
+		}
+
+		// Ensure consumer is closed on exit
+		defer rabbitConsumer.Close()
+
+		log.Println("✓ RabbitMQ consumer initialized successfully")
+	}
 
 	// Initialize Fiber app
 	app := fiber.New(fiber.Config{

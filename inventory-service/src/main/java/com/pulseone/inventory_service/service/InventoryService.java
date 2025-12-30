@@ -7,6 +7,8 @@ import com.pulseone.inventory_service.exception.InsufficientStockException;
 import com.pulseone.inventory_service.repository.CatalogItemRepository;
 import com.pulseone.inventory_service.repository.InventoryBatchRepository;
 import com.pulseone.inventory_service.repository.StockTransactionRepository;
+import com.pulseone.inventory_service.messaging.RabbitMQPublisher;
+import events.v1.UserEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,13 +32,16 @@ public class InventoryService {
         private final CatalogItemRepository catalogItemRepository;
         private final InventoryBatchRepository inventoryBatchRepository;
         private final StockTransactionRepository stockTransactionRepository;
+        private final RabbitMQPublisher rabbitMQPublisher;
 
         public InventoryService(CatalogItemRepository catalogItemRepository,
                         InventoryBatchRepository inventoryBatchRepository,
-                        StockTransactionRepository stockTransactionRepository) {
+                        StockTransactionRepository stockTransactionRepository,
+                        RabbitMQPublisher rabbitMQPublisher) {
                 this.catalogItemRepository = catalogItemRepository;
                 this.inventoryBatchRepository = inventoryBatchRepository;
                 this.stockTransactionRepository = stockTransactionRepository;
+                this.rabbitMQPublisher = rabbitMQPublisher;
         }
 
         /**
@@ -104,8 +109,8 @@ public class InventoryService {
          */
         @Transactional
         public DispenseResponse dispenseDrug(DispenseRequest request) {
-                logger.info("Dispensing drug - CatalogItemId: {}, Quantity: {}, AppointmentId: {}",
-                                request.getCatalogItemId(), request.getQuantityRequired(), request.getAppointmentId());
+                logger.info("Dispensing drug - CatalogItemId: {}, Quantity: {}, PrescriptionId: {}",
+                                request.getCatalogItemId(), request.getQuantityRequired(), request.getPrescriptionId());
 
                 // Fetch the catalog item
                 CatalogItem catalogItem = catalogItemRepository.findById(request.getCatalogItemId())
@@ -160,15 +165,42 @@ public class InventoryService {
 
                 // Log transaction
                 logStockTransaction(catalogItem, TransactionType.DISPENSED, request.getQuantityRequired(),
-                                request.getAppointmentId());
+                                request.getPrescriptionId());
 
                 logger.info("Drug dispensed successfully. Total cost: {}", totalCost);
+
+                // Publish prescription dispensed event to RabbitMQ (only if prescriptionId is
+                // provided)
+                if (request.getPrescriptionId() != null && !request.getPrescriptionId().isEmpty()) {
+                        try {
+                                UserEvents.PrescriptionDispensedEvent event = UserEvents.PrescriptionDispensedEvent
+                                                .newBuilder()
+                                                .setPrescriptionId(request.getPrescriptionId())
+                                                .setClinicId(String.valueOf(catalogItem.getClinicId()))
+                                                .setCatalogItemId(request.getCatalogItemId().toString())
+                                                .setQuantityDispensed(request.getQuantityRequired())
+                                                .setTotalCost(totalCost.toString())
+                                                .setTimestamp(System.currentTimeMillis() / 1000)
+                                                .setEventType("PRESCRIPTION_DISPENSED")
+                                                .build();
+
+                                rabbitMQPublisher.publishPrescriptionDispensedEvent(event);
+                                logger.info("✓ Published prescription dispensed event for prescription: {}",
+                                                request.getPrescriptionId());
+                        } catch (Exception e) {
+                                logger.error("⚠️ Failed to publish prescription dispensed event: {}", e.getMessage(),
+                                                e);
+                                // Don't fail the dispense operation if event publishing fails
+                        }
+                } else {
+                        logger.debug("Skipping event publishing - prescriptionId not provided");
+                }
 
                 return new DispenseResponse(
                                 request.getCatalogItemId(),
                                 request.getQuantityRequired(),
                                 totalCost,
-                                request.getAppointmentId(),
+                                request.getPrescriptionId(),
                                 "Drug dispensed successfully");
         }
 

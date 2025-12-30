@@ -18,8 +18,8 @@ public class DispenseResponse {
     @Schema(description = "Total cost of the dispensed medication", example = "55.00")
     private BigDecimal totalCost;
 
-    @Schema(description = "Appointment ID for which medication was dispensed", example = "AP-2024-001")
-    private String appointmentId;
+    @Schema(description = "Prescription ID for which medication was dispensed", example = "550e8400-e29b-41d4-a716-446655440001")
+    private String prescriptionId;
 
     @Schema(description = "Status message from the dispense operation", example = "Medication dispensed successfully from batch BATCH-2024-001")
     private String message;
@@ -27,12 +27,12 @@ public class DispenseResponse {
     public DispenseResponse() {
     }
 
-    public DispenseResponse(UUID catalogItemId, Integer quantityDispensed, BigDecimal totalCost, String appointmentId,
+    public DispenseResponse(UUID catalogItemId, Integer quantityDispensed, BigDecimal totalCost, String prescriptionId,
             String message) {
         this.catalogItemId = catalogItemId;
         this.quantityDispensed = quantityDispensed;
         this.totalCost = totalCost;
-        this.appointmentId = appointmentId;
+        this.prescriptionId = prescriptionId;
         this.message = message;
     }
 
@@ -60,12 +60,12 @@ public class DispenseResponse {
         this.totalCost = totalCost;
     }
 
-    public String getAppointmentId() {
-        return appointmentId;
+    public String getPrescriptionId() {
+        return prescriptionId;
     }
 
-    public void setAppointmentId(String appointmentId) {
-        this.appointmentId = appointmentId;
+    public void setPrescriptionId(String prescriptionId) {
+        this.prescriptionId = prescriptionId;
     }
 
     public String getMessage() {

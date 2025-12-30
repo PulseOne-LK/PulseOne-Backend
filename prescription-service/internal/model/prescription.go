@@ -12,7 +12,7 @@ type Prescription struct {
 	PatientID     string             `gorm:"index" json:"patient_id"`
 	ClinicID      string             `gorm:"index" json:"clinic_id"`
 	IssuedAt      time.Time          `gorm:"autoCreateTime" json:"issued_at"`
-	Status        string             `gorm:"type:varchar(50);default:'ACTIVE'" json:"status"` // ACTIVE, FILLED, CANCELLED
+	Status        string             `gorm:"type:varchar(50);default:'ACTIVE'" json:"status"` // ACTIVE, DISPENSED, FILLED, CANCELLED
 	Items         []PrescriptionItem `gorm:"foreignKey:PrescriptionID;constraint:OnDelete:CASCADE" json:"items"`
 	CreatedAt     time.Time          `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt     time.Time          `gorm:"autoUpdateTime" json:"updated_at"`

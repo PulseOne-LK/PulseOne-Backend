@@ -178,14 +178,14 @@ const docTemplate = `{
         },
         "/prescriptions/appointment/{appointment_id}": {
             "get": {
-                "description": "Retrieve prescription details for a specific appointment",
+                "description": "Retrieve all prescription details for a specific appointment (supports multiple prescriptions per appointment)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Prescriptions"
                 ],
-                "summary": "Get prescription by appointment ID",
+                "summary": "Get all prescriptions by appointment ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -199,7 +199,10 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Prescription"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Prescription"
+                            }
                         }
                     },
                     "400": {
@@ -636,7 +639,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "description": "ACTIVE, FILLED, CANCELLED",
+                    "description": "ACTIVE, DISPENSED, FILLED, CANCELLED",
                     "type": "string"
                 },
                 "updated_at": {
