@@ -77,8 +77,13 @@
 		<!-- Bean Validation -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
+			<artifactId>spring-boot-starter-validation</artifactId>	</dependency>
+
+	<!-- Spring Dotenv -->
+	<dependency>
+		<groupId>me.paulschwarz</groupId>
+		<artifactId>spring-dotenv</artifactId>
+		<version>4.0.0</version>		</dependency>
 		<dependency>
 			<groupId>io.hypersistence</groupId>
 			<artifactId>hypersistence-utils-hibernate-60</artifactId>
