@@ -57,6 +57,13 @@ public class DoctorProfile {
     @Column(name = "is_verified")
     private Boolean isVerified = Boolean.FALSE;
 
+    // --- Ratings (transient field, populated from DoctorRating table) ---
+    @Transient
+    private Double averageRating;
+
+    @Transient
+    private Long ratingCount;
+
     public Long getId() {
         return id;
     }
@@ -159,5 +166,21 @@ public class DoctorProfile {
 
     public void setVerified(Boolean verified) {
         isVerified = verified;
+    }
+
+    public Double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(Double averageRating) {
+        this.averageRating = averageRating;
+    }
+
+    public Long getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(Long ratingCount) {
+        this.ratingCount = ratingCount;
     }
 }

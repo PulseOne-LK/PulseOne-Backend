@@ -39,6 +39,20 @@ public class Pharmacy {
     @Column(name = "fulfillment_radius_km")
     private Integer fulfillmentRadiusKm;
 
+    /**
+     * Latitude coordinate for pharmacy location (for geospatial queries and
+     * mapping).
+     */
+    @Column(name = "latitude")
+    private Double latitude;
+
+    /**
+     * Longitude coordinate for pharmacy location (for geospatial queries and
+     * mapping).
+     */
+    @Column(name = "longitude")
+    private Double longitude;
+
     // --- Administrative ---
     @Column(name = "is_verified")
     private Boolean isVerified = Boolean.FALSE;
@@ -113,5 +127,21 @@ public class Pharmacy {
 
     public void setVerified(Boolean verified) {
         isVerified = verified;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

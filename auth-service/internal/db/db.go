@@ -64,6 +64,16 @@ func ConnectAndMigrate(dsn string) *sql.DB {
 
         CREATE INDEX IF NOT EXISTS idx_prt_user_id ON password_reset_tokens(user_id);
         CREATE INDEX IF NOT EXISTS idx_prt_expires_at ON password_reset_tokens(expires_at);
+
+        CREATE TABLE IF NOT EXISTS token_blacklist (
+            token VARCHAR(1024) PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_tbl_user_id ON token_blacklist(user_id);
+        CREATE INDEX IF NOT EXISTS idx_tbl_expires_at ON token_blacklist(expires_at);
     `
 	if _, err := db.Exec(createTableQuery); err != nil {
 		log.Fatalf("Failed to execute CREATE TABLE migration: %v", err)

@@ -1,5 +1,6 @@
 package com.pulseone.profile_service.controller;
 
+import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.DoctorProfile;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
@@ -375,5 +376,146 @@ public class ProfileController {
     public Pharmacy getPharmacyById(
             @Parameter(description = "Pharmacy ID", required = true) @PathVariable Long pharmacyId) {
         return profileService.getPharmacyById(pharmacyId);
+    }
+
+    // --- 4. CLINIC DISCOVERY ENDPOINTS (For Patients) ---
+
+    /**
+     * GET /clinics - Get all available clinics for patient discovery
+     * Public endpoint for patients to browse all clinics
+     */
+    @Operation(summary = "Get all clinics", description = "Retrieve list of all available clinics for patient discovery")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of clinics retrieved successfully"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/clinics")
+    public List<Clinic> getAllClinics() {
+        return profileService.getAllClinics();
+    }
+
+    /**
+     * GET /clinics/search?query={searchTerm} - Search clinics by name, address, or
+     * specialty
+     * Allows patients to search for specific clinics
+     */
+    @Operation(summary = "Search clinics", description = "Search for clinics by name, address, or specialty")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Clinics matching search criteria retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid search query")
+    })
+    @GetMapping("/clinics/search")
+    public List<Clinic> searchClinics(
+            @Parameter(description = "Search query (clinic name, address, or specialty)", required = true) @RequestParam String query) {
+        return profileService.searchClinics(query);
+    }
+
+    /**
+     * GET /clinics/nearby?latitude={lat}&longitude={lng}&radius={km} - Get nearby
+     * clinics
+     * Returns clinics within specified radius from given coordinates
+     */
+    @Operation(summary = "Get nearby clinics", description = "Retrieve clinics within a specified radius from given coordinates")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Nearby clinics retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid coordinates or radius")
+    })
+    @GetMapping("/clinics/nearby")
+    public List<Clinic> getNearByClinics(
+            @Parameter(description = "Latitude coordinate", required = true) @RequestParam Double latitude,
+            @Parameter(description = "Longitude coordinate", required = true) @RequestParam Double longitude,
+            @Parameter(description = "Search radius in kilometers (default: 5)", required = false) @RequestParam(defaultValue = "5") Double radiusKm) {
+        return profileService.getNearByClinics(latitude, longitude, radiusKm);
+    }
+
+    // --- 5. PHARMACY DISCOVERY ENDPOINTS (For Patients) ---
+
+    /**
+     * GET /pharmacies - Get all available pharmacies for patient discovery
+     * Public endpoint for patients to browse all pharmacies
+     */
+    @Operation(summary = "Get all pharmacies", description = "Retrieve list of all available pharmacies for patient discovery")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of pharmacies retrieved successfully"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/pharmacies")
+    public List<Pharmacy> getAllPharmacies() {
+        return profileService.getAllPharmacies();
+    }
+
+    /**
+     * GET /pharmacies/search?query={searchTerm} - Search pharmacies by name or
+     * address
+     * Allows patients to search for specific pharmacies
+     */
+    @Operation(summary = "Search pharmacies", description = "Search for pharmacies by name or address")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pharmacies matching search criteria retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid search query")
+    })
+    @GetMapping("/pharmacies/search")
+    public List<Pharmacy> searchPharmacies(
+            @Parameter(description = "Search query (pharmacy name or address)", required = true) @RequestParam String query) {
+        return profileService.searchPharmacies(query);
+    }
+
+    /**
+     * GET /pharmacies/nearby?latitude={lat}&longitude={lng}&radius={km} - Get
+     * nearby pharmacies
+     * Returns pharmacies within specified radius from given coordinates
+     */
+    @Operation(summary = "Get nearby pharmacies", description = "Retrieve pharmacies within a specified radius from given coordinates")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Nearby pharmacies retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid coordinates or radius")
+    })
+    @GetMapping("/pharmacies/nearby")
+    public List<Pharmacy> getNearByPharmacies(
+            @Parameter(description = "Latitude coordinate", required = true) @RequestParam Double latitude,
+            @Parameter(description = "Longitude coordinate", required = true) @RequestParam Double longitude,
+            @Parameter(description = "Search radius in kilometers (default: 5)", required = false) @RequestParam(defaultValue = "5") Double radiusKm) {
+        return profileService.getNearByPharmacies(latitude, longitude, radiusKm);
+    }
+
+    // --- 6. DOCTOR RATINGS (Public Endpoints) ---
+
+    /**
+     * GET /doctor/{userId}/ratings - Get all ratings for a doctor
+     * Public endpoint for patients to view doctor ratings and reviews
+     */
+    @Operation(summary = "Get doctor ratings", description = "Retrieve all ratings and reviews for a specific doctor")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Doctor ratings retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Doctor not found")
+    })
+    @GetMapping("/doctor/{userId}/ratings")
+    public List<com.pulseone.profile_service.entity.DoctorRating> getDoctorRatings(
+            @Parameter(description = "User ID of the doctor", required = true) @PathVariable String userId) {
+        return profileService.getDoctorRatings(userId);
+    }
+
+    /**
+     * POST /doctor/{userId}/ratings - Submit a rating for a doctor
+     * Authenticated patients can submit ratings and reviews for doctors they've
+     * visited
+     */
+    @Operation(summary = "Submit doctor rating", description = "Submit a rating and review for a doctor")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Rating submitted successfully", content = @Content(schema = @Schema(implementation = com.pulseone.profile_service.entity.DoctorRating.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid rating data"),
+            @ApiResponse(responseCode = "403", description = "Insufficient permissions"),
+            @ApiResponse(responseCode = "404", description = "Doctor not found")
+    })
+    @PostMapping("/doctor/{userId}/ratings")
+    public ResponseEntity<com.pulseone.profile_service.entity.DoctorRating> submitDoctorRating(
+            @Parameter(description = "User ID of the doctor", required = true) @PathVariable String userId,
+            @Parameter(description = "User ID from JWT token", required = true) @RequestHeader("X-User-ID") String patientUserId,
+            @Parameter(description = "User role from JWT token", required = true) @RequestHeader("X-User-Role") String userRole,
+            @Parameter(description = "Rating data", required = true) @RequestBody com.pulseone.profile_service.entity.DoctorRating rating) {
+
+        checkRole("PATIENT", userRole);
+        return new ResponseEntity<>(profileService.submitDoctorRating(userId, patientUserId, rating),
+                HttpStatus.CREATED);
     }
 }

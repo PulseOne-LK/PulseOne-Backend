@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"net/smtp"
 	"os"
 	"strings"
@@ -22,6 +23,8 @@ import (
 var ErrUserExists = errors.New("user already exists")
 var ErrInvalidCredentials = errors.New("invalid email or password")
 var ErrAccountInactive = errors.New("account inactive or suspended")
+var ErrInvalidToken = errors.New("invalid token")
+var ErrTokenExpired = errors.New("token expired")
 
 // UserService holds the database connection pool.
 type UserService struct {
@@ -699,4 +702,173 @@ Thanks,
 	msg := strings.Join(headers, "\r\n") + "\r\n\r\n" + body
 
 	return smtp.SendMail(addr, auth, from, []string{toEmail}, []byte(msg))
+}
+
+// LogoutUser invalidates the user's token by adding it to the blacklist
+func (s *UserService) LogoutUser(ctx context.Context, token string) error {
+	// Extract user ID and expiration from token
+	userID, expiresAt, err := s.extractUserIDAndExpiry(token)
+	if err != nil {
+		return errors.New("invalid token")
+	}
+
+	// Calculate TTL (time until token expiry)
+	ttl := time.Unix(expiresAt, 0).Sub(time.Now())
+	if ttl <= 0 {
+		return nil // Token already expired, no need to blacklist
+	}
+
+	// Add token to Redis blacklist with TTL (simulated with database for now)
+	// For a production system, use Redis, but we'll store in DB with expiry time
+	query := `INSERT INTO token_blacklist (token, user_id, expires_at, created_at) 
+	         VALUES ($1, $2, $3, NOW())
+	         ON CONFLICT (token) DO NOTHING`
+
+	_, err = s.DB.ExecContext(ctx, query, token, userID, time.Unix(expiresAt, 0))
+	if err != nil {
+		log.Printf("Error adding token to blacklist: %v", err)
+		return errors.New("failed to logout")
+	}
+
+	return nil
+}
+
+// RefreshToken validates refresh token and generates new access token
+func (s *UserService) RefreshToken(ctx context.Context, refreshToken string) (*model.User, string, error) {
+	// Validate refresh token
+	userID, err := s.validateRefreshToken(ctx, refreshToken)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Get user from database
+	user := &model.User{}
+	query := `SELECT id, email, first_name, last_name, role, is_verified, is_active, created_at 
+	         FROM users WHERE id = $1`
+
+	err = s.DB.QueryRowContext(ctx, query, userID).Scan(
+		&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Role,
+		&user.IsVerified, &user.IsActive, &user.CreatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, "", errors.New("user not found")
+		}
+		log.Printf("Error fetching user: %v", err)
+		return nil, "", errors.New("failed to refresh token")
+	}
+
+	if !user.IsActive {
+		return nil, "", errors.New("account is inactive")
+	}
+
+	// Generate new access token
+	newAccessToken, err := auth.GenerateJWT(user.ID, string(user.Role))
+	if err != nil {
+		log.Printf("Error generating token: %v", err)
+		return nil, "", errors.New("failed to generate token")
+	}
+
+	return user, newAccessToken, nil
+}
+
+// ChangePassword updates user's password after validating the current password
+func (s *UserService) ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
+	if currentPassword == "" || newPassword == "" {
+		return errors.New("current and new passwords are required")
+	}
+
+	if len(newPassword) < 8 {
+		return errors.New("new password must be at least 8 characters long")
+	}
+
+	if currentPassword == newPassword {
+		return errors.New("new password must be different from current password")
+	}
+
+	// Fetch user's current password hash
+	var passwordHash string
+	query := `SELECT password_hash FROM users WHERE id = $1 AND is_account_active = true`
+	err := s.DB.QueryRowContext(ctx, query, userID).Scan(&passwordHash)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("user not found or account is inactive")
+		}
+		log.Printf("Error fetching user password: %v", err)
+		return errors.New("failed to change password")
+	}
+
+	// Verify current password
+	if !auth.CheckPasswordHash(currentPassword, passwordHash) {
+		return errors.New("current password is incorrect")
+	}
+
+	// Hash new password
+	newPasswordHash, err := auth.HashPassword(newPassword)
+	if err != nil {
+		log.Printf("Error hashing password: %v", err)
+		return errors.New("failed to hash new password")
+	}
+
+	// Update password in database
+	updateQuery := `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2`
+	_, err = s.DB.ExecContext(ctx, updateQuery, newPasswordHash, userID)
+	if err != nil {
+		log.Printf("Error updating password: %v", err)
+		return errors.New("failed to update password")
+	}
+
+	return nil
+}
+
+// validateRefreshToken validates a refresh token and returns the user ID
+func (s *UserService) validateRefreshToken(ctx context.Context, refreshToken string) (int64, error) {
+	// Try to parse as JWT
+	userID, expiresAt, err := s.extractUserIDAndExpiry(refreshToken)
+	if err != nil {
+		return 0, errors.New("invalid refresh token")
+	}
+
+	// Check if token is expired
+	if time.Now().Unix() > expiresAt {
+		return 0, errors.New("refresh token expired")
+	}
+
+	// Check if token is in blacklist
+	var count int
+	query := `SELECT COUNT(*) FROM token_blacklist WHERE token = $1 AND expires_at > NOW()`
+	err = s.DB.QueryRowContext(ctx, query, refreshToken).Scan(&count)
+	if err == nil && count > 0 {
+		return 0, errors.New("token has been revoked")
+	}
+
+	return userID, nil
+}
+
+// extractUserIDAndExpiry extracts user ID and expiration time from JWT token
+func (s *UserService) extractUserIDAndExpiry(token string) (int64, int64, error) {
+	claims, err := auth.ValidateJWT(token)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Parse user_id from claims
+	userID := claims.UserID
+	if userID == "" {
+		return 0, 0, errors.New("invalid token claims")
+	}
+
+	// Convert userID string to int64
+	var userIDInt int64
+	_, err = fmt.Sscanf(userID, "%d", &userIDInt)
+	if err != nil {
+		return 0, 0, errors.New("invalid user_id format")
+	}
+
+	expiresAt := claims.ExpiresAt.Unix()
+	if expiresAt == 0 {
+		return 0, 0, errors.New("invalid token expiration")
+	}
+
+	return userIDInt, expiresAt, nil
 }

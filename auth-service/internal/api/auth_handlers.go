@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -349,5 +350,158 @@ func (h *AuthHandlers) ResetPasswordHandler(w http.ResponseWriter, r *http.Reque
 
 	respondJSON(w, http.StatusOK, map[string]string{
 		"message": "Password has been reset successfully. You can now log in with your new password.",
+	})
+}
+
+// LogoutHandler godoc
+// @Summary      User logout
+// @Description  Logout user by invalidating their token
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string  true  "Bearer token"
+// @Success      200            {object}  model.SuccessResponse
+// @Failure      401            {object}  model.ErrorResponse
+// @Failure      500            {object}  model.ErrorResponse
+// @Router       /logout [post]
+func (h *AuthHandlers) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract token from Authorization header
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Authorization header is required"})
+		return
+	}
+
+	// Extract token from "Bearer <token>"
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid authorization header format"})
+		return
+	}
+
+	tokenString := parts[1]
+
+	// Call service to invalidate token (add to blacklist or revoke)
+	err := h.Service.LogoutUser(r.Context(), tokenString)
+	if err != nil {
+		log.Printf("Logout error: %v", err)
+		respondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to logout"})
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Logged out successfully",
+	})
+}
+
+// RefreshTokenHandler godoc
+// @Summary      Refresh JWT token
+// @Description  Get a new JWT token using the refresh token
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        request  body      model.RefreshTokenRequest  true  "Refresh token request"
+// @Success      200      {object}  model.LoginResponse
+// @Failure      400      {object}  model.ErrorResponse
+// @Failure      401      {object}  model.ErrorResponse
+// @Failure      500      {object}  model.ErrorResponse
+// @Router       /refresh-token [post]
+func (h *AuthHandlers) RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var req model.RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+		return
+	}
+
+	if req.RefreshToken == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Refresh token is required"})
+		return
+	}
+
+	// Validate and generate new access token
+	user, newAccessToken, err := h.Service.RefreshToken(r.Context(), req.RefreshToken)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidToken) || errors.Is(err, service.ErrTokenExpired) {
+			respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid or expired refresh token"})
+			return
+		}
+		log.Printf("Refresh token error: %v", err)
+		respondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to refresh token"})
+		return
+	}
+
+	respondJSON(w, http.StatusOK, model.LoginResponse{
+		Message: "Token refreshed successfully",
+		Token:   newAccessToken,
+		UserID:  user.ID,
+		Role:    user.Role,
+	})
+}
+
+// ChangePasswordHandler godoc
+// @Summary      Change user password
+// @Description  Change password for authenticated user
+// @Tags         Authentication
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header    string                      true  "Bearer token"
+// @Param        request        body      model.ChangePasswordRequest  true  "Current and new password"
+// @Success      200            {object}  model.SuccessResponse
+// @Failure      400            {object}  model.ErrorResponse
+// @Failure      401            {object}  model.ErrorResponse
+// @Failure      500            {object}  model.ErrorResponse
+// @Router       /change-password [put]
+func (h *AuthHandlers) ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from context (set by middleware)
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok || userID == "" {
+		respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+
+	var req model.ChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
+		return
+	}
+
+	// Validate passwords
+	if req.CurrentPassword == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Current password is required"})
+		return
+	}
+
+	if len(req.NewPassword) < 8 {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "New password must be at least 8 characters long"})
+		return
+	}
+
+	if req.CurrentPassword == req.NewPassword {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "New password must be different from current password"})
+		return
+	}
+
+	// Convert userID to int64
+	var userIDInt int64
+	_, err := fmt.Sscanf(userID, "%d", &userIDInt)
+	if err != nil {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		return
+	}
+
+	// Call service to change password
+	err = h.Service.ChangePassword(r.Context(), userIDInt, req.CurrentPassword, req.NewPassword)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidCredentials) {
+			respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Current password is incorrect"})
+			return
+		}
+		log.Printf("Change password error: %v", err)
+		respondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to change password"})
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Password changed successfully",
 	})
 }

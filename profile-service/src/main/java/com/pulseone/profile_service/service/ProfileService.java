@@ -4,12 +4,14 @@ import com.pulseone.profile_service.client.AppointmentsServiceClient;
 import com.pulseone.profile_service.entity.Clinic;
 import com.pulseone.profile_service.entity.ClinicDoctor;
 import com.pulseone.profile_service.entity.DoctorProfile;
+import com.pulseone.profile_service.entity.DoctorRating;
 import com.pulseone.profile_service.entity.PatientProfile;
 import com.pulseone.profile_service.entity.Pharmacy;
 import com.pulseone.profile_service.messaging.RabbitMQPublisher;
 import com.pulseone.profile_service.repository.ClinicDoctorRepository;
 import com.pulseone.profile_service.repository.ClinicRepository;
 import com.pulseone.profile_service.repository.DoctorProfileRepository;
+import com.pulseone.profile_service.repository.DoctorRatingRepository;
 import com.pulseone.profile_service.repository.PatientProfileRepository;
 import com.pulseone.profile_service.repository.PharmacyRepository;
 import events.v1.UserEvents;
@@ -69,6 +71,7 @@ public class ProfileService {
     private final PharmacyRepository pharmacyRepo;
     private final ClinicRepository clinicRepo;
     private final ClinicDoctorRepository clinicDoctorRepo;
+    private final DoctorRatingRepository doctorRatingRepo;
     private final AppointmentsServiceClient appointmentsServiceClient;
 
     @Autowired(required = false)
@@ -80,12 +83,14 @@ public class ProfileService {
             PharmacyRepository pharmacyRepo,
             ClinicRepository clinicRepo,
             ClinicDoctorRepository clinicDoctorRepo,
+            DoctorRatingRepository doctorRatingRepo,
             AppointmentsServiceClient appointmentsServiceClient) {
         this.patientRepo = patientRepo;
         this.doctorRepo = doctorRepo;
         this.pharmacyRepo = pharmacyRepo;
         this.clinicRepo = clinicRepo;
         this.clinicDoctorRepo = clinicDoctorRepo;
+        this.doctorRatingRepo = doctorRatingRepo;
         this.appointmentsServiceClient = appointmentsServiceClient;
     }
 
@@ -513,5 +518,232 @@ public class ProfileService {
         } catch (Exception e) {
             logger.error("Failed to create clinic profile from event: {}", e.getMessage(), e);
         }
+    }
+
+    // -------------------------------------------------------------------
+    // CLINIC & PHARMACY DISCOVERY METHODS (For Patients)
+    // -------------------------------------------------------------------
+
+    /**
+     * Get all available clinics for patient discovery
+     */
+    public List<Clinic> getAllClinics() {
+        List<Clinic> clinics = clinicRepo.findAll();
+        clinics.forEach(this::populateClinicDoctors);
+        return clinics;
+    }
+
+    /**
+     * Search clinics by name, address, or operating hours
+     */
+    public List<Clinic> searchClinics(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return getAllClinics();
+        }
+
+        String searchTerm = "%" + query.toLowerCase() + "%";
+        List<Clinic> clinics = clinicRepo.findAll().stream()
+                .filter(clinic -> (clinic.getName() != null
+                        && clinic.getName().toLowerCase().contains(query.toLowerCase())) ||
+                        (clinic.getPhysicalAddress() != null
+                                && clinic.getPhysicalAddress().toLowerCase().contains(query.toLowerCase()))
+                        ||
+                        (clinic.getOperatingHours() != null
+                                && clinic.getOperatingHours().toLowerCase().contains(query.toLowerCase())))
+                .toList();
+
+        clinics.forEach(this::populateClinicDoctors);
+        return clinics;
+    }
+
+    /**
+     * Get nearby clinics within specified radius (in kilometers)
+     * Note: This is a simplified implementation. For production, use actual
+     * geospatial queries
+     * Requires Clinic entity to have latitude and longitude fields
+     */
+    public List<Clinic> getNearByClinics(Double latitude, Double longitude, Double radiusKm) {
+        if (latitude == null || longitude == null || radiusKm == null || radiusKm <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Valid latitude, longitude, and radius are required.");
+        }
+
+        List<Clinic> allClinics = getAllClinics();
+
+        // Filter clinics within the radius
+        // Simplified distance calculation (Haversine formula would be more accurate)
+        List<Clinic> nearbyClinics = allClinics.stream()
+                .filter(clinic -> {
+                    // Check if clinic has location info
+                    if (clinic.getLatitude() == null || clinic.getLongitude() == null) {
+                        return false;
+                    }
+
+                    // Simple distance calculation (in real app, use Haversine formula)
+                    double distance = Math.sqrt(
+                            Math.pow((clinic.getLatitude() - latitude) * 111.32, 2) +
+                                    Math.pow((clinic.getLongitude() - longitude) * 111.32
+                                            * Math.cos(Math.toRadians(latitude)), 2));
+
+                    return distance <= radiusKm;
+                })
+                .toList();
+
+        return nearbyClinics;
+    }
+
+    /**
+     * Get all available pharmacies for patient discovery
+     */
+    public List<Pharmacy> getAllPharmacies() {
+        return pharmacyRepo.findAll();
+    }
+
+    /**
+     * Search pharmacies by name or address
+     */
+    public List<Pharmacy> searchPharmacies(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return getAllPharmacies();
+        }
+
+        List<Pharmacy> pharmacies = pharmacyRepo.findAll().stream()
+                .filter(pharmacy -> (pharmacy.getName() != null
+                        && pharmacy.getName().toLowerCase().contains(query.toLowerCase())) ||
+                        (pharmacy.getAddress() != null
+                                && pharmacy.getAddress().toLowerCase().contains(query.toLowerCase())))
+                .toList();
+
+        return pharmacies;
+    }
+
+    /**
+     * Get nearby pharmacies within specified radius (in kilometers)
+     * Note: This is a simplified implementation. For production, use actual
+     * geospatial queries
+     * Requires Pharmacy entity to have latitude and longitude fields
+     */
+    public List<Pharmacy> getNearByPharmacies(Double latitude, Double longitude, Double radiusKm) {
+        if (latitude == null || longitude == null || radiusKm == null || radiusKm <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Valid latitude, longitude, and radius are required.");
+        }
+
+        List<Pharmacy> allPharmacies = getAllPharmacies();
+
+        // Filter pharmacies within the radius
+        List<Pharmacy> nearbyPharmacies = allPharmacies.stream()
+                .filter(pharmacy -> {
+                    // Check if pharmacy has location info
+                    if (pharmacy.getLatitude() == null || pharmacy.getLongitude() == null) {
+                        return false;
+                    }
+
+                    // Simple distance calculation (in real app, use Haversine formula)
+                    double distance = Math.sqrt(
+                            Math.pow((pharmacy.getLatitude() - latitude) * 111.32, 2) +
+                                    Math.pow((pharmacy.getLongitude() - longitude) * 111.32
+                                            * Math.cos(Math.toRadians(latitude)), 2));
+
+                    return distance <= radiusKm;
+                })
+                .toList();
+
+        return nearbyPharmacies;
+    }
+
+    // -------------------------------------------------------------------
+    // DOCTOR RATING METHODS
+    // -------------------------------------------------------------------
+
+    /**
+     * Get all ratings for a specific doctor.
+     * 
+     * @param doctorUserId The user ID of the doctor.
+     * @return List of ratings for the doctor.
+     */
+    public List<DoctorRating> getDoctorRatings(String doctorUserId) {
+        if (doctorUserId == null || doctorUserId.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Doctor user ID is required.");
+        }
+
+        // Verify the doctor exists
+        DoctorProfile doctor = doctorRepo.findByUserId(doctorUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found."));
+
+        return doctorRatingRepo.findByDoctorUserId(doctorUserId);
+    }
+
+    /**
+     * Submit a rating for a doctor.
+     * 
+     * @param doctorUserId  The user ID of the doctor being rated.
+     * @param patientUserId The user ID of the patient submitting the rating.
+     * @param rating        The rating data.
+     * @return The saved rating.
+     */
+    public DoctorRating submitDoctorRating(String doctorUserId, String patientUserId, DoctorRating rating) {
+        if (doctorUserId == null || doctorUserId.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Doctor user ID is required.");
+        }
+
+        if (patientUserId == null || patientUserId.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient user ID is required.");
+        }
+
+        if (rating.getRating() == null || rating.getRating() < 1 || rating.getRating() > 5) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 5.");
+        }
+
+        // Verify the doctor exists
+        DoctorProfile doctor = doctorRepo.findByUserId(doctorUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found."));
+
+        // Verify the patient exists
+        PatientProfile patient = patientRepo.findByUserId(patientUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found."));
+
+        // Check if patient has already rated this doctor (prevent duplicate ratings
+        // from same patient)
+        var existingRating = doctorRatingRepo.findByDoctorUserIdAndPatientUserId(doctorUserId, patientUserId);
+        if (existingRating.isPresent()) {
+            // Update the existing rating instead of creating a new one
+            DoctorRating existing = existingRating.get();
+            existing.setRating(rating.getRating());
+            existing.setReview(rating.getReview());
+            return doctorRatingRepo.save(existing);
+        }
+
+        // Create new rating
+        DoctorRating newRating = new DoctorRating(doctorUserId, patientUserId, rating.getRating(), rating.getReview());
+        return doctorRatingRepo.save(newRating);
+    }
+
+    /**
+     * Get the average rating for a doctor.
+     * 
+     * @param doctorUserId The user ID of the doctor.
+     * @return The average rating (0 if no ratings exist).
+     */
+    public Double getAverageDoctorRating(String doctorUserId) {
+        List<DoctorRating> ratings = doctorRatingRepo.findByDoctorUserId(doctorUserId);
+        if (ratings == null || ratings.isEmpty()) {
+            return 0.0;
+        }
+
+        return ratings.stream()
+                .mapToInt(DoctorRating::getRating)
+                .average()
+                .orElse(0.0);
+    }
+
+    /**
+     * Get the total number of ratings for a doctor.
+     * 
+     * @param doctorUserId The user ID of the doctor.
+     * @return The number of ratings.
+     */
+    public long getDoctorRatingCount(String doctorUserId) {
+        return doctorRatingRepo.findByDoctorUserId(doctorUserId).size();
     }
 }

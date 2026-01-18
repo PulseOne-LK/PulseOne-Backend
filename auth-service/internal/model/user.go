@@ -58,6 +58,17 @@ type ResetPasswordRequest struct {
 	NewPassword string `json:"new_password" validate:"required,min=8"`
 }
 
+// RefreshTokenRequest is the payload for token refresh API call.
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+// ChangePasswordRequest is the payload for change password API call.
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" validate:"required"`
+	NewPassword     string `json:"new_password" validate:"required,min=8"`
+}
+
 // PasswordResetToken represents a password reset token in the database.
 type PasswordResetToken struct {
 	Token     string        `json:"token"`

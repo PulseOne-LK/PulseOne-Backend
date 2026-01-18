@@ -110,6 +110,11 @@ func main() {
 	r.Post("/forgot-password", authHandlers.ForgotPasswordHandler)
 	r.Post("/reset-password", authHandlers.ResetPasswordHandler)
 
+	// Authenticated user endpoints
+	r.Post("/logout", authHandlers.LogoutHandler)
+	r.Post("/refresh-token", authHandlers.RefreshTokenHandler)
+	r.Put("/change-password", authHandlers.ChangePasswordHandler)
+
 	// Admin endpoints
 	r.Post("/admin/register", authHandlers.AdminRegisterHandler)
 

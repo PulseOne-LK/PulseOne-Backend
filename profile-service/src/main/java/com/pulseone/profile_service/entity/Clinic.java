@@ -56,6 +56,19 @@ public class Clinic {
     private String operatingHours;
 
     /**
+     * Latitude coordinate for clinic location (for geospatial queries and mapping).
+     */
+    @Column(name = "latitude")
+    private Double latitude;
+
+    /**
+     * Longitude coordinate for clinic location (for geospatial queries and
+     * mapping).
+     */
+    @Column(name = "longitude")
+    private Double longitude;
+
+    /**
      * Doctor associations are now managed through the ClinicDoctor entity.
      * This allows for tracking confirmation status and timestamps.
      * Previously stored as ElementCollection, now using dedicated entity.
@@ -124,6 +137,22 @@ public class Clinic {
 
     public void setOperatingHours(String operatingHours) {
         this.operatingHours = operatingHours;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     /**
