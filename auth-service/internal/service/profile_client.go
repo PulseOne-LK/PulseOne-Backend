@@ -48,6 +48,14 @@ type UserRegistrationEventRequest struct {
 	ClinicPhysicalAddress string
 	ClinicContactPhone    string
 	ClinicOperatingHours  string
+
+	// Pharmacy-related fields for PHARMACIST users
+	PharmacyName                string
+	PharmacyAddress             string
+	PharmacyLicenseNumber       string
+	PharmacyContactPhone        string
+	PharmacyOperatingHours      string
+	PharmacyFulfillmentRadiusKm int32
 }
 
 // NotifyUserRegistered sends a user registration notification to profile service using protobuf
@@ -73,6 +81,20 @@ func (c *ProfileServiceClient) NotifyUserRegistered(ctx context.Context, event U
 		}
 		log.Printf("Adding clinic data to protobuf event: name=%s, address=%s",
 			event.ClinicName, event.ClinicPhysicalAddress)
+	}
+
+	// Add pharmacy data if this is a PHARMACIST user and pharmacy data is provided
+	if event.Role == "PHARMACIST" && event.PharmacyName != "" {
+		pbEvent.PharmacyData = &pb.PharmacyData{
+			Name:                event.PharmacyName,
+			Address:             event.PharmacyAddress,
+			LicenseNumber:       event.PharmacyLicenseNumber,
+			ContactPhone:        event.PharmacyContactPhone,
+			OperatingHours:      event.PharmacyOperatingHours,
+			FulfillmentRadiusKm: event.PharmacyFulfillmentRadiusKm,
+		}
+		log.Printf("Adding pharmacy data to protobuf event: name=%s, address=%s",
+			event.PharmacyName, event.PharmacyAddress)
 	}
 
 	// Marshal protobuf message to bytes

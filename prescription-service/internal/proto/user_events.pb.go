@@ -41,7 +41,9 @@ type UserRegistrationEvent struct {
 	// Event type identifier
 	EventType string `protobuf:"bytes,8,opt,name=event_type,json=eventType,proto3" json:"event_type,omitempty"`
 	// Optional clinic information (for CLINIC_ADMIN users)
-	ClinicData    *ClinicData `protobuf:"bytes,9,opt,name=clinic_data,json=clinicData,proto3" json:"clinic_data,omitempty"`
+	ClinicData *ClinicData `protobuf:"bytes,9,opt,name=clinic_data,json=clinicData,proto3" json:"clinic_data,omitempty"`
+	// Optional pharmacy information (for PHARMACIST users)
+	PharmacyData  *PharmacyData `protobuf:"bytes,10,opt,name=pharmacy_data,json=pharmacyData,proto3" json:"pharmacy_data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -139,6 +141,13 @@ func (x *UserRegistrationEvent) GetClinicData() *ClinicData {
 	return nil
 }
 
+func (x *UserRegistrationEvent) GetPharmacyData() *PharmacyData {
+	if x != nil {
+		return x.PharmacyData
+	}
+	return nil
+}
+
 // Clinic data for clinic admin registration
 type ClinicData struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -221,6 +230,106 @@ func (x *ClinicData) GetOperatingHours() string {
 	return ""
 }
 
+// Pharmacy data for pharmacist registration
+type PharmacyData struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Pharmacy ID from profile service (for updates)
+	PharmacyId int64 `protobuf:"varint,1,opt,name=pharmacy_id,json=pharmacyId,proto3" json:"pharmacy_id,omitempty"`
+	// Pharmacy name
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// Pharmacy license number
+	LicenseNumber string `protobuf:"bytes,3,opt,name=license_number,json=licenseNumber,proto3" json:"license_number,omitempty"`
+	// Physical address
+	Address string `protobuf:"bytes,4,opt,name=address,proto3" json:"address,omitempty"`
+	// Contact phone
+	ContactPhone string `protobuf:"bytes,5,opt,name=contact_phone,json=contactPhone,proto3" json:"contact_phone,omitempty"`
+	// Operating hours
+	OperatingHours string `protobuf:"bytes,6,opt,name=operating_hours,json=operatingHours,proto3" json:"operating_hours,omitempty"`
+	// Fulfillment radius in kilometers
+	FulfillmentRadiusKm int32 `protobuf:"varint,7,opt,name=fulfillment_radius_km,json=fulfillmentRadiusKm,proto3" json:"fulfillment_radius_km,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *PharmacyData) Reset() {
+	*x = PharmacyData{}
+	mi := &file_user_events_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PharmacyData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PharmacyData) ProtoMessage() {}
+
+func (x *PharmacyData) ProtoReflect() protoreflect.Message {
+	mi := &file_user_events_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PharmacyData.ProtoReflect.Descriptor instead.
+func (*PharmacyData) Descriptor() ([]byte, []int) {
+	return file_user_events_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *PharmacyData) GetPharmacyId() int64 {
+	if x != nil {
+		return x.PharmacyId
+	}
+	return 0
+}
+
+func (x *PharmacyData) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *PharmacyData) GetLicenseNumber() string {
+	if x != nil {
+		return x.LicenseNumber
+	}
+	return ""
+}
+
+func (x *PharmacyData) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *PharmacyData) GetContactPhone() string {
+	if x != nil {
+		return x.ContactPhone
+	}
+	return ""
+}
+
+func (x *PharmacyData) GetOperatingHours() string {
+	if x != nil {
+		return x.OperatingHours
+	}
+	return ""
+}
+
+func (x *PharmacyData) GetFulfillmentRadiusKm() int32 {
+	if x != nil {
+		return x.FulfillmentRadiusKm
+	}
+	return 0
+}
+
 // Clinic update event message
 type ClinicUpdateEvent struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -246,7 +355,7 @@ type ClinicUpdateEvent struct {
 
 func (x *ClinicUpdateEvent) Reset() {
 	*x = ClinicUpdateEvent{}
-	mi := &file_user_events_proto_msgTypes[2]
+	mi := &file_user_events_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -258,7 +367,7 @@ func (x *ClinicUpdateEvent) String() string {
 func (*ClinicUpdateEvent) ProtoMessage() {}
 
 func (x *ClinicUpdateEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_user_events_proto_msgTypes[2]
+	mi := &file_user_events_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -271,7 +380,7 @@ func (x *ClinicUpdateEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClinicUpdateEvent.ProtoReflect.Descriptor instead.
 func (*ClinicUpdateEvent) Descriptor() ([]byte, []int) {
-	return file_user_events_proto_rawDescGZIP(), []int{2}
+	return file_user_events_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ClinicUpdateEvent) GetClinicId() int64 {
@@ -345,7 +454,7 @@ type UserRegistrationEventResponse struct {
 
 func (x *UserRegistrationEventResponse) Reset() {
 	*x = UserRegistrationEventResponse{}
-	mi := &file_user_events_proto_msgTypes[3]
+	mi := &file_user_events_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -357,7 +466,7 @@ func (x *UserRegistrationEventResponse) String() string {
 func (*UserRegistrationEventResponse) ProtoMessage() {}
 
 func (x *UserRegistrationEventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_user_events_proto_msgTypes[3]
+	mi := &file_user_events_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -370,7 +479,7 @@ func (x *UserRegistrationEventResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserRegistrationEventResponse.ProtoReflect.Descriptor instead.
 func (*UserRegistrationEventResponse) Descriptor() ([]byte, []int) {
-	return file_user_events_proto_rawDescGZIP(), []int{3}
+	return file_user_events_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *UserRegistrationEventResponse) GetSuccess() bool {
@@ -417,7 +526,7 @@ type PrescriptionDispensedEvent struct {
 
 func (x *PrescriptionDispensedEvent) Reset() {
 	*x = PrescriptionDispensedEvent{}
-	mi := &file_user_events_proto_msgTypes[4]
+	mi := &file_user_events_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -429,7 +538,7 @@ func (x *PrescriptionDispensedEvent) String() string {
 func (*PrescriptionDispensedEvent) ProtoMessage() {}
 
 func (x *PrescriptionDispensedEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_user_events_proto_msgTypes[4]
+	mi := &file_user_events_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -442,7 +551,7 @@ func (x *PrescriptionDispensedEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrescriptionDispensedEvent.ProtoReflect.Descriptor instead.
 func (*PrescriptionDispensedEvent) Descriptor() ([]byte, []int) {
-	return file_user_events_proto_rawDescGZIP(), []int{4}
+	return file_user_events_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *PrescriptionDispensedEvent) GetPrescriptionId() string {
@@ -498,7 +607,7 @@ var File_user_events_proto protoreflect.FileDescriptor
 
 const file_user_events_proto_rawDesc = "" +
 	"\n" +
-	"\x11user_events.proto\x12\tevents.v1\"\xae\x02\n" +
+	"\x11user_events.proto\x12\tevents.v1\"\xec\x02\n" +
 	"\x15UserRegistrationEvent\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
@@ -511,7 +620,9 @@ const file_user_events_proto_rawDesc = "" +
 	"\n" +
 	"event_type\x18\b \x01(\tR\teventType\x126\n" +
 	"\vclinic_data\x18\t \x01(\v2\x15.events.v1.ClinicDataR\n" +
-	"clinicData\"\xb6\x01\n" +
+	"clinicData\x12<\n" +
+	"\rpharmacy_data\x18\n" +
+	" \x01(\v2\x17.events.v1.PharmacyDataR\fpharmacyData\"\xb6\x01\n" +
 	"\n" +
 	"ClinicData\x12\x1b\n" +
 	"\tclinic_id\x18\x01 \x01(\x03R\bclinicId\x12\x12\n" +
@@ -519,6 +630,15 @@ const file_user_events_proto_rawDesc = "" +
 	"\x10physical_address\x18\x03 \x01(\tR\x0fphysicalAddress\x12#\n" +
 	"\rcontact_phone\x18\x04 \x01(\tR\fcontactPhone\x12'\n" +
 	"\x0foperating_hours\x18\x05 \x01(\tR\x0eoperatingHours\"\x86\x02\n" +
+	"\fPharmacyData\x12\x1f\n" +
+	"\vpharmacy_id\x18\x01 \x01(\x03R\n" +
+	"pharmacyId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12%\n" +
+	"\x0elicense_number\x18\x03 \x01(\tR\rlicenseNumber\x12\x18\n" +
+	"\aaddress\x18\x04 \x01(\tR\aaddress\x12#\n" +
+	"\rcontact_phone\x18\x05 \x01(\tR\fcontactPhone\x12'\n" +
+	"\x0foperating_hours\x18\x06 \x01(\tR\x0eoperatingHours\x122\n" +
+	"\x15fulfillment_radius_km\x18\a \x01(\x05R\x13fulfillmentRadiusKm\"\x86\x02\n" +
 	"\x11ClinicUpdateEvent\x12\x1b\n" +
 	"\tclinic_id\x18\x01 \x01(\x03R\bclinicId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -557,21 +677,23 @@ func file_user_events_proto_rawDescGZIP() []byte {
 	return file_user_events_proto_rawDescData
 }
 
-var file_user_events_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_user_events_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_user_events_proto_goTypes = []any{
 	(*UserRegistrationEvent)(nil),         // 0: events.v1.UserRegistrationEvent
 	(*ClinicData)(nil),                    // 1: events.v1.ClinicData
-	(*ClinicUpdateEvent)(nil),             // 2: events.v1.ClinicUpdateEvent
-	(*UserRegistrationEventResponse)(nil), // 3: events.v1.UserRegistrationEventResponse
-	(*PrescriptionDispensedEvent)(nil),    // 4: events.v1.PrescriptionDispensedEvent
+	(*PharmacyData)(nil),                  // 2: events.v1.PharmacyData
+	(*ClinicUpdateEvent)(nil),             // 3: events.v1.ClinicUpdateEvent
+	(*UserRegistrationEventResponse)(nil), // 4: events.v1.UserRegistrationEventResponse
+	(*PrescriptionDispensedEvent)(nil),    // 5: events.v1.PrescriptionDispensedEvent
 }
 var file_user_events_proto_depIdxs = []int32{
 	1, // 0: events.v1.UserRegistrationEvent.clinic_data:type_name -> events.v1.ClinicData
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: events.v1.UserRegistrationEvent.pharmacy_data:type_name -> events.v1.PharmacyData
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_user_events_proto_init() }
@@ -585,7 +707,7 @@ func file_user_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_user_events_proto_rawDesc), len(file_user_events_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

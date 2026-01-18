@@ -247,6 +247,20 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 		event.ClinicOperatingHours = "Monday-Friday 9:00-17:00" // Default hours
 	}
 
+	// For PHARMACIST users, add default pharmacy data
+	// TODO: This should come from a proper pharmacy registration form
+	if newUser.Role == model.RolePharmacist {
+		fullName := newUser.FirstName.String + " " + newUser.LastName.String
+		if fullName == " " {
+			fullName = newUser.Email
+		}
+		event.PharmacyName = "Pharmacy managed by " + fullName
+		event.PharmacyAddress = "Address to be provided"
+		event.PharmacyLicenseNumber = "PENDING-" + newUser.ID     // Use unique license with user ID
+		event.PharmacyContactPhone = ""                           // Optional
+		event.PharmacyOperatingHours = "Monday-Friday 9:00-18:00" // Default hours
+	}
+
 	// Publish event to RabbitMQ (primary method)
 	if s.RabbitPublisher != nil {
 		go func() {
@@ -261,16 +275,29 @@ func (s *UserService) RegisterUser(ctx context.Context, req model.AuthRequest) (
 				}
 			}
 
+			var pharmacyData *proto.PharmacyData
+			if newUser.Role == model.RolePharmacist {
+				pharmacyData = &proto.PharmacyData{
+					Name:                event.PharmacyName,
+					Address:             event.PharmacyAddress,
+					LicenseNumber:       event.PharmacyLicenseNumber,
+					ContactPhone:        event.PharmacyContactPhone,
+					OperatingHours:      event.PharmacyOperatingHours,
+					FulfillmentRadiusKm: 0, // Default value, can be updated later
+				}
+			}
+
 			pbEvent := &proto.UserRegistrationEvent{
-				UserId:      newUser.ID,
-				Email:       newUser.Email,
-				Role:        string(newUser.Role),
-				FirstName:   newUser.FirstName.String,
-				LastName:    newUser.LastName.String,
-				PhoneNumber: "",
-				Timestamp:   time.Now().Unix(),
-				EventType:   "user.registered",
-				ClinicData:  clinicData,
+				UserId:       newUser.ID,
+				Email:        newUser.Email,
+				Role:         string(newUser.Role),
+				FirstName:    newUser.FirstName.String,
+				LastName:     newUser.LastName.String,
+				PhoneNumber:  "",
+				Timestamp:    time.Now().Unix(),
+				EventType:    "user.registered",
+				ClinicData:   clinicData,
+				PharmacyData: pharmacyData,
 			}
 
 			if err := s.RabbitPublisher.PublishUserRegistrationEvent(pbEvent); err != nil {
@@ -409,6 +436,20 @@ func (s *UserService) AdminRegisterUser(ctx context.Context, req model.AuthReque
 		event.ClinicOperatingHours = "Monday-Friday 9:00-17:00" // Default hours
 	}
 
+	// For PHARMACIST users, add default pharmacy data
+	// TODO: This should come from a proper pharmacy registration form
+	if newUser.Role == model.RolePharmacist {
+		fullName := newUser.FirstName.String + " " + newUser.LastName.String
+		if fullName == " " {
+			fullName = newUser.Email
+		}
+		event.PharmacyName = "Pharmacy managed by " + fullName
+		event.PharmacyAddress = "Address to be provided"
+		event.PharmacyLicenseNumber = "PENDING-" + newUser.ID     // Use unique license with user ID
+		event.PharmacyContactPhone = ""                           // Optional
+		event.PharmacyOperatingHours = "Monday-Friday 9:00-18:00" // Default hours
+	}
+
 	// Publish event to RabbitMQ (primary method)
 	if s.RabbitPublisher != nil {
 		go func() {
@@ -423,16 +464,29 @@ func (s *UserService) AdminRegisterUser(ctx context.Context, req model.AuthReque
 				}
 			}
 
+			var pharmacyData *proto.PharmacyData
+			if newUser.Role == model.RolePharmacist {
+				pharmacyData = &proto.PharmacyData{
+					Name:                event.PharmacyName,
+					Address:             event.PharmacyAddress,
+					LicenseNumber:       event.PharmacyLicenseNumber,
+					ContactPhone:        event.PharmacyContactPhone,
+					OperatingHours:      event.PharmacyOperatingHours,
+					FulfillmentRadiusKm: 0, // Default value, can be updated later
+				}
+			}
+
 			pbEvent := &proto.UserRegistrationEvent{
-				UserId:      newUser.ID,
-				Email:       newUser.Email,
-				Role:        string(newUser.Role),
-				FirstName:   newUser.FirstName.String,
-				LastName:    newUser.LastName.String,
-				PhoneNumber: "",
-				Timestamp:   time.Now().Unix(),
-				EventType:   "user.registered",
-				ClinicData:  clinicData,
+				UserId:       newUser.ID,
+				Email:        newUser.Email,
+				Role:         string(newUser.Role),
+				FirstName:    newUser.FirstName.String,
+				LastName:     newUser.LastName.String,
+				PhoneNumber:  "",
+				Timestamp:    time.Now().Unix(),
+				EventType:    "user.registered",
+				ClinicData:   clinicData,
+				PharmacyData: pharmacyData,
 			}
 
 			if err := s.RabbitPublisher.PublishUserRegistrationEvent(pbEvent); err != nil {

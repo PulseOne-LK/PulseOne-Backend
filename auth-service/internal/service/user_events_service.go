@@ -30,18 +30,20 @@ func (s *EventPublisher) PublishUserRegistration(
 	lastName string,
 	phoneNumber string,
 	clinicData *proto.ClinicData, // Optional for CLINIC_ADMIN
+	pharmacyData *proto.PharmacyData, // Optional for PHARMACIST
 ) error {
 	// Create the Protobuf message
 	event := &proto.UserRegistrationEvent{
-		UserId:      userID,
-		Email:       email,
-		Role:        role,
-		FirstName:   firstName,
-		LastName:    lastName,
-		PhoneNumber: phoneNumber,
-		Timestamp:   time.Now().Unix(),
-		EventType:   "user.registered",
-		ClinicData:  clinicData,
+		UserId:       userID,
+		Email:        email,
+		Role:         role,
+		FirstName:    firstName,
+		LastName:     lastName,
+		PhoneNumber:  phoneNumber,
+		Timestamp:    time.Now().Unix(),
+		EventType:    "user.registered",
+		ClinicData:   clinicData,
+		PharmacyData: pharmacyData,
 	}
 
 	// Publish the event

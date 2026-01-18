@@ -298,6 +298,13 @@ public class ProfileService {
     }
 
     /**
+     * Creates a pharmacy for a pharmacist.
+     */
+    public Pharmacy createPharmacy(Pharmacy pharmacy) {
+        return pharmacyRepo.save(pharmacy);
+    }
+
+    /**
      * Updates clinic fields by admin user id.
      */
     public Clinic updateClinicByAdmin(String adminUserId, Clinic updates) {
@@ -429,34 +436,64 @@ public class ProfileService {
      */
     public void createPharmacistProfileFromEvent(events.v1.UserEvents.UserRegistrationEvent event) {
         try {
-            logger.info("Processing pharmacist registration event for user: {} (email: {})",
-                    event.getUserId(), event.getEmail());
+            logger.info("Processing pharmacist registration event for pharmacy: {} (email: {})",
+                    event.hasPharmacyData() ? event.getPharmacyData().getName() : "N/A", event.getEmail());
 
-            // Create a new pharmacy profile for the pharmacist
-            Pharmacy pharmacy = new Pharmacy();
-            pharmacy.setPharmacistUserId(event.getUserId());
+            // Check if pharmacy already exists for this pharmacist
+            if (pharmacyRepo.findByPharmacistUserId(event.getUserId()).isPresent()) {
+                logger.info("Pharmacy already exists for pharmacist user: {}", event.getUserId());
+                return;
+            }
 
-            // Set basic info if available
-            if (!event.getFirstName().isEmpty()) {
-                pharmacy.setName(event.getFirstName() + " Pharmacy");
+            // Create pharmacy from the event's pharmacy data (similar to clinic creation)
+            if (event.hasPharmacyData()) {
+                events.v1.UserEvents.PharmacyData pharmacyData = event.getPharmacyData();
+
+                Pharmacy pharmacy = new Pharmacy();
+                pharmacy.setPharmacistUserId(event.getUserId());
+                pharmacy.setName(pharmacyData.getName());
+                pharmacy.setAddress(pharmacyData.getAddress());
+
+                // Generate unique license number: use event user ID with "PENDING" prefix to
+                // ensure uniqueness
+                String licenseNumber = pharmacyData.getLicenseNumber();
+                if (licenseNumber.isEmpty() || licenseNumber.equals("PENDING")) {
+                    licenseNumber = "PENDING-" + event.getUserId();
+                }
+                pharmacy.setLicenseNumber(licenseNumber);
+
+                pharmacy.setContactPhone(pharmacyData.getContactPhone());
+                pharmacy.setOperatingHours(pharmacyData.getOperatingHours());
+                if (pharmacyData.getFulfillmentRadiusKm() > 0) {
+                    pharmacy.setFulfillmentRadiusKm((int) pharmacyData.getFulfillmentRadiusKm());
+                }
+                pharmacy.setVerified(false);
+
+                Pharmacy savedPharmacy = createPharmacy(pharmacy);
+                logger.info("Successfully created pharmacy with ID: {} for pharmacist user: {}",
+                        savedPharmacy.getId(), event.getUserId());
+
+                // Optionally publish RabbitMQ event for other services
+                // (can be implemented for future integrations like inventory service)
             } else {
-                pharmacy.setName("Pharmacy");
+                logger.warn("Pharmacy data not provided in registration event for user: {}", event.getUserId());
+                // Fall back to creating a basic pharmacy profile with minimal data
+                Pharmacy pharmacy = new Pharmacy();
+                pharmacy.setPharmacistUserId(event.getUserId());
+                pharmacy.setName(event.getFirstName().isEmpty() ? "Pharmacy" : event.getFirstName() + " Pharmacy");
+                pharmacy.setAddress("Address to be provided");
+                // Generate unique license number: use user ID to ensure uniqueness
+                pharmacy.setLicenseNumber("PENDING-" + event.getUserId());
+                pharmacy.setContactPhone(event.getPhoneNumber().isEmpty() ? "" : event.getPhoneNumber());
+                pharmacy.setVerified(false);
+
+                Pharmacy savedPharmacy = createPharmacy(pharmacy);
+                logger.info("Successfully created basic pharmacy profile with ID: {} for pharmacist user: {}",
+                        savedPharmacy.getId(), event.getUserId());
             }
-
-            if (!event.getPhoneNumber().isEmpty()) {
-                pharmacy.setContactPhone(event.getPhoneNumber());
-            }
-
-            // Set a default license number (pharmacist must provide this later)
-            pharmacy.setLicenseNumber("PENDING");
-            pharmacy.setVerified(false);
-
-            // Save the pharmacy profile
-            Pharmacy savedPharmacy = pharmacyRepo.save(pharmacy);
-            logger.info("Successfully created pharmacy profile with ID: {} for pharmacist user: {}",
-                    savedPharmacy.getId(), event.getUserId());
         } catch (Exception e) {
             logger.error("Failed to create pharmacist profile from event: {}", e.getMessage(), e);
+            // Swallow the exception to prevent message redelivery loop from RabbitMQ
         }
     }
 

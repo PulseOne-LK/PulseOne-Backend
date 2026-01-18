@@ -32,6 +32,9 @@ message UserRegistrationEvent {
   
   // Optional clinic information (for CLINIC_ADMIN users)
   ClinicData clinic_data = 9;
+  
+  // Optional pharmacy information (for PHARMACIST users)
+  PharmacyData pharmacy_data = 10;
 }
 
 // Clinic data for clinic admin registration
@@ -50,6 +53,30 @@ message ClinicData {
   
   // Operating hours
   string operating_hours = 5;
+}
+
+// Pharmacy data for pharmacist registration
+message PharmacyData {
+  // Pharmacy ID from profile service (for updates)
+  int64 pharmacy_id = 1;
+  
+  // Pharmacy name
+  string name = 2;
+  
+  // Pharmacy license number
+  string license_number = 3;
+  
+  // Physical address
+  string address = 4;
+  
+  // Contact phone
+  string contact_phone = 5;
+  
+  // Operating hours
+  string operating_hours = 6;
+  
+  // Fulfillment radius in kilometers
+  int32 fulfillment_radius_km = 7;
 }
 
 // Clinic update event message
