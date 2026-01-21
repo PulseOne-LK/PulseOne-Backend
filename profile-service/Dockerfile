@@ -3,11 +3,12 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
 # Copy pom.xml and download dependencies
-COPY pom.xml .
+COPY profile-service/pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source code and build
-COPY src ./src
+# Copy source code and proto files
+COPY profile-service/src ./src
+COPY proto ../proto
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime stage

@@ -117,15 +117,14 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_DEFAULT_VHOST: "/"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - pulseone-network
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   # ===================== API GATEWAY =====================
   kong-db:
@@ -212,8 +211,8 @@ services:
   # Auth Service (Go)
   auth-service:
     build:
-      context: ./auth-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./auth-service/Dockerfile
     container_name: auth-service
     restart: on-failure
     ports:
@@ -242,8 +241,8 @@ services:
   # Profile Service (Spring Boot)
   profile-service:
     build:
-      context: ./profile-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./profile-service/Dockerfile
     container_name: profile-service
     restart: on-failure
     ports:
@@ -272,8 +271,8 @@ services:
   # Appointments Service (Spring Boot)
   appointments-service:
     build:
-      context: ./appointments-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./appointments-service/Dockerfile
     container_name: appointments-service
     restart: on-failure
     ports:
@@ -303,14 +302,18 @@ services:
   # Prescription Service (Go)
   prescription-service:
     build:
-      context: ./prescription-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./prescription-service/Dockerfile
     container_name: prescription-service
     restart: on-failure
     ports:
       - "8085:8085"
     environment:
-      POSTGRES_DSN: "user=postgres password=postgres host=prescription-postgres-db port=5432 dbname=prescriptiondb sslmode=disable"
+      DB_HOST: "prescription-postgres-db"
+      DB_PORT: "5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "prescriptiondb"
       PORT: "8085"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
     depends_on:
@@ -328,8 +331,8 @@ services:
   # Inventory Service (Spring Boot)
   inventory-service:
     build:
-      context: ./inventory-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./inventory-service/Dockerfile
     container_name: inventory-service
     restart: on-failure
     ports:
@@ -363,7 +366,6 @@ volumes:
   prescription_postgres_data:
   inventory_postgres_data:
   kong_postgres_data:
-  rabbitmq_data:
 
 networks:
   pulseone-network:

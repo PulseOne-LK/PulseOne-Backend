@@ -12,11 +12,14 @@ RUN apk add --no-cache git gcc libc-dev
 WORKDIR /app
 
 # Copy go.mod and go.sum to cache dependencies
-COPY go.mod go.sum ./
+COPY auth-service/go.mod auth-service/go.sum ./
 RUN go mod download
 
 # Copy all source code
-COPY . .
+COPY auth-service/cmd ./cmd
+COPY auth-service/internal ./internal
+COPY auth-service/pkg ./pkg
+COPY auth-service/docs ./docs
 
 # Build the final binary. 
 # -ldflags "-s -w" strips debugging symbols, making the binary smaller.
