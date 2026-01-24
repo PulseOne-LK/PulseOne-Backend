@@ -477,8 +477,8 @@ services:
       DB_NAME: "videodb"
       DB_USER: "postgres"
       DB_PASSWORD: "postgres"
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-AKIARSCWF3UWZ2CZ5GP5}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-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}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION:-us-east-1}
       AWS_CHIME_ENDPOINT: "https://service.chime.aws.amazon.com"
       S3_BUCKET_NAME: "pulseone-video-recordings"
