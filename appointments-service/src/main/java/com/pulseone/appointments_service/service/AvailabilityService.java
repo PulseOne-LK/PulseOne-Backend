@@ -252,15 +252,20 @@ public class AvailabilityService {
     }
 
     /**
-     * Helper method to check if session matches service type filter
+     * Check if session matches the requested service type.
+     * In the dual-mode concept, sessions are strictly either VIRTUAL or IN_PERSON.
+     * 
+     * @param session The session to check
+     * @param serviceType The requested service type (null means no filter)
+     * @return true if session matches or no filter applied
      */
     private boolean matchesServiceType(Session session, com.pulseone.appointments_service.enums.ServiceType serviceType) {
         if (serviceType == null) {
-            return true;
+            return true; // No filter, match all
         }
         
-        return session.getServiceType().equals(serviceType) || 
-               session.getServiceType().equals(com.pulseone.appointments_service.enums.ServiceType.BOTH);
+        // Strict matching - no BOTH option anymore in dual-mode concept
+        return session.getServiceType().equals(serviceType);
     }
 
     /**

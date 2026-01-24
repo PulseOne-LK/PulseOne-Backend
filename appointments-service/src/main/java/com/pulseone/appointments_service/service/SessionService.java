@@ -60,6 +60,9 @@ public class SessionService {
         // Validate session times
         validateSessionTimes(request.getSessionStartTime(), request.getSessionEndTime());
 
+        // Validate dual-mode concept rules
+        validateDualModeRules(request);
+
         // Check for overlapping sessions
         List<Session> overlappingSessions = sessionRepository.findOverlappingSessions(
                 doctor, request.getDayOfWeek(), request.getSessionStartTime(), request.getSessionEndTime());
@@ -85,6 +88,8 @@ public class SessionService {
         session.setEffectiveFrom(request.getEffectiveFrom());
         session.setEffectiveUntil(request.getEffectiveUntil());
         session.setIsActive(true);
+        session.setCreatorType(request.getCreatorType());
+        session.setCreatorId(request.getCreatorId());
 
         Session savedSession = sessionRepository.save(session);
         return convertToSessionResponse(savedSession);
@@ -232,6 +237,41 @@ public class SessionService {
     }
 
     /**
+     * Validate dual-mode doctor concept rules
+     * 
+     * STRICT RULES:
+     * - CLINIC_ADMIN sessions: Must be IN_PERSON and have clinicId
+     * - DOCTOR sessions: Must be VIRTUAL and NOT have clinicId
+     */
+    private void validateDualModeRules(CreateSessionRequest request) {
+        String creatorType = request.getCreatorType();
+        
+        if (creatorType == null || creatorType.trim().isEmpty()) {
+            throw new IllegalArgumentException("Creator type is required. Must be either CLINIC_ADMIN or DOCTOR.");
+        }
+        
+        if ("CLINIC_ADMIN".equals(creatorType)) {
+            // Clinic admin can only create IN_PERSON sessions with clinic reference
+            if (request.getServiceType() != com.pulseone.appointments_service.enums.ServiceType.IN_PERSON) {
+                throw new IllegalArgumentException("Clinic admin can only create IN_PERSON sessions. For virtual consultations, the doctor must create their own session.");
+            }
+            if (request.getClinicId() == null) {
+                throw new IllegalArgumentException("IN_PERSON clinic sessions must have a clinic ID.");
+            }
+        } else if ("DOCTOR".equals(creatorType)) {
+            // Doctor can only create VIRTUAL sessions without clinic reference
+            if (request.getServiceType() != com.pulseone.appointments_service.enums.ServiceType.VIRTUAL) {
+                throw new IllegalArgumentException("Doctors can only create VIRTUAL direct sessions. For clinic-based sessions, the clinic admin must create them.");
+            }
+            if (request.getClinicId() != null) {
+                throw new IllegalArgumentException("VIRTUAL direct doctor sessions cannot be associated with a clinic.");
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid creator type. Must be either CLINIC_ADMIN or DOCTOR.");
+        }
+    }
+
+    /**
      * Validate session times
      */
     private void validateSessionTimes(LocalTime startTime, LocalTime endTime) {
@@ -258,6 +298,8 @@ public class SessionService {
         response.setEffectiveFrom(session.getEffectiveFrom());
         response.setEffectiveUntil(session.getEffectiveUntil());
         response.setIsActive(session.getIsActive());
+        response.setCreatorType(session.getCreatorType());
+        response.setCreatorId(session.getCreatorId());
 
         // Set doctor information
         if (session.getDoctor() != null) {

@@ -103,6 +103,24 @@ public class Session {
     @Column(name = "is_active")
     private Boolean isActive = Boolean.TRUE;
 
+    /**
+     * Who created/manages this session.
+     * - CLINIC_ADMIN: Session created by clinic admin for physical consultations
+     * - DOCTOR: Session created by doctor for virtual direct consultations
+     * 
+     * This field enforces the dual-mode concept:
+     * - CLINIC_ADMIN sessions must be IN_PERSON with clinic reference
+     * - DOCTOR sessions must be VIRTUAL without clinic reference
+     */
+    @Column(name = "creator_type", length = 20)
+    private String creatorType;
+
+    /**
+     * User ID of the creator (clinic admin ID or doctor ID)
+     */
+    @Column(name = "creator_id")
+    private String creatorId;
+
     // Constructors
     public Session() {
     }
@@ -146,6 +164,22 @@ public class Session {
 
     public void setClinicProfileId(Long clinicProfileId) {
         this.clinicProfileId = clinicProfileId;
+    }
+
+    public String getCreatorType() {
+        return creatorType;
+    }
+
+    public void setCreatorType(String creatorType) {
+        this.creatorType = creatorType;
+    }
+
+    public String getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(String creatorId) {
+        this.creatorId = creatorId;
     }
 
     public DayOfWeek getDayOfWeek() {

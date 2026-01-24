@@ -6,7 +6,10 @@ import com.pulseone.appointments_service.dto.response.AppointmentResponse;
 import com.pulseone.appointments_service.dto.response.BookingResponse;
 import com.pulseone.appointments_service.entity.*;
 import com.pulseone.appointments_service.enums.AppointmentStatus;
+import com.pulseone.appointments_service.enums.PaymentStatus;
 import com.pulseone.appointments_service.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class AppointmentService {
 
+    private static final Logger log = LoggerFactory.getLogger(AppointmentService.class);
+
     @Autowired
     private AppointmentRepository appointmentRepository;
 
@@ -45,6 +50,9 @@ public class AppointmentService {
 
     @Autowired
     private ClinicRepository clinicRepository;
+
+    @Autowired
+    private VideoConsultationService videoConsultationService;
 
     /**
      * Get all appointments for a specific clinic
@@ -123,6 +131,11 @@ public class AppointmentService {
         // Create history record
         createAppointmentHistory(savedAppointment, null, AppointmentStatus.BOOKED, 
                 "Appointment booked", request.getPatientId(), "PATIENT");
+
+        // For VIRTUAL appointments: Create video session automatically
+        if (appointment.getAppointmentType() == com.pulseone.appointments_service.enums.AppointmentType.VIRTUAL) {
+            createVideoSessionForAppointment(savedAppointment);
+        }
 
         // Calculate estimated wait time
         Integer estimatedWaitTime = (queueNumber - 1) * session.getEstimatedConsultationMinutes();
@@ -353,22 +366,31 @@ public class AppointmentService {
     }
 
     /**
-     * Validate appointment type compatibility
+     * Validate appointment type compatibility with the dual-mode concept.
+     * 
+     * STRICT RULES:
+     * - VIRTUAL sessions (doctor-managed): Only VIRTUAL appointments allowed
+     * - IN_PERSON sessions (clinic-managed): Only IN_PERSON appointments allowed
      */
     private void validateAppointmentType(com.pulseone.appointments_service.enums.AppointmentType appointmentType, Session session) {
         switch (session.getServiceType()) {
             case VIRTUAL:
                 if (appointmentType != com.pulseone.appointments_service.enums.AppointmentType.VIRTUAL) {
-                    throw new IllegalArgumentException("This session only supports virtual appointments");
+                    throw new IllegalArgumentException("This is a virtual-only session. Doctor-managed direct consultations only support VIRTUAL appointments.");
+                }
+                // For VIRTUAL sessions, ensure no clinic is associated (doctor direct workflow)
+                if (session.getClinic() != null || session.getClinicProfileId() != null) {
+                    throw new IllegalArgumentException("Virtual direct sessions cannot be associated with a clinic.");
                 }
                 break;
             case IN_PERSON:
                 if (appointmentType != com.pulseone.appointments_service.enums.AppointmentType.IN_PERSON) {
-                    throw new IllegalArgumentException("This session only supports in-person appointments");
+                    throw new IllegalArgumentException("This is an in-person only session. Clinic-managed sessions only support IN_PERSON appointments.");
                 }
-                break;
-            case BOTH:
-                // Both types are allowed
+                // For IN_PERSON sessions, ensure clinic is associated (clinic workflow)
+                if (session.getClinic() == null && session.getClinicProfileId() == null) {
+                    throw new IllegalArgumentException("In-person clinic sessions must be associated with a clinic.");
+                }
                 break;
         }
     }
@@ -397,6 +419,138 @@ public class AppointmentService {
         int waitTimeMinutes = (queueNumber - 1) * session.getEstimatedConsultationMinutes();
         
         return sessionDateTime.plusMinutes(waitTimeMinutes);
+    }
+
+    /**
+     * Create video session for VIRTUAL appointments
+     * This is called automatically when a VIRTUAL appointment is booked
+     * 
+     * IMPORTANT: For the dual-mode concept, video sessions are created immediately upon booking
+     * but should only be accessible after payment verification.
+     */
+    private void createVideoSessionForAppointment(Appointment appointment) {
+        try {
+            log.info("Requesting video session creation for VIRTUAL appointment: {}", appointment.getAppointmentId());
+            
+            // Publish event to video service via RabbitMQ
+            videoConsultationService.requestVideoSessionCreation(
+                appointment.getAppointmentId(),
+                appointment.getDoctorId(),
+                appointment.getPatientId(),
+                appointment.getEstimatedStartTime()
+            );
+            
+            log.info("Video session creation request published for appointment: {}", appointment.getAppointmentId());
+            // Note: The actual meeting link will be set when we receive the response event
+            
+        } catch (Exception e) {
+            log.error("Error requesting video session for appointment: {}", appointment.getAppointmentId(), e);
+            // Don't fail the entire booking if video creation request fails
+        }
+    }
+
+    /**
+     * Verify payment and update appointment status
+     * For VIRTUAL appointments, this enables access to the video link
+     */
+    public AppointmentResponse verifyPaymentAndActivate(UUID appointmentId, String paymentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+        
+        // Update payment status
+        AppointmentStatus previousStatus = appointment.getStatus();
+        appointment.setPaymentStatus(PaymentStatus.PAID);
+        appointment.setPaymentId(paymentId);
+        
+        // For VIRTUAL appointments, ensure video session exists
+        if (appointment.getAppointmentType() == com.pulseone.appointments_service.enums.AppointmentType.VIRTUAL) {
+            if (appointment.getMeetingLink() == null || appointment.getMeetingLink().isEmpty()) {
+                log.info("Payment verified but no video link yet. Re-requesting video session for: {}", appointmentId);
+                createVideoSessionForAppointment(appointment);
+            }
+            
+            // Confirm payment is complete before patient can access video
+            if (appointment.getPaymentStatus() == PaymentStatus.PAID) {
+                log.info("Payment verified. Patient can now access video consultation for: {}", appointmentId);
+            }
+        }
+        
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+        
+        createAppointmentHistory(savedAppointment, previousStatus, appointment.getStatus(),
+                "Payment verified and completed", paymentId, "PAYMENT_SERVICE");
+        
+        return convertToAppointmentResponse(savedAppointment);
+    }
+
+    /**
+     * Start video consultation (called by doctor)
+     */
+    public AppointmentResponse startVideoConsultation(UUID appointmentId, String doctorId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+        
+        // Validate this is a VIRTUAL appointment
+        if (appointment.getAppointmentType() != com.pulseone.appointments_service.enums.AppointmentType.VIRTUAL) {
+            throw new IllegalArgumentException("Cannot start video consultation for non-virtual appointment");
+        }
+        
+        // Validate payment is completed
+        if (appointment.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new IllegalArgumentException("Payment must be completed before starting video consultation");
+        }
+        
+        // Validate meeting link exists
+        if (appointment.getMeetingId() == null) {
+            throw new IllegalArgumentException("No video session found. Please create one first.");
+        }
+        
+        // Start the video session via RabbitMQ
+        videoConsultationService.requestStartVideoSession(appointment.getMeetingId(), doctorId);
+        
+        // Update appointment status immediately
+        AppointmentStatus previousStatus = appointment.getStatus();
+        appointment.setStatus(AppointmentStatus.IN_PROGRESS);
+        appointment.setActualStartTime(LocalDateTime.now());
+        
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+        
+        createAppointmentHistory(savedAppointment, previousStatus, AppointmentStatus.IN_PROGRESS,
+                "Video consultation start requested by doctor", doctorId, "DOCTOR");
+        
+        log.info("Video consultation start requested for appointment: {} by doctor: {}", appointmentId, doctorId);
+        
+        return convertToAppointmentResponse(savedAppointment);
+    }
+
+    /**
+     * End video consultation (called by doctor or patient)
+     */
+    public AppointmentResponse endVideoConsultation(UUID appointmentId, String userId, String endedByRole) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Appointment not found with id: " + appointmentId));
+        
+        if (appointment.getMeetingId() == null) {
+            throw new IllegalArgumentException("No video session to end");
+        }
+        
+        // End the video session via RabbitMQ
+        videoConsultationService.requestEndVideoSession(
+            appointment.getMeetingId(), userId, endedByRole.toLowerCase());
+        
+        // Update appointment status immediately
+        AppointmentStatus previousStatus = appointment.getStatus();
+        appointment.setStatus(AppointmentStatus.COMPLETED);
+        appointment.setActualEndTime(LocalDateTime.now());
+        
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+        
+        createAppointmentHistory(savedAppointment, previousStatus, AppointmentStatus.COMPLETED,
+                "Video consultation end requested", userId, endedByRole.toUpperCase());
+        
+        log.info("Video consultation end requested for appointment: {} by {}", appointmentId, endedByRole);
+        
+        return convertToAppointmentResponse(savedAppointment);
     }
 
     /**
@@ -431,6 +585,8 @@ public class AppointmentService {
         response.setActualEndTime(appointment.getActualEndTime());
         response.setCreatedAt(appointment.getCreatedAt());
         response.setUpdatedAt(appointment.getUpdatedAt());
+        response.setMeetingLink(appointment.getMeetingLink());
+        response.setMeetingId(appointment.getMeetingId());
 
         // Set doctor information
         if (appointment.getSession() != null && appointment.getSession().getDoctor() != null) {

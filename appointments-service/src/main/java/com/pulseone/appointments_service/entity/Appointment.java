@@ -133,6 +133,21 @@ public class Appointment {
     @Column(name = "actual_end_time")
     private LocalDateTime actualEndTime;
 
+    /**
+     * AWS Chime meeting link for virtual consultations.
+     * Only populated for VIRTUAL appointment types.
+     * Generated upon successful payment verification for direct doctor sessions.
+     */
+    @Column(name = "meeting_link", length = 500)
+    private String meetingLink;
+
+    /**
+     * AWS Chime meeting ID for tracking and management.
+     * Only populated for VIRTUAL appointment types.
+     */
+    @Column(name = "meeting_id", length = 100)
+    private String meetingId;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -288,6 +303,22 @@ public class Appointment {
 
     public void setActualEndTime(LocalDateTime actualEndTime) {
         this.actualEndTime = actualEndTime;
+    }
+
+    public String getMeetingLink() {
+        return meetingLink;
+    }
+
+    public void setMeetingLink(String meetingLink) {
+        this.meetingLink = meetingLink;
+    }
+
+    public String getMeetingId() {
+        return meetingId;
+    }
+
+    public void setMeetingId(String meetingId) {
+        this.meetingId = meetingId;
     }
 
     public LocalDateTime getCreatedAt() {

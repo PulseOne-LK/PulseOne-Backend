@@ -11,6 +11,7 @@ from datetime import datetime
 from app.config import settings
 from app.database import init_db, engine
 from app.rabbitmq_publisher import rabbitmq_publisher
+from app.rabbitmq_consumer import rabbitmq_consumer
 from app.routes import router
 from app.schemas import HealthCheckResponse
 
@@ -37,7 +38,12 @@ async def lifespan(app: FastAPI):
         
         # Connect to RabbitMQ
         await rabbitmq_publisher.connect()
-        logger.info("RabbitMQ connected successfully")
+        logger.info("RabbitMQ Publisher connected successfully")
+        
+        # Start RabbitMQ Consumer
+        await rabbitmq_consumer.connect()
+        await rabbitmq_consumer.setup_queues()
+        logger.info("RabbitMQ Consumer started successfully")
         
     except Exception as e:
         logger.error(f"Startup error: {e}")

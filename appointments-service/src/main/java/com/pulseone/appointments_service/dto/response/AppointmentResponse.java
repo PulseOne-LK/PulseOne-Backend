@@ -34,6 +34,8 @@ public class AppointmentResponse {
     private LocalDateTime actualEndTime;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String meetingLink; // AWS Chime link for VIRTUAL appointments
+    private String meetingId; // AWS Chime meeting ID
 
     // Constructors
     public AppointmentResponse() {
@@ -198,6 +200,22 @@ public class AppointmentResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getMeetingLink() {
+        return meetingLink;
+    }
+
+    public void setMeetingLink(String meetingLink) {
+        this.meetingLink = meetingLink;
+    }
+
+    public String getMeetingId() {
+        return meetingId;
+    }
+
+    public void setMeetingId(String meetingId) {
+        this.meetingId = meetingId;
     }
 
     // Nested DTOs

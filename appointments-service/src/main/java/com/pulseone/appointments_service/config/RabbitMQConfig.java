@@ -26,6 +26,19 @@ public class RabbitMQConfig {
     public static final String VIDEO_CONSULTATION_QUEUE = "video-consultation-events-appointments";
     public static final String VIDEO_CONSULTATION_ROUTING_KEY = "appointment.consultation.completed";
 
+    // Video session queues
+    public static final String APPOINTMENTS_EXCHANGE = "appointments-exchange";
+    public static final String VIDEO_SESSION_RESPONSES_QUEUE = "video-session-responses-appointments";
+    public static final String VIDEO_SESSION_RESPONSES_ROUTING_KEY = "video.session.#";
+
+    /**
+     * Declare the appointments exchange for outgoing events
+     */
+    @Bean
+    public TopicExchange appointmentsExchange() {
+        return new TopicExchange(APPOINTMENTS_EXCHANGE, true, false);
+    }
+
     /**
      * Declare the user events exchange
      */
@@ -87,5 +100,24 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(videoConsultationQueue)
                 .to(userEventsExchange)
                 .with(VIDEO_CONSULTATION_ROUTING_KEY);
+    }
+
+    /**
+     * Declare the video session responses queue for appointments service
+     * Listens for video session creation responses from video service
+     */
+    @Bean
+    public Queue videoSessionResponsesQueue() {
+        return new Queue(VIDEO_SESSION_RESPONSES_QUEUE, true, false, false);
+    }
+
+    /**
+     * Bind the video session responses queue to the appointments exchange
+     */
+    @Bean
+    public Binding videoSessionResponsesBinding(Queue videoSessionResponsesQueue, TopicExchange appointmentsExchange) {
+        return BindingBuilder.bind(videoSessionResponsesQueue)
+                .to(appointmentsExchange)
+                .with(VIDEO_SESSION_RESPONSES_ROUTING_KEY);
     }
 }

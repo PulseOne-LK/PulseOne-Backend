@@ -49,6 +49,18 @@ public class CreateSessionRequest {
 
     private LocalDate effectiveUntil; // Optional
 
+    /**
+     * Who is creating this session.
+     * - CLINIC_ADMIN: For physical clinic sessions (requires clinicId)
+     * - DOCTOR: For direct virtual sessions (clinicId must be null)
+     */
+    private String creatorType;
+
+    /**
+     * User ID of the creator (clinic admin or doctor)
+     */
+    private String creatorId;
+
     // Constructors
     public CreateSessionRequest() {
     }
@@ -132,5 +144,21 @@ public class CreateSessionRequest {
 
     public void setEffectiveUntil(LocalDate effectiveUntil) {
         this.effectiveUntil = effectiveUntil;
+    }
+
+    public String getCreatorType() {
+        return creatorType;
+    }
+
+    public void setCreatorType(String creatorType) {
+        this.creatorType = creatorType;
+    }
+
+    public String getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(String creatorId) {
+        this.creatorId = creatorId;
     }
 }

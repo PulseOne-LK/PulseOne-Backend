@@ -23,6 +23,8 @@ public class SessionResponse {
     private LocalDate effectiveFrom;
     private LocalDate effectiveUntil;
     private Boolean isActive;
+    private String creatorType; // CLINIC_ADMIN or DOCTOR
+    private String creatorId; // User ID of creator
 
     // Constructors
     public SessionResponse() {
@@ -123,6 +125,22 @@ public class SessionResponse {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public String getCreatorType() {
+        return creatorType;
+    }
+
+    public void setCreatorType(String creatorType) {
+        this.creatorType = creatorType;
+    }
+
+    public String getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(String creatorId) {
+        this.creatorId = creatorId;
     }
 
     /**
