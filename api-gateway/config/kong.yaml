@@ -6,6 +6,8 @@ plugins:
     config:
       origins:
         - "http://localhost:3000"
+        - "http://localhost:3001"
+        - "http://localhost:3002"
         - "https://your-frontend-domain.com"
       methods:
         - GET
@@ -14,6 +16,7 @@ plugins:
         - DELETE
         - OPTIONS
         - HEAD
+        - PATCH
       headers:
         - Accept
         - Authorization

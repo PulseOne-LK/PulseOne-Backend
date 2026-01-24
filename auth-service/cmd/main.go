@@ -119,7 +119,9 @@ func main() {
 	r.Post("/admin/register", authHandlers.AdminRegisterHandler)
 
 	// Swagger documentation
-	r.Get("/swagger-ui/*", httpSwagger.WrapHandler)
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
 
 	fmt.Printf("Auth Service (Go + PostgreSQL + Chi) running on port %s...\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
