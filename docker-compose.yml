@@ -105,6 +105,27 @@ services:
       timeout: 5s
       retries: 5
 
+  # PostgreSQL for Video Consultation Service
+  video-postgres-db:
+    image: postgres:15-alpine
+    container_name: video-postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: videodb
+    ports:
+      - "5438:5432"
+    volumes:
+      - video_postgres_data:/var/lib/postgresql/data
+    networks:
+      - pulseone-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ===================== MESSAGE BROKER =====================
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -435,12 +456,69 @@ services:
         limits:
           memory: 512M
 
+  # Video Consultation Service (Python FastAPI)
+  video-consultation-service:
+    build:
+      context: ./video-consultation-service
+      dockerfile: Dockerfile
+    container_name: video-consultation-service
+    restart: on-failure
+    ports:
+      - "8086:8086"
+    environment:
+      APP_NAME: "Video Consultation Service"
+      VERSION: "1.0.0"
+      DEBUG: "False"
+      PORT: "8086"
+      HOST: "0.0.0.0"
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@video-postgres-db:5432/videodb"
+      DB_HOST: "video-postgres-db"
+      DB_PORT: "5432"
+      DB_NAME: "videodb"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-AKIARSCWF3UWZ2CZ5GP5}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-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}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_CHIME_ENDPOINT: "https://service.chime.aws.amazon.com"
+      S3_BUCKET_NAME: "pulseone-video-recordings"
+      RABBITMQ_HOST: "rabbitmq"
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_USER: "guest"
+      RABBITMQ_PASSWORD: "guest"
+      RABBITMQ_VHOST: "/"
+      RABBITMQ_EXCHANGE: "user-events-exchange"
+      JWT_SECRET_KEY: ${JWT_SECRET:-3fb7bad1a0d1cd72dc13fa99ac2e870c7e9b7927a17fbff5de0e24e29e5e9e2f}
+      JWT_ALGORITHM: "HS256"
+      JWT_EXPIRATION_MINUTES: "60"
+      AUTH_SERVICE_URL: "http://auth-service:8080"
+      PROFILE_SERVICE_URL: "http://profile-service:8082"
+      APPOINTMENTS_SERVICE_URL: "http://appointments-service:8083"
+      DEFAULT_CONSULTATION_DURATION_MINUTES: "30"
+      MAX_CONSULTATION_DURATION_MINUTES: "120"
+      MIN_CONSULTATION_DURATION_MINUTES: "15"
+      AWS_FREE_TIER_ATTENDEE_MINUTES: "1000"
+      ENABLE_USAGE_TRACKING: "True"
+      MAX_ATTENDEES_PER_MEETING: "2"
+    depends_on:
+      video-postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - pulseone-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
 volumes:
   auth_postgres_data:
   profile_postgres_data:
   appointments_postgres_data:
   prescription_postgres_data:
   inventory_postgres_data:
+  video_postgres_data:
   kong_postgres_data:
 
 networks:

@@ -1,0 +1,240 @@
+### Video Consultation Service - API Tests
+### Base URL
+@baseUrl = http://localhost:8086
+@token = your_jwt_token_here
+@sessionId = session_uuid_here
+
+### Health Check
+GET {{baseUrl}}/health
+
+###
+
+### Root Endpoint
+GET {{baseUrl}}/
+
+###
+
+### Create Direct Doctor Video Session
+POST {{baseUrl}}/api/video/sessions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_type": "DIRECT_DOCTOR",
+  "doctor_id": "doc_123",
+  "patient_id": "pat_456",
+  "scheduled_start_time": "2026-01-25T14:00:00",
+  "consultation_duration_minutes": 30,
+  "chief_complaint": "Follow-up consultation for hypertension"
+}
+
+###
+
+### Create Clinic-Based Video Session
+POST {{baseUrl}}/api/video/sessions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_type": "CLINIC_BASED",
+  "appointment_id": "789e1552-abfa-42ab-a7a9-b033e8b745f9",
+  "doctor_id": "doc_123",
+  "patient_id": "pat_456",
+  "clinic_id": 1,
+  "scheduled_start_time": "2026-01-25T10:00:00",
+  "consultation_duration_minutes": 30,
+  "chief_complaint": "Regular checkup"
+}
+
+###
+
+### Join Video Session
+POST {{baseUrl}}/api/video/sessions/{{sessionId}}/join
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "device_type": "web",
+  "browser_info": "Chrome 120"
+}
+
+###
+
+### Leave Video Session
+POST {{baseUrl}}/api/video/sessions/{{sessionId}}/leave
+Authorization: Bearer {{token}}
+
+###
+
+### End Video Session (Doctor only)
+POST {{baseUrl}}/api/video/sessions/{{sessionId}}/end
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "session_notes": "Patient is recovering well. Prescribed medication XYZ for 2 weeks. Follow-up in 1 month.",
+  "connection_quality_rating": 5
+}
+
+###
+
+### Cancel Video Session
+POST {{baseUrl}}/api/video/sessions/{{sessionId}}/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cancellation_reason": "Patient requested to reschedule due to emergency"
+}
+
+###
+
+### Get Session Details
+GET {{baseUrl}}/api/video/sessions/{{sessionId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Get Session Events
+GET {{baseUrl}}/api/video/sessions/{{sessionId}}/events
+Authorization: Bearer {{token}}
+
+###
+
+### Update Session Notes (Doctor only)
+PUT {{baseUrl}}/api/video/sessions/{{sessionId}}/notes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "session_notes": "Updated notes: Patient showed significant improvement. Continue current treatment plan."
+}
+
+###
+
+### List My Sessions
+GET {{baseUrl}}/api/video/sessions?page=1&page_size=20
+Authorization: Bearer {{token}}
+
+###
+
+### List My Active Sessions
+GET {{baseUrl}}/api/video/sessions?status=ACTIVE&page=1&page_size=10
+Authorization: Bearer {{token}}
+
+###
+
+### List My Completed Sessions
+GET {{baseUrl}}/api/video/sessions?status=COMPLETED&page=1&page_size=20
+Authorization: Bearer {{token}}
+
+###
+
+### List Doctor Sessions
+GET {{baseUrl}}/api/video/sessions/doctor/doc_123?page=1&page_size=20
+Authorization: Bearer {{token}}
+
+###
+
+### List Patient Sessions
+GET {{baseUrl}}/api/video/sessions/patient/pat_456?page=1&page_size=20
+Authorization: Bearer {{token}}
+
+###
+
+### Get Usage Metrics (Current Month)
+GET {{baseUrl}}/api/video/metrics/usage
+Authorization: Bearer {{token}}
+
+###
+
+### Get Usage Metrics (Specific Month)
+GET {{baseUrl}}/api/video/metrics/usage?year=2026&month=1
+Authorization: Bearer {{token}}
+
+###
+
+### Sample Test Flow: Complete Consultation
+# 1. Create session
+# 2. Doctor joins
+# 3. Patient joins
+# 4. Doctor ends session
+# 5. Check session details
+
+### Step 1: Create Session
+# @name createSession
+POST {{baseUrl}}/api/video/sessions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_type": "DIRECT_DOCTOR",
+  "doctor_id": "doc_123",
+  "patient_id": "pat_456",
+  "scheduled_start_time": "2026-01-25T14:00:00",
+  "consultation_duration_minutes": 30,
+  "chief_complaint": "Test consultation"
+}
+
+###
+
+# Extract session_id from response
+@testSessionId = {{createSession.response.body.session_id}}
+
+### Step 2: Doctor Joins
+POST {{baseUrl}}/api/video/sessions/{{testSessionId}}/join
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "device_type": "web",
+  "browser_info": "Chrome - Doctor"
+}
+
+###
+
+### Step 3: Patient Joins
+POST {{baseUrl}}/api/video/sessions/{{testSessionId}}/join
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "device_type": "mobile",
+  "browser_info": "Safari - Patient"
+}
+
+###
+
+### Step 4: Check Session Status
+GET {{baseUrl}}/api/video/sessions/{{testSessionId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Step 5: End Session
+POST {{baseUrl}}/api/video/sessions/{{testSessionId}}/end
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "session_notes": "Test consultation completed successfully",
+  "connection_quality_rating": 5
+}
+
+###
+
+### Step 6: Verify Session Ended
+GET {{baseUrl}}/api/video/sessions/{{testSessionId}}
+Authorization: Bearer {{token}}
+
+###
+
+### Step 7: Check Events
+GET {{baseUrl}}/api/video/sessions/{{testSessionId}}/events
+Authorization: Bearer {{token}}
+
+###
+
+### Step 8: Check Usage
+GET {{baseUrl}}/api/video/metrics/usage
+Authorization: Bearer {{token}}

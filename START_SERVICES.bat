@@ -90,8 +90,18 @@ if not exist "prescription-service" (
 echo ✓ Prescription Service found
 echo.
 
-REM Step 7: Start services
-echo [7/7] Starting all services...
+REM Step 7: Check if Video Consultation Service folder exists
+echo [7/8] Checking Video Consultation Service (Python)...
+if not exist "video-consultation-service" (
+    echo ✗ Video Consultation Service folder not found!
+    pause
+    exit /b 1
+)
+echo ✓ Video Consultation Service found
+echo.
+
+REM Step 8: Start services
+echo [8/8] Starting all services...
 echo.
 echo ┌─────────────────────────────────────────────────────┐
 echo │   Services Starting - Wait for all to load...       │
@@ -122,6 +132,10 @@ timeout /t 3 /nobreak
 
 start "Prescription Service (Go)" cmd /k "cd prescription-service && go mod download && go mod tidy && swag init -g cmd/main.go && go build -o prescription-service.exe .\cmd\main.go && echo. && echo ✓ Prescription Service built! Starting on port 8085... && echo. && .\prescription-service.exe"
 
+timeout /t 3 /nobreak
+
+start "Video Consultation Service (Python)" cmd /k "cd video-consultation-service && python -m pip install -r requirements.txt && echo. && echo ✓ Video Consultation Service dependencies installed! Starting on port 8086... && echo. && python main.py"
+
 echo.
 echo ✓ All services are starting!
 echo.
@@ -135,6 +149,7 @@ echo │   Profile Service:  http://localhost:8082           │
 echo │   Appointments:     http://localhost:8083           │
 echo │   Inventory:        http://localhost:8084           │
 echo │   Prescription:     http://localhost:8085           │
+echo │   Video Consult:    http://localhost:8086           │
 echo └─────────────────────────────────────────────────────┘
 echo.
 echo Routed through API Gateway:
@@ -143,6 +158,7 @@ echo   - http://localhost:8000/profile
 echo   - http://localhost:8000/appointments
 echo   - http://localhost:8000/inventory
 echo   - http://localhost:8000/prescription
+echo   - http://localhost:8000/video
 echo.
 echo Check the service windows for startup messages.
 echo.

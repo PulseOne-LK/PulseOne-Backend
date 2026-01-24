@@ -28,6 +28,12 @@ CREATE DATABASE appointmentsdb
     LOCALE 'en_US.UTF-8'
     TEMPLATE template0;
 
+CREATE DATABASE videodb
+    WITH 
+    ENCODING 'UTF8'
+    LOCALE 'en_US.UTF-8'
+    TEMPLATE template0;
+
 -- =======================================================
 -- 2. VERIFY CREATION
 -- =======================================================

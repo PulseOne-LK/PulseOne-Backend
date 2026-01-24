@@ -23,6 +23,9 @@ public class RabbitMQConfig {
     public static final String CLINIC_UPDATE_QUEUE = "clinic-update-events-appointments";
     public static final String CLINIC_UPDATE_ROUTING_KEY = "clinic.update.#";
 
+    public static final String VIDEO_CONSULTATION_QUEUE = "video-consultation-events-appointments";
+    public static final String VIDEO_CONSULTATION_ROUTING_KEY = "appointment.consultation.completed";
+
     /**
      * Declare the user events exchange
      */
@@ -65,5 +68,24 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(clinicUpdateQueue)
                 .to(userEventsExchange)
                 .with(CLINIC_UPDATE_ROUTING_KEY);
+    }
+
+    /**
+     * Declare the video consultation queue for appointments service
+     * Listens for video consultation completion events from video service
+     */
+    @Bean
+    public Queue videoConsultationQueue() {
+        return new Queue(VIDEO_CONSULTATION_QUEUE, true, false, false);
+    }
+
+    /**
+     * Bind the video consultation queue to the exchange
+     */
+    @Bean
+    public Binding videoConsultationBinding(Queue videoConsultationQueue, TopicExchange userEventsExchange) {
+        return BindingBuilder.bind(videoConsultationQueue)
+                .to(userEventsExchange)
+                .with(VIDEO_CONSULTATION_ROUTING_KEY);
     }
 }

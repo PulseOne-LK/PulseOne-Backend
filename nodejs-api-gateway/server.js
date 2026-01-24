@@ -52,6 +52,10 @@ const services = {
   prescription: {
     target: 'http://localhost:8085',
     pathPrefix: '/prescription'
+  },
+  video: {
+    target: 'http://localhost:8086',
+    pathPrefix: '/video'
   }
 };
 
@@ -104,6 +108,11 @@ app.use('/prescription', (req, res) => {
   proxies.prescription.web(req, res);
 });
 
+// Video Consultation Service Route
+app.use('/video', (req, res) => {
+  proxies.video.web(req, res);
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'API Gateway is running' });
@@ -119,7 +128,8 @@ app.get('/', (req, res) => {
       profile: 'http://localhost:8000/profile',
       appointments: 'http://localhost:8000/appointments',
       inventory: 'http://localhost:8000/inventory',
-      prescription: 'http://localhost:8000/prescription'
+      prescription: 'http://localhost:8000/prescription',
+      video: 'http://localhost:8000/video'
     },
     health: 'http://localhost:8000/health'
   });
@@ -135,5 +145,6 @@ app.listen(PORT, () => {
   console.log(`  - /appointments  -> http://localhost:8083`);
   console.log(`  - /inventory     -> http://localhost:8084`);
   console.log(`  - /prescription  -> http://localhost:8085`);
+  console.log(`  - /video         -> http://localhost:8086`);
   console.log(`\nHealth Check: http://localhost:${PORT}/health\n`);
 });

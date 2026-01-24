@@ -57,3 +57,11 @@ services:
         paths:
           - /appointments
         strip_path: true
+
+  - name: video-consultation-service
+    url: http://video-consultation-service:8086
+    routes:
+      - name: video-route
+        paths:
+          - /video
+        strip_path: true
