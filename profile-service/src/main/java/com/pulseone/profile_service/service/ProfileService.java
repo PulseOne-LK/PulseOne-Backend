@@ -64,6 +64,52 @@ public class ProfileService {
         clinic.setDoctorUuids(new java.util.ArrayList<>(doctorUuids));
     }
 
+    /**
+     * Synchronizes clinic-doctor associations when clinic is updated.
+     * Creates ClinicDoctor entries for new doctors and removes entries for removed
+     * doctors.
+     * 
+     * @param clinicId       The clinic ID
+     * @param newDoctorUuids List of doctor user IDs that should be associated with
+     *                       the clinic
+     */
+    private void syncClinicDoctorAssociations(Long clinicId, List<String> newDoctorUuids) {
+        // Get existing associations
+        List<ClinicDoctor> existingAssociations = clinicDoctorRepo.findByClinicId(clinicId);
+        java.util.Set<String> existingDoctorIds = existingAssociations.stream()
+                .map(ClinicDoctor::getDoctorUserId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        java.util.Set<String> newDoctorIdSet = new java.util.HashSet<>(newDoctorUuids);
+
+        // Find doctors to add (in new list but not in existing)
+        java.util.Set<String> doctorsToAdd = new java.util.HashSet<>(newDoctorIdSet);
+        doctorsToAdd.removeAll(existingDoctorIds);
+
+        // Find doctors to remove (in existing but not in new list)
+        java.util.Set<String> doctorsToRemove = new java.util.HashSet<>(existingDoctorIds);
+        doctorsToRemove.removeAll(newDoctorIdSet);
+
+        // Add new doctor associations
+        for (String doctorUserId : doctorsToAdd) {
+            ClinicDoctor newAssociation = new ClinicDoctor(clinicId, doctorUserId);
+            clinicDoctorRepo.save(newAssociation);
+            logger.info("Created pending clinic association for clinic {} and doctor {}", clinicId, doctorUserId);
+        }
+
+        // Remove doctor associations that are no longer in the list
+        for (ClinicDoctor association : existingAssociations) {
+            if (doctorsToRemove.contains(association.getDoctorUserId())) {
+                clinicDoctorRepo.delete(association);
+                logger.info("Removed clinic association for clinic {} and doctor {}", clinicId,
+                        association.getDoctorUserId());
+            }
+        }
+
+        logger.info("Synced clinic-doctor associations for clinic {}: added {}, removed {}",
+                clinicId, doctorsToAdd.size(), doctorsToRemove.size());
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(ProfileService.class);
 
     private final PatientProfileRepository patientRepo;
@@ -319,6 +365,12 @@ public class ProfileService {
         existing.setOperatingHours(updates.getOperatingHours());
 
         Clinic savedClinic = clinicRepo.save(existing);
+
+        // Process doctor associations if doctorUuids is provided
+        if (updates.getDoctorUuids() != null && !updates.getDoctorUuids().isEmpty()) {
+            syncClinicDoctorAssociations(savedClinic.getId(), updates.getDoctorUuids());
+        }
+
         populateClinicDoctors(savedClinic);
 
         // Notify appointments service of clinic update via RabbitMQ
