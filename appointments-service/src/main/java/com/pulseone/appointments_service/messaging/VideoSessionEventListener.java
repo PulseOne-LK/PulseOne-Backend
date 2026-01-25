@@ -6,10 +6,12 @@ import com.pulseone.appointments_service.entity.Appointment;
 import com.pulseone.appointments_service.repository.AppointmentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
@@ -32,11 +34,13 @@ public class VideoSessionEventListener {
      * Updates the appointment with meeting link and ID
      */
     @RabbitListener(queues = "video-session-responses-appointments")
-    public void handleVideoSessionCreated(String message) {
+    public void handleVideoSessionCreated(Message message) {
         try {
-            log.info("Received video session event from Video Service");
+            // Manually convert message body to String to avoid Jackson deserialization issues
+            String messageBody = new String(message.getBody(), StandardCharsets.UTF_8);
+            log.info("Received video session event from Video Service: {}", messageBody);
             
-            JsonNode json = objectMapper.readTree(message);
+            JsonNode json = objectMapper.readTree(messageBody);
             String eventType = json.path("event_type").asText();
             JsonNode data = json.path("data");
             
@@ -51,7 +55,7 @@ public class VideoSessionEventListener {
             }
             
         } catch (Exception e) {
-            log.error("Error processing video session event: {}", message, e);
+            log.error("Error processing video session event", e);
         }
     }
 
@@ -63,18 +67,18 @@ public class VideoSessionEventListener {
             String appointmentIdStr = data.path("appointment_id").asText();
             String sessionId = data.path("session_id").asText();
             String meetingId = data.path("meeting_id").asText();
-            String attendeeUrl = data.path("attendee_url").asText();
+            String meetingUrl = data.path("meeting_url").asText();
 
             UUID appointmentId = UUID.fromString(appointmentIdStr);
 
             // Update appointment with meeting link
             appointmentRepository.findById(appointmentId).ifPresent(appointment -> {
                 appointment.setMeetingId(meetingId);
-                appointment.setMeetingLink(attendeeUrl);
+                appointment.setMeetingLink(meetingUrl);
                 appointmentRepository.save(appointment);
                 
                 log.info("Updated appointment {} with video session: Meeting ID: {}, Link: {}", 
-                        appointmentId, meetingId, attendeeUrl);
+                        appointmentId, meetingId, meetingUrl);
             });
 
         } catch (Exception e) {

@@ -2,8 +2,11 @@ package com.pulseone.appointments_service.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.pulseone.appointments_service.events.UserEventListener;
@@ -119,5 +122,24 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(videoSessionResponsesQueue)
                 .to(appointmentsExchange)
                 .with(VIDEO_SESSION_RESPONSES_ROUTING_KEY);
+    }
+
+    /**
+     * Configure Jackson JSON message converter for RabbitMQ
+     * This ensures messages are sent as JSON instead of Java serialization
+     */
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    /**
+     * Configure RabbitTemplate with JSON message converter
+     */
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(jsonMessageConverter());
+        return rabbitTemplate;
     }
 }
