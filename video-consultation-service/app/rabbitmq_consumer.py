@@ -45,37 +45,47 @@ class RabbitMQConsumer:
     async def setup_queues(self):
         """Declare queues and bindings"""
         try:
+            logger.info(f"Setting up RabbitMQ queues for exchange: {settings.RABBITMQ_EXCHANGE}")
+            
             # Declare exchange
             exchange = await self.channel.declare_exchange(
                 settings.RABBITMQ_EXCHANGE,
                 aio_pika.ExchangeType.TOPIC,
                 durable=True
             )
+            logger.info(f"Exchange declared: {settings.RABBITMQ_EXCHANGE}")
             
             # Declare queue for video session requests from appointments service
             video_requests_queue = await self.channel.declare_queue(
                 "video-session-requests",
                 durable=True
             )
+            logger.info("Queue declared: video-session-requests")
             
             # Bind queue to exchange with routing keys
             await video_requests_queue.bind(
                 exchange,
                 routing_key="appointment.video.create"
             )
+            logger.info("Queue bound to: appointment.video.create")
+            
             await video_requests_queue.bind(
                 exchange,
                 routing_key="appointment.video.start"
             )
+            logger.info("Queue bound to: appointment.video.start")
+            
             await video_requests_queue.bind(
                 exchange,
                 routing_key="appointment.video.end"
             )
+            logger.info("Queue bound to: appointment.video.end")
             
             logger.info("Queues and bindings set up successfully")
             
             # Start consuming
             await video_requests_queue.consume(self.handle_message)
+            logger.info("🎧 RabbitMQ Consumer is now listening for messages...")
             
         except Exception as e:
             logger.error(f"Failed to setup queues: {e}")
@@ -87,11 +97,13 @@ class RabbitMQConsumer:
         """
         async with message.process():
             try:
+                logger.info(f"📨 Received RabbitMQ message")
                 body = json.loads(message.body.decode())
                 event_type = body.get("event_type")
                 data = body.get("data", {})
                 
-                logger.info(f"Received event: {event_type}")
+                logger.info(f"📌 Event Type: {event_type}")
+                logger.info(f"📦 Event Data: {data}")
                 
                 # Route to appropriate handler
                 if event_type == "appointment.video.create":
@@ -126,7 +138,7 @@ class RabbitMQConsumer:
             scheduled_datetime = datetime.fromisoformat(scheduled_time) if scheduled_time else None
             
             # Create session using video service
-            async with async_session_maker() as db:
+            async with AsyncSessionLocal() as db:
                 session = await video_service.create_session(
                     db=db,
                     booking_type="DIRECT_DOCTOR",  # For VIRTUAL appointments in dual-mode
@@ -149,8 +161,8 @@ class RabbitMQConsumer:
                     data={
                         "appointment_id": appointment_id,
                         "session_id": session.session_id,
-                        "meeting_id": session.chime_meeting_id,
-                        "attendee_url": f"{settings.API_URL}/api/video/sessions/{session.session_id}/join",
+                        "meeting_id": session.meeting_id,
+                        "meeting_url": f"{settings.API_URL}/api/video/sessions/{session.session_id}/join",
                         "status": "created",
                         "created_at": session.created_at.isoformat()
                     }
@@ -184,7 +196,7 @@ class RabbitMQConsumer:
             
             logger.info(f"Starting video session: {session_id}")
             
-            async with async_session_maker() as db:
+            async with AsyncSessionLocal() as db:
                 # Update session status
                 from app.models import VideoSession, SessionStatus
                 from sqlalchemy import select
@@ -234,7 +246,7 @@ class RabbitMQConsumer:
             
             logger.info(f"Ending video session: {session_id}")
             
-            async with async_session_maker() as db:
+            async with AsyncSessionLocal() as db:
                 from app.models import VideoSession, SessionStatus
                 from sqlalchemy import select
                 

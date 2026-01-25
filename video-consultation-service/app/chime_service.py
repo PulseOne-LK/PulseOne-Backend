@@ -69,9 +69,6 @@ class ChimeService:
                         'MaxResolution': 'FHD'  # Full HD for screen sharing
                     }
                 },
-                NotificationsConfiguration={
-                    'LambdaFunctionArn': '',  # Can add Lambda for notifications
-                },
                 Tags=[
                     {'Key': 'Service', 'Value': 'PulseOne'},
                     {'Key': 'Type', 'Value': 'VideoConsultation'},

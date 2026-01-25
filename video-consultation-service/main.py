@@ -57,9 +57,13 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down Video Consultation Service...")
     
     try:
-        # Disconnect RabbitMQ
+        # Disconnect RabbitMQ Publisher
         await rabbitmq_publisher.disconnect()
-        logger.info("RabbitMQ disconnected")
+        logger.info("RabbitMQ Publisher disconnected")
+        
+        # Disconnect RabbitMQ Consumer
+        await rabbitmq_consumer.disconnect()
+        logger.info("RabbitMQ Consumer disconnected")
         
         # Close database connection
         await engine.dispose()

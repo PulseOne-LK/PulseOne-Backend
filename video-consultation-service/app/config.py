@@ -14,9 +14,9 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5438/videodb"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:root2004@localhost:5432/videodb"
     DB_HOST: str = "localhost"
-    DB_PORT: int = 5438
+    DB_PORT: int = 5432
     DB_NAME: str = "videodb"
     DB_USER: str = "postgres"
     DB_PASSWORD: str = "root2004"
@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     RABBITMQ_USER: str = "guest"
     RABBITMQ_PASSWORD: str = "guest"
     RABBITMQ_VHOST: str = "/"
-    RABBITMQ_EXCHANGE: str = "video-consultation-events"
+    RABBITMQ_EXCHANGE: str = "appointments-exchange"
     
     # JWT Configuration
     JWT_SECRET_KEY: str
@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     JWT_EXPIRATION_MINUTES: int = 60
     
     # Service URLs (for inter-service communication)
+    API_URL: str = "http://localhost:8086"
     AUTH_SERVICE_URL: str = "http://localhost:8080"
     PROFILE_SERVICE_URL: str = "http://localhost:8082"
     APPOINTMENTS_SERVICE_URL: str = "http://localhost:8081"

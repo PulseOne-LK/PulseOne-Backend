@@ -44,7 +44,7 @@ class VideoConsultationService:
         chief_complaint: Optional[str] = None
     ) -> VideoConsultationSession:
         """
-        Create a new video consultation session
+        Create a new video consultation session with AWS Chime meeting
         """
         try:
             # Calculate end time
@@ -65,7 +65,34 @@ class VideoConsultationService:
             )
             
             db.add(session)
-            await db.flush()
+            await db.flush()  # Get the session_id
+            
+            # Create AWS Chime meeting immediately
+            external_meeting_id = f"pulseone-{session.session_id}"
+            
+            try:
+                meeting_data = await chime_service.create_meeting(
+                    external_meeting_id=external_meeting_id,
+                    session_id=session.session_id,
+                    doctor_id=doctor_id,
+                    patient_id=patient_id
+                )
+                
+                # Update session with meeting details
+                session.meeting_id = meeting_data['meeting_id']
+                session.external_meeting_id = meeting_data['external_meeting_id']
+                session.media_region = meeting_data['media_region']
+                session.media_placement_audio_host_url = meeting_data['media_placement']['audio_host_url']
+                session.media_placement_audio_fallback_url = meeting_data['media_placement']['audio_fallback_url']
+                session.media_placement_signaling_url = meeting_data['media_placement']['signaling_url']
+                session.media_placement_turn_control_url = meeting_data['media_placement']['turn_control_url']
+                
+                logger.info(f"AWS Chime meeting created: {meeting_data['meeting_id']} for session: {session.session_id}")
+                
+            except Exception as e:
+                logger.error(f"Failed to create AWS Chime meeting: {e}")
+                # Continue without meeting - can be created later when starting session
+                pass
             
             # Log event
             event = VideoConsultationEvent(
@@ -97,7 +124,7 @@ class VideoConsultationService:
             
         except Exception as e:
             await db.rollback()
-            logger.error(f"Failed to create session: {e}")
+            logger.error(f"Failed to create session: {e}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to create video consultation session: {str(e)}"
