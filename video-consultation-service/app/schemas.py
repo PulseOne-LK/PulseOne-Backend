@@ -136,6 +136,14 @@ class SessionResponse(BaseModel):
     session_notes: Optional[str]
     doctor_joined_at: Optional[datetime]
     patient_joined_at: Optional[datetime]
+    # AWS Chime meeting details
+    meeting_id: Optional[str]
+    external_meeting_id: Optional[str]
+    media_region: Optional[str]
+    media_placement_audio_host_url: Optional[str]
+    media_placement_audio_fallback_url: Optional[str]
+    media_placement_signaling_url: Optional[str]
+    media_placement_turn_control_url: Optional[str]
     created_at: datetime
     updated_at: datetime
     

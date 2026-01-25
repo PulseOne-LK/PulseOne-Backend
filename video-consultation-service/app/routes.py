@@ -8,9 +8,7 @@ from datetime import datetime
 
 from app.database import get_db
 from app.auth import (
-    get_current_user,
-    get_current_doctor,
-    get_current_patient,
+    get_current_user_optional,
     verify_session_access,
     AuthUser
 )
@@ -39,7 +37,7 @@ router = APIRouter(prefix="/api/video", tags=["Video Consultation"])
 @router.post("/sessions", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
 async def create_session(
     request: CreateSessionRequest,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -54,8 +52,8 @@ async def create_session(
     - **consultation_duration_minutes**: Duration (15-120 minutes)
     - **chief_complaint**: Optional patient complaint
     """
-    # Verify authorization
-    if not current_user.is_admin():
+    # Verify authorization (optional)
+    if current_user and not current_user.is_admin():
         # Doctors can create sessions for their patients
         if current_user.is_doctor() and current_user.user_id != request.doctor_id:
             raise HTTPException(
@@ -89,7 +87,7 @@ async def create_session(
 async def join_session(
     session_id: str,
     request: JoinSessionRequest,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -105,30 +103,27 @@ async def join_session(
             detail="Video consultation session not found"
         )
     
-    # Verify access
-    await verify_session_access(
-        session_id=session_id,
-        current_user=current_user,
-        doctor_id=session.doctor_id,
-        patient_id=session.patient_id
-    )
-    
-    # Determine role
-    if current_user.user_id == session.doctor_id:
-        role = ParticipantRoleEnum.DOCTOR.value
-    elif current_user.user_id == session.patient_id:
-        role = ParticipantRoleEnum.PATIENT.value
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this session"
+    # Verify access - if authenticated
+    if current_user:
+        await verify_session_access(
+            session_id=session_id,
+            current_user=current_user,
+            doctor_id=session.doctor_id,
+            patient_id=session.patient_id
         )
     
+    # Determine role
+    if current_user and current_user.user_id == session.doctor_id:
+        role = ParticipantRoleEnum.DOCTOR.value
+    else:
+        role = ParticipantRoleEnum.PATIENT.value
+    
     # Join session
+    user_id = current_user.user_id if current_user else session_id
     session, meeting_data, attendee_data = await video_service.join_session(
         db=db,
         session_id=session_id,
-        user_id=current_user.user_id,
+        user_id=user_id,
         role=role,
         device_type=request.device_type,
         browser_info=request.browser_info
@@ -146,10 +141,78 @@ async def join_session(
     )
 
 
+@router.post("/sessions/{session_id}/start", response_model=JoinSessionResponse)
+async def start_session(
+    session_id: str,
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Start a video consultation session and join as the current user
+    
+    Creates the AWS Chime meeting, marks the session as WAITING, and returns
+    attendee credentials for the current user to join immediately.
+    """
+    # Get session to verify access
+    session = await video_service.get_session(db, session_id)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Video consultation session not found"
+        )
+    
+    # Only doctor or admin can start session (if authenticated)
+    if current_user and not current_user.is_admin() and current_user.user_id != session.doctor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the doctor or admin can start the session"
+        )
+    
+    # Start the meeting
+    session, meeting_data = await video_service.start_meeting(
+        db=db,
+        session_id=session_id
+    )
+    
+    # Automatically join the current user
+    # Determine role and user_id
+    if current_user:
+        user_id = current_user.user_id
+        if current_user.user_id == session.doctor_id:
+            role = ParticipantRoleEnum.DOCTOR.value
+        else:
+            role = ParticipantRoleEnum.PATIENT.value
+    else:
+        # Unauthenticated - default to doctor role
+        user_id = session.doctor_id
+        role = ParticipantRoleEnum.DOCTOR.value
+    
+    # Join session to get attendee credentials
+    session, meeting_data, attendee_data = await video_service.join_session(
+        db=db,
+        session_id=session_id,
+        user_id=user_id,
+        role=role,
+        device_type="web",
+        browser_info="browser"
+    )
+    
+    return JoinSessionResponse(
+        session_id=session.session_id,
+        meeting_id=meeting_data['meeting_id'],
+        external_meeting_id=meeting_data['external_meeting_id'],
+        media_region=meeting_data['media_region'],
+        media_placement=MediaPlacementResponse(**meeting_data['media_placement']),
+        attendee=AttendeeResponse(**attendee_data),
+        scheduled_start_time=session.scheduled_start_time,
+        scheduled_end_time=session.scheduled_end_time
+    )
+
+
 @router.post("/sessions/{session_id}/leave", response_model=SessionResponse)
 async def leave_session(
     session_id: str,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -163,29 +226,26 @@ async def leave_session(
             detail="Video consultation session not found"
         )
     
-    # Verify access
-    await verify_session_access(
-        session_id=session_id,
-        current_user=current_user,
-        doctor_id=session.doctor_id,
-        patient_id=session.patient_id
-    )
-    
-    # Determine role
-    if current_user.user_id == session.doctor_id:
-        role = ParticipantRoleEnum.DOCTOR.value
-    elif current_user.user_id == session.patient_id:
-        role = ParticipantRoleEnum.PATIENT.value
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a participant in this session"
+    # Verify access - if authenticated
+    if current_user:
+        await verify_session_access(
+            session_id=session_id,
+            current_user=current_user,
+            doctor_id=session.doctor_id,
+            patient_id=session.patient_id
         )
     
+    # Determine role
+    if current_user and current_user.user_id == session.doctor_id:
+        role = ParticipantRoleEnum.DOCTOR.value
+    else:
+        role = ParticipantRoleEnum.PATIENT.value
+    
+    user_id = current_user.user_id if current_user else session_id
     session = await video_service.leave_session(
         db=db,
         session_id=session_id,
-        user_id=current_user.user_id,
+        user_id=user_id,
         role=role
     )
     
@@ -196,11 +256,11 @@ async def leave_session(
 async def end_session(
     session_id: str,
     request: EndSessionRequest,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    End a video consultation session (only doctor can end)
+    End a video consultation session (only doctor can end or unauthenticated for demo)
     """
     # Get session to verify access
     session = await video_service.get_session(db, session_id)
@@ -210,17 +270,18 @@ async def end_session(
             detail="Video consultation session not found"
         )
     
-    # Only doctor or admin can end session
-    if not current_user.is_admin() and current_user.user_id != session.doctor_id:
+    # Only doctor or admin can end session (if authenticated)
+    if current_user and not current_user.is_admin() and current_user.user_id != session.doctor_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the doctor or admin can end the session"
         )
     
+    ended_by = current_user.user_id if current_user else "unknown"
     session = await video_service.end_session(
         db=db,
         session_id=session_id,
-        ended_by=current_user.user_id,
+        ended_by=ended_by,
         session_notes=request.session_notes,
         connection_quality_rating=request.connection_quality_rating
     )
@@ -232,13 +293,13 @@ async def end_session(
 async def cancel_session(
     session_id: str,
     request: CancelSessionRequest,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Cancel a video consultation session
     
-    Both doctor and patient can cancel before the session starts
+    Both doctor and patient can cancel before the session starts (or unauthenticated for demo)
     """
     # Get session to verify access
     session = await video_service.get_session(db, session_id)
@@ -248,18 +309,20 @@ async def cancel_session(
             detail="Video consultation session not found"
         )
     
-    # Verify access
-    await verify_session_access(
-        session_id=session_id,
-        current_user=current_user,
-        doctor_id=session.doctor_id,
-        patient_id=session.patient_id
-    )
+    # Verify access - if authenticated
+    if current_user:
+        await verify_session_access(
+            session_id=session_id,
+            current_user=current_user,
+            doctor_id=session.doctor_id,
+            patient_id=session.patient_id
+        )
     
+    cancelled_by = current_user.user_id if current_user else "unknown"
     session = await video_service.cancel_session(
         db=db,
         session_id=session_id,
-        cancelled_by=current_user.user_id,
+        cancelled_by=cancelled_by,
         cancellation_reason=request.cancellation_reason
     )
     
@@ -269,7 +332,7 @@ async def cancel_session(
 @router.get("/sessions/{session_id}", response_model=SessionResponse)
 async def get_session(
     session_id: str,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -283,13 +346,14 @@ async def get_session(
             detail="Video consultation session not found"
         )
     
-    # Verify access
-    await verify_session_access(
-        session_id=session_id,
-        current_user=current_user,
-        doctor_id=session.doctor_id,
-        patient_id=session.patient_id
-    )
+    # Verify access - if authenticated
+    if current_user:
+        await verify_session_access(
+            session_id=session_id,
+            current_user=current_user,
+            doctor_id=session.doctor_id,
+            patient_id=session.patient_id
+        )
     
     return SessionResponse.from_orm(session)
 
@@ -297,7 +361,7 @@ async def get_session(
 @router.get("/sessions/{session_id}/events", response_model=List[SessionEventResponse])
 async def get_session_events(
     session_id: str,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -311,13 +375,14 @@ async def get_session_events(
             detail="Video consultation session not found"
         )
     
-    # Verify access
-    await verify_session_access(
-        session_id=session_id,
-        current_user=current_user,
-        doctor_id=session.doctor_id,
-        patient_id=session.patient_id
-    )
+    # Verify access - if authenticated
+    if current_user:
+        await verify_session_access(
+            session_id=session_id,
+            current_user=current_user,
+            doctor_id=session.doctor_id,
+            patient_id=session.patient_id
+        )
     
     # Get events
     result = await db.execute(
@@ -334,11 +399,11 @@ async def get_session_events(
 async def update_session_notes(
     session_id: str,
     request: UpdateSessionNotesRequest,
-    current_user: AuthUser = Depends(get_current_doctor),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Update session notes (doctor only)
+    Update session notes (doctor only or unauthenticated for demo)
     """
     # Get session
     session = await video_service.get_session(db, session_id)
@@ -348,8 +413,8 @@ async def update_session_notes(
             detail="Video consultation session not found"
         )
     
-    # Verify doctor
-    if current_user.user_id != session.doctor_id:
+    # Verify doctor - if authenticated
+    if current_user and current_user.user_id != session.doctor_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the assigned doctor can update notes"
@@ -364,35 +429,50 @@ async def update_session_notes(
 
 @router.get("/sessions", response_model=SessionListResponse)
 async def list_sessions(
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     status_filter: Optional[str] = Query(None, alias="status"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    List video consultation sessions for current user
+    List video consultation sessions
     
-    - Doctors see sessions where they are the doctor
-    - Patients see sessions where they are the patient
-    - Admins see all sessions
+    - Without token: Returns all sessions (for demo/testing)
+    - With token as doctor: Returns sessions where they are the doctor
+    - With token as patient: Returns sessions where they are the patient
+    - With token as admin: Returns all sessions
     """
+    # If no user authenticated, return all sessions
+    if not current_user:
+        sessions, total = await video_service.get_user_sessions(
+            db=db,
+            user_id="",
+            role=None,
+            status=status_filter,
+            page=page,
+            page_size=page_size
+        )
     # For admins, show all sessions
-    if current_user.is_admin():
-        user_id = None
-        role = None
+    elif current_user.is_admin():
+        sessions, total = await video_service.get_user_sessions(
+            db=db,
+            user_id=None,
+            role=None,
+            status=status_filter,
+            page=page,
+            page_size=page_size
+        )
     else:
-        user_id = current_user.user_id
-        role = current_user.role
-    
-    sessions, total = await video_service.get_user_sessions(
-        db=db,
-        user_id=user_id if user_id else "",
-        role=role,
-        status=status_filter,
-        page=page,
-        page_size=page_size
-    )
+        # Authenticated non-admin: filter by role
+        sessions, total = await video_service.get_user_sessions(
+            db=db,
+            user_id=current_user.user_id,
+            role=current_user.role,
+            status=status_filter,
+            page=page,
+            page_size=page_size
+        )
     
     return SessionListResponse(
         sessions=[SessionResponse.from_orm(s) for s in sessions],
@@ -405,7 +485,7 @@ async def list_sessions(
 @router.get("/sessions/doctor/{doctor_id}", response_model=SessionListResponse)
 async def list_doctor_sessions(
     doctor_id: str,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     status_filter: Optional[str] = Query(None, alias="status"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -414,8 +494,8 @@ async def list_doctor_sessions(
     """
     List video consultation sessions for a specific doctor
     """
-    # Verify access
-    if not current_user.is_admin() and current_user.user_id != doctor_id:
+    # Verify access - if authenticated, must be the doctor or admin
+    if current_user and not current_user.is_admin() and current_user.user_id != doctor_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only view your own sessions"
@@ -441,7 +521,7 @@ async def list_doctor_sessions(
 @router.get("/sessions/patient/{patient_id}", response_model=SessionListResponse)
 async def list_patient_sessions(
     patient_id: str,
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     status_filter: Optional[str] = Query(None, alias="status"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -450,8 +530,8 @@ async def list_patient_sessions(
     """
     List video consultation sessions for a specific patient
     """
-    # Verify access
-    if not current_user.is_admin() and current_user.user_id != patient_id:
+    # Verify access - if authenticated, must be the patient or admin
+    if current_user and not current_user.is_admin() and current_user.user_id != patient_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only view your own sessions"
@@ -476,20 +556,36 @@ async def list_patient_sessions(
 
 @router.get("/metrics/usage", response_model=UsageMetricsResponse)
 async def get_usage_metrics(
-    current_user: AuthUser = Depends(get_current_user),
+    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
     year: Optional[int] = Query(None),
-    month: Optional[int] = Query(None),
+    month: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Get usage metrics for AWS Free Tier tracking
     
-    Shows attendee-minutes used in the current or specified month
+    Shows attendee-minutes used in the current or specified month.
+    Month can be provided as integer (1-12) or string format "YYYY-MM".
     """
+    # Parse month if it's in "YYYY-MM" format
+    month_int = None
+    year_int = year
+    
+    if month:
+        if '-' in str(month):
+            # Format: "YYYY-MM"
+            parts = str(month).split('-')
+            if len(parts) == 2:
+                year_int = int(parts[0])
+                month_int = int(parts[1])
+        else:
+            # Format: "MM" or integer
+            month_int = int(month)
+    
     metrics = await video_service.get_usage_metrics(
         db=db,
-        year=year,
-        month=month
+        year=year_int,
+        month=month_int
     )
     
     return UsageMetricsResponse(**metrics)

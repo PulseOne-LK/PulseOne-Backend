@@ -131,11 +131,7 @@ class ChimeService:
                     'Audio': 'SendReceive',  # Full audio capabilities
                     'Video': 'SendReceive',  # Full video capabilities
                     'Content': 'SendReceive'  # Screen sharing enabled
-                },
-                Tags=[
-                    {'Key': 'UserId', 'Value': user_id},
-                    {'Key': 'Role', 'Value': role}
-                ]
+                }
             )
             
             attendee = response['Attendee']

@@ -22,6 +22,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# OpenAPI tags metadata for better documentation
+tags_metadata = [
+    {
+        "name": "Health",
+        "description": "Service health check and status endpoints",
+    },
+    {
+        "name": "Video Consultation",
+        "description": "Video consultation session management endpoints - Create, join, manage video sessions with AWS Chime",
+    },
+    {
+        "name": "Root",
+        "description": "Root and utility endpoints",
+    },
+]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -79,7 +95,17 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
-    description="Video Consultation Service with AWS Chime integration for PulseOne Healthcare Platform",
+    description="Video Consultation Service with AWS Chime integration for PulseOne Healthcare Platform. Create and manage video consultation sessions with real-time meeting capabilities.",
+    contact={
+        "name": "PulseOne Support",
+        "email": "support@pulseone.com",
+        "url": "https://pulseone.com",
+    },
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
+    openapi_tags=tags_metadata,
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",

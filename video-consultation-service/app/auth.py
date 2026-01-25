@@ -93,6 +93,39 @@ async def get_current_user(
     return AuthUser(user_id=user_id, email=email, role=role, name=name)
 
 
+async def get_current_user_optional(request: Request) -> Optional[AuthUser]:
+    """
+    Extract and validate current user from JWT token (optional)
+    Returns None if no token is provided instead of raising an error
+    
+    Args:
+        request: FastAPI request object
+    
+    Returns:
+        AuthUser or None: Authenticated user object or None if not authenticated
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    
+    try:
+        token = auth_header.replace("Bearer ", "")
+        payload = decode_jwt_token(token)
+        
+        # Extract user info from token
+        user_id = payload.get("sub") or payload.get("user_id")
+        email = payload.get("email")
+        role = payload.get("role")
+        name = payload.get("name")
+        
+        if not user_id or not role:
+            return None
+        
+        return AuthUser(user_id=user_id, email=email, role=role, name=name)
+    except Exception:
+        return None
+
+
 async def get_current_doctor(
     current_user: AuthUser = Depends(get_current_user)
 ) -> AuthUser:

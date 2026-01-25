@@ -154,7 +154,7 @@ class VideoConsultationService:
         
         # Check if meeting already created
         if session.meeting_id:
-            # Return existing meeting details
+            # Verify meeting exists in AWS
             meeting_info = await chime_service.get_meeting(session.meeting_id)
             if meeting_info:
                 logger.info(f"Meeting already exists for session: {session_id}")
@@ -169,6 +169,11 @@ class VideoConsultationService:
                         'turn_control_url': session.media_placement_turn_control_url
                     }
                 }
+            else:
+                # Meeting doesn't exist in AWS anymore - clear it and create new one
+                logger.warning(f"Meeting {session.meeting_id} not found in AWS, creating new one for session: {session_id}")
+                session.meeting_id = None
+                session.external_meeting_id = None
         
         # Create AWS Chime meeting
         external_meeting_id = f"pulseone-{session_id}"
@@ -332,13 +337,46 @@ class VideoConsultationService:
         # Create AWS Chime attendee
         external_user_id = f"{role.lower()}-{user_id}"
         
+        # Try to create attendee, if meeting not found, recreate it
+        attendee_created = False
+        max_retries = 1
+        retry_count = 0
+        
+        while not attendee_created and retry_count <= max_retries:
+            try:
+                attendee_data = await chime_service.create_attendee(
+                    meeting_id=session.meeting_id,
+                    external_user_id=external_user_id,
+                    user_id=user_id,
+                    role=role
+                )
+                attendee_created = True
+                
+            except Exception as e:
+                if "Meeting" in str(e) and "not found" in str(e) and retry_count == 0:
+                    logger.warning(f"Meeting {session.meeting_id} not found, recreating it")
+                    retry_count += 1
+                    # Meeting doesn't exist - recreate it
+                    try:
+                        session, meeting_data = await self.start_meeting(db, session_id)
+                        logger.info(f"Successfully recreated meeting for session {session_id}")
+                        # Continue loop to retry attendee creation
+                    except Exception as meet_error:
+                        logger.error(f"Failed to recreate meeting: {meet_error}")
+                        await db.rollback()
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Failed to create video meeting: {str(meet_error)}"
+                        )
+                else:
+                    logger.error(f"Failed to create attendee: {e}")
+                    await db.rollback()
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Failed to join video session: {str(e)}"
+                    )
+        
         try:
-            attendee_data = await chime_service.create_attendee(
-                meeting_id=session.meeting_id,
-                external_user_id=external_user_id,
-                user_id=user_id,
-                role=role
-            )
             
             # Create or update attendee record
             if existing_attendee:
