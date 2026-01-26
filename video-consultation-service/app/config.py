@@ -21,13 +21,6 @@ class Settings(BaseSettings):
     DB_USER: str = "postgres"
     DB_PASSWORD: str = "root2004"
     
-    # AWS Configuration
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
-    AWS_REGION: str = "us-east-1"
-    AWS_CHIME_ENDPOINT: str = "https://service.chime.aws.amazon.com"
-    S3_BUCKET_NAME: Optional[str] = "pulseone-video-recordings"
-    
     # RabbitMQ
     RABBITMQ_HOST: str = "localhost"
     RABBITMQ_PORT: int = 5672
@@ -52,13 +45,16 @@ class Settings(BaseSettings):
     MAX_CONSULTATION_DURATION_MINUTES: int = 120
     MIN_CONSULTATION_DURATION_MINUTES: int = 15
     
-    # AWS Free Tier Limits
-    AWS_FREE_TIER_ATTENDEE_MINUTES: int = 1000  # Per month
+    # WebRTC Configuration
     ENABLE_USAGE_TRACKING: bool = True
+    MAX_PARTICIPANTS_PER_ROOM: int = 2  # Doctor + Patient
+    ENABLE_RECORDING: bool = False  # Disable by default
     
-    # Meeting Configuration
-    MAX_ATTENDEES_PER_MEETING: int = 2  # Doctor + Patient
-    ENABLE_RECORDING: bool = False  # Disable by default to save costs
+    # STUN/TURN Servers (for WebRTC)
+    STUN_SERVER: str = "stun:stun.l.google.com:19302"
+    TURN_SERVER: Optional[str] = None
+    TURN_USERNAME: Optional[str] = None
+    TURN_PASSWORD: Optional[str] = None
     
     class Config:
         env_file = ".env"

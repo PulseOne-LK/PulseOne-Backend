@@ -1,17 +1,17 @@
 # Video Consultation Service
 
-A comprehensive video consultation service for the PulseOne Healthcare Platform, built with FastAPI and AWS Chime SDK.
+A comprehensive video consultation service for the PulseOne Healthcare Platform, built with FastAPI and WebRTC.
 
 ## 🎯 Features
 
-- **AWS Chime Integration**: Real-time video consultations using AWS Chime SDK
+- **WebRTC Integration**: Real-time video consultations using WebRTC and Socket.IO
 - **Dual Booking Types**:
   - Clinic-based consultations (patient → clinic session → doctor)
   - Direct doctor bookings (patient → doctor directly)
 - **Real-time Session Management**: Create, join, start, end, and cancel video sessions
 - **Event-Driven Architecture**: Publishes events to RabbitMQ for inter-service communication
 - **JWT Authentication**: Secure endpoints with role-based access control
-- **AWS Free Tier Compliant**: Tracks usage to stay within 1000 attendee-minutes/month
+- **No Cloud Costs**: Free peer-to-peer video consultations
 - **Comprehensive Metrics**: Monitor usage, session quality, and system health
 
 ## 📋 Prerequisites
@@ -19,7 +19,6 @@ A comprehensive video consultation service for the PulseOne Healthcare Platform,
 - Python 3.9+
 - PostgreSQL 13+
 - RabbitMQ 3.8+
-- AWS Account (Free Tier)
 - Running instances of:
   - Auth Service (port 8080)
   - Appointments Service (port 8081)
@@ -27,63 +26,31 @@ A comprehensive video consultation service for the PulseOne Healthcare Platform,
 
 ## 🚀 Quick Start
 
-### 1. AWS Chime Setup
-
-1. Create an AWS account (if you don't have one)
-2. Go to AWS IAM Console
-3. Create a new IAM user with programmatic access
-4. Attach the following policy to the user:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "chime:CreateMeeting",
-        "chime:DeleteMeeting",
-        "chime:GetMeeting",
-        "chime:ListMeetings",
-        "chime:CreateAttendee",
-        "chime:DeleteAttendee",
-        "chime:GetAttendee",
-        "chime:ListAttendees",
-        "chime:StartMeetingTranscription",
-        "chime:StopMeetingTranscription"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-5. Copy the Access Key ID and Secret Access Key
-
-### 2. Database Setup
+### 1. Database Setup
 
 ```bash
 # Create database
 psql -U postgres
 CREATE DATABASE videodb;
 \q
+
+# Run migration
+psql -U postgres -d videodb -f migration_webrtc.sql
 ```
 
-### 3. Environment Configuration
+### 2. Environment Configuration
 
-Update the `.env` file with your AWS credentials:
+Update the `.env` file:
 
 ```env
-# AWS Configuration
-AWS_ACCESS_KEY_ID=your_actual_access_key_here
-AWS_SECRET_ACCESS_KEY=your_actual_secret_key_here
-AWS_REGION=us-east-1
-
 # JWT Secret (must match auth-service)
 JWT_SECRET_KEY=3fb7bad1a0d1cd72dc13fa99ac2e870c7e9b7927a17fbff5de0e24e29e5e9e2f
+
+# Optional: STUN/TURN servers for better connectivity
+STUN_SERVER=stun:stun.l.google.com:19302
 ```
 
-### 4. Install Dependencies
+### 3. Install Dependencies
 
 ```bash
 # Create virtual environment
@@ -223,12 +190,10 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "total_attendee_minutes_current_month": 450,
-  "free_tier_limit": 1000,
-  "remaining_minutes": 550,
-  "percentage_used": 45.0,
+  "total_session_minutes_current_month": 450,
   "total_sessions_current_month": 25,
-  "active_sessions": 2
+  "active_sessions": 2,
+  "average_session_duration_minutes": 18.0
 }
 ```
 
@@ -238,7 +203,7 @@ Authorization: Bearer <token>
 
 1. **FastAPI Application** - REST API server
 2. **SQLAlchemy + PostgreSQL** - Data persistence
-3. **AWS Chime SDK** - Video meeting infrastructure
+3. **WebRTC + Socket.IO** - Video communication infrastructure
 4. **RabbitMQ** - Event publishing for microservices
 5. **JWT Authentication** - Secure API access
 
@@ -249,13 +214,13 @@ Authorization: Bearer <token>
 - Session details (doctor, patient, clinic)
 - Booking type (clinic-based or direct)
 - Status tracking (scheduled → waiting → active → completed)
-- AWS Chime meeting information
+- WebRTC room information
 - Timing and duration
 
 #### VideoConsultationAttendee
 
 - Participant information
-- AWS Chime attendee details
+- WebRTC peer details
 - Join/leave timestamps
 - Device and connection info
 
@@ -267,7 +232,7 @@ Authorization: Bearer <token>
 
 #### VideoConsultationMetrics
 
-- Usage tracking for Free Tier
+- Session duration tracking
 - Quality metrics
 - Session outcomes
 
@@ -280,11 +245,11 @@ Authorization: Bearer <token>
    ↓
 3. Participants join session
    ↓
-4. AWS Chime meeting created
+4. WebRTC room created
    ↓
 5. User joined events → RabbitMQ
    ↓
-6. Video consultation happens
+6. Video consultation happens (P2P)
    ↓
 7. Doctor ends session
    ↓
@@ -317,20 +282,7 @@ When a video consultation is linked to an appointment (clinic-based booking):
 - User authentication
 - Role-based access control
 
-## 📊 AWS Free Tier Monitoring
-
-The service automatically tracks usage to help stay within AWS Free Tier limits:
-
-- **Limit**: 1000 attendee-minutes per month
-- **Calculation**: Each participant's minutes are counted separately
-- **Alerts**: Check `/api/video/metrics/usage` regularly
-
-**Example:**
-
-- 30-minute consultation with doctor + patient = 60 attendee-minutes
-- Free tier allows ~16-17 such consultations per month
-
-## 🔒 Security
+## Security
 
 ### Authentication
 
@@ -355,7 +307,8 @@ video-consultation-service/
 ├── app/
 │   ├── __init__.py
 │   ├── auth.py              # Authentication middleware
-│   ├── chime_service.py     # AWS Chime integration
+│   ├── webrtc_service.py    # WebRTC room management
+│   ├── socket_manager.py    # Socket.IO signaling
 │   ├── config.py            # Configuration settings
 │   ├── database.py          # Database setup
 │   ├── models.py            # SQLAlchemy models
@@ -365,7 +318,9 @@ video-consultation-service/
 │   └── video_service.py     # Business logic
 ├── main.py                  # FastAPI application
 ├── requirements.txt         # Python dependencies
+├── migration_webrtc.sql     # Database migration
 ├── .env                     # Environment variables
+├── WEBRTC_MIGRATION.md      # Migration guide
 └── README.md               # This file
 ```
 
@@ -390,15 +345,7 @@ flake8 app/
 
 ### Common Issues
 
-#### 1. AWS Credentials Error
-
-```
-Error: Unable to locate credentials
-```
-
-**Solution**: Ensure AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set in `.env`
-
-#### 2. Database Connection Error
+#### 1. Database Connection Error
 
 ```
 Error: could not connect to server
@@ -406,7 +353,7 @@ Error: could not connect to server
 
 **Solution**: Verify PostgreSQL is running and database exists
 
-#### 3. RabbitMQ Connection Error
+#### 2. RabbitMQ Connection Error
 
 ```
 Error: Connection refused
@@ -414,7 +361,7 @@ Error: Connection refused
 
 **Solution**: Start RabbitMQ service
 
-#### 4. JWT Validation Error
+#### 3. JWT Validation Error
 
 ```
 Error: Invalid authentication credentials
@@ -437,7 +384,7 @@ Expected response:
   "version": "1.0.0",
   "database": "healthy",
   "rabbitmq": "healthy",
-  "aws_chime": "configured"
+  "aws_chime": "webrtc"
 }
 ```
 

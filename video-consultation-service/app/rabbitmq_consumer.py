@@ -161,7 +161,7 @@ class RabbitMQConsumer:
                     data={
                         "appointment_id": appointment_id,
                         "session_id": session.session_id,
-                        "meeting_id": session.meeting_id,
+                        "meeting_id": session.room_id,
                         "meeting_url": f"{settings.API_URL}/api/video/sessions/{session.session_id}/join",
                         "status": "created",
                         "created_at": session.created_at.isoformat()

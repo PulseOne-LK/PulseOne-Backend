@@ -66,19 +66,19 @@ public class VideoSessionEventListener {
         try {
             String appointmentIdStr = data.path("appointment_id").asText();
             String sessionId = data.path("session_id").asText();
-            String meetingId = data.path("meeting_id").asText();
+            String roomId = data.path("room_id").asText();
             String meetingUrl = data.path("meeting_url").asText();
 
             UUID appointmentId = UUID.fromString(appointmentIdStr);
 
             // Update appointment with meeting link
             appointmentRepository.findById(appointmentId).ifPresent(appointment -> {
-                appointment.setMeetingId(meetingId);
+                appointment.setMeetingId(roomId);  // Store room_id as meeting_id for compatibility
                 appointment.setMeetingLink(meetingUrl);
                 appointmentRepository.save(appointment);
                 
-                log.info("Updated appointment {} with video session: Meeting ID: {}, Link: {}", 
-                        appointmentId, meetingId, meetingUrl);
+                log.info("Updated appointment {} with video session: Room ID: {}, Link: {}", 
+                        appointmentId, roomId, meetingUrl);
             });
 
         } catch (Exception e) {

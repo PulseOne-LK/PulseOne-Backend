@@ -134,7 +134,7 @@ public class Appointment {
     private LocalDateTime actualEndTime;
 
     /**
-     * AWS Chime meeting link for virtual consultations.
+     * WebRTC meeting link for virtual consultations.
      * Only populated for VIRTUAL appointment types.
      * Generated upon successful payment verification for direct doctor sessions.
      */
@@ -142,7 +142,7 @@ public class Appointment {
     private String meetingLink;
 
     /**
-     * AWS Chime meeting ID for tracking and management.
+     * WebRTC room ID for tracking and management.
      * Only populated for VIRTUAL appointment types.
      */
     @Column(name = "meeting_id", length = 100)

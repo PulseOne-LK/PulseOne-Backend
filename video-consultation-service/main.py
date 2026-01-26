@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
+import socketio
 from datetime import datetime
 
 from app.config import settings
@@ -14,6 +15,7 @@ from app.rabbitmq_publisher import rabbitmq_publisher
 from app.rabbitmq_consumer import rabbitmq_consumer
 from app.routes import router
 from app.schemas import HealthCheckResponse
+from app.socket_manager import sio
 
 # Configure logging
 logging.basicConfig(
@@ -30,7 +32,7 @@ tags_metadata = [
     },
     {
         "name": "Video Consultation",
-        "description": "Video consultation session management endpoints - Create, join, manage video sessions with AWS Chime",
+        "description": "Video consultation session management endpoints - Create, join, manage video sessions with WebRTC and Socket.IO",
     },
     {
         "name": "Root",
@@ -92,10 +94,10 @@ async def lifespan(app: FastAPI):
 
 
 # Create FastAPI application
-app = FastAPI(
+fastapi_app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
-    description="Video Consultation Service with AWS Chime integration for PulseOne Healthcare Platform. Create and manage video consultation sessions with real-time meeting capabilities.",
+    description="Video Consultation Service with WebRTC and Socket.IO for PulseOne Healthcare Platform. Create and manage video consultation sessions with real-time peer-to-peer connections.",
     contact={
         "name": "PulseOne Support",
         "email": "support@pulseone.com",
@@ -113,7 +115,7 @@ app = FastAPI(
 )
 
 # CORS Configuration
-app.add_middleware(
+fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Configure this properly in production
     allow_credentials=True,
@@ -123,7 +125,7 @@ app.add_middleware(
 
 
 # Exception handlers
-@app.exception_handler(Exception)
+@fastapi_app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler"""
     logger.error(f"Global exception: {exc}", exc_info=True)
@@ -137,7 +139,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Health check endpoint
-@app.get("/health", response_model=HealthCheckResponse, tags=["Health"])
+@fastapi_app.get("/health", response_model=HealthCheckResponse, tags=["Health"])
 async def health_check():
     """
     Health check endpoint
@@ -163,13 +165,6 @@ async def health_check():
         logger.error(f"RabbitMQ health check failed: {e}")
         rabbitmq_status = "unhealthy"
     
-    # Check AWS Chime (basic check)
-    try:
-        aws_chime_status = "configured"
-    except Exception as e:
-        logger.error(f"AWS Chime health check failed: {e}")
-        aws_chime_status = "error"
-    
     overall_status = "healthy" if all([
         db_status == "healthy",
         rabbitmq_status == "healthy"
@@ -182,12 +177,12 @@ async def health_check():
         timestamp=datetime.utcnow(),
         database=db_status,
         rabbitmq=rabbitmq_status,
-        aws_chime=aws_chime_status
+        aws_chime="webrtc"  # Changed from AWS to WebRTC
     )
 
 
 # Root endpoint
-@app.get("/", tags=["Root"])
+@fastapi_app.get("/", tags=["Root"])
 async def root():
     """Root endpoint"""
     return {
@@ -200,17 +195,22 @@ async def root():
 
 
 # Include routers
-app.include_router(router)
-
+fastapi_app.include_router(router)
 
 # Request logging middleware
-@app.middleware("http")
+@fastapi_app.middleware("http")
 async def log_requests(request: Request, call_next):
     """Log all requests"""
     logger.info(f"{request.method} {request.url.path}")
     response = await call_next(request)
     logger.info(f"{request.method} {request.url.path} - {response.status_code}")
     return response
+
+
+# Create the final ASGI application
+# We wrap the FastAPI app with Socket.IO's ASGI app
+# This handles the routing: /socket.io/... -> Socket.IO, everything else -> FastAPI
+app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
 
 
 if __name__ == "__main__":

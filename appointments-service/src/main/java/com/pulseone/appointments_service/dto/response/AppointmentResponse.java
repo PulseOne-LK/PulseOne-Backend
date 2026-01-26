@@ -34,8 +34,8 @@ public class AppointmentResponse {
     private LocalDateTime actualEndTime;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String meetingLink; // AWS Chime link for VIRTUAL appointments
-    private String meetingId; // AWS Chime meeting ID
+    private String meetingLink; // WebRTC link for VIRTUAL appointments
+    private String meetingId; // WebRTC room ID
 
     // Constructors
     public AppointmentResponse() {

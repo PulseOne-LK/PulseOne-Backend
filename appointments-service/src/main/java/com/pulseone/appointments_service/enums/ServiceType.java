@@ -15,7 +15,7 @@ public enum ServiceType {
      * - Managed by: Doctor (self-managed)
      * - Booking: Time-slot based (not token-based)
      * - Payment: Online pre-payment REQUIRED before consultation
-     * - Video: AWS Chime meeting link generated upon booking
+     * - Video: WebRTC meeting link generated upon booking
      */
     VIRTUAL,
     

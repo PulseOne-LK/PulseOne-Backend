@@ -1,6 +1,7 @@
 """
 REST API Endpoints for Video Consultation Service
 """
+import fastapi
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
@@ -9,7 +10,9 @@ from datetime import datetime
 from app.database import get_db
 from app.auth import (
     get_current_user_optional,
+    get_current_user_lenient,
     verify_session_access,
+    decode_jwt_token_lenient,
     AuthUser
 )
 from app.schemas import (
@@ -21,7 +24,6 @@ from app.schemas import (
     SessionResponse,
     SessionListResponse,
     JoinSessionResponse,
-    MediaPlacementResponse,
     AttendeeResponse,
     SessionEventResponse,
     UsageMetricsResponse,
@@ -93,7 +95,7 @@ async def join_session(
     """
     Join a video consultation session
     
-    Returns AWS Chime meeting details and attendee join token
+    Returns WebRTC room details and access credentials
     """
     # Get session to verify access
     session = await video_service.get_session(db, session_id)
@@ -120,7 +122,7 @@ async def join_session(
     
     # Join session
     user_id = current_user.user_id if current_user else session_id
-    session, meeting_data, attendee_data = await video_service.join_session(
+    session, room_data, attendee_data = await video_service.join_session(
         db=db,
         session_id=session_id,
         user_id=user_id,
@@ -131,10 +133,8 @@ async def join_session(
     
     return JoinSessionResponse(
         session_id=session.session_id,
-        meeting_id=meeting_data['meeting_id'],
-        external_meeting_id=meeting_data['external_meeting_id'],
-        media_region=meeting_data['media_region'],
-        media_placement=MediaPlacementResponse(**meeting_data['media_placement']),
+        room_id=room_data['room_id'],
+        signaling_server_url=room_data['signaling_server_url'],
         attendee=AttendeeResponse(**attendee_data),
         scheduled_start_time=session.scheduled_start_time,
         scheduled_end_time=session.scheduled_end_time
@@ -150,7 +150,7 @@ async def start_session(
     """
     Start a video consultation session and join as the current user
     
-    Creates the AWS Chime meeting, marks the session as WAITING, and returns
+    Creates the WebRTC room, marks the session as WAITING, and returns
     attendee credentials for the current user to join immediately.
     """
     # Get session to verify access
@@ -168,8 +168,8 @@ async def start_session(
             detail="Only the doctor or admin can start the session"
         )
     
-    # Start the meeting
-    session, meeting_data = await video_service.start_meeting(
+    # Start the room
+    session, room_data = await video_service.start_meeting(
         db=db,
         session_id=session_id
     )
@@ -188,7 +188,7 @@ async def start_session(
         role = ParticipantRoleEnum.DOCTOR.value
     
     # Join session to get attendee credentials
-    session, meeting_data, attendee_data = await video_service.join_session(
+    session, room_data, attendee_data = await video_service.join_session(
         db=db,
         session_id=session_id,
         user_id=user_id,
@@ -199,10 +199,8 @@ async def start_session(
     
     return JoinSessionResponse(
         session_id=session.session_id,
-        meeting_id=meeting_data['meeting_id'],
-        external_meeting_id=meeting_data['external_meeting_id'],
-        media_region=meeting_data['media_region'],
-        media_placement=MediaPlacementResponse(**meeting_data['media_placement']),
+        room_id=room_data['room_id'],
+        signaling_server_url=room_data['signaling_server_url'],
         attendee=AttendeeResponse(**attendee_data),
         scheduled_start_time=session.scheduled_start_time,
         scheduled_end_time=session.scheduled_end_time
@@ -332,12 +330,16 @@ async def cancel_session(
 @router.get("/sessions/{session_id}", response_model=SessionResponse)
 async def get_session(
     session_id: str,
-    current_user: Optional[AuthUser] = Depends(get_current_user_optional),
+    request: fastapi.Request,
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Get video consultation session details
+    Get video consultation session details.
+    Uses lenient auth to allow expired tokens during active sessions.
     """
+    # Use lenient authentication that allows expired tokens
+    current_user = await get_current_user_lenient(request)
+    
     session = await video_service.get_session(db, session_id)
     
     if not session:
@@ -447,7 +449,7 @@ async def list_sessions(
     if not current_user:
         sessions, total = await video_service.get_user_sessions(
             db=db,
-            user_id="",
+            user_id=None,
             role=None,
             status=status_filter,
             page=page,
@@ -589,3 +591,85 @@ async def get_usage_metrics(
     )
     
     return UsageMetricsResponse(**metrics)
+
+
+@router.post("/auth/refresh-token")
+async def refresh_token(
+    request: fastapi.Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Refresh an expired JWT token for ongoing video consultations.
+    
+    This endpoint allows clients to refresh their JWT token during an active video session.
+    It accepts expired tokens and issues new ones if the token is still structurally valid.
+    
+    Returns:
+        dict: New JWT token and user information
+    """
+    from jose import jwt
+    from datetime import datetime, timedelta
+    from app.config import settings
+    
+    # Extract token from Authorization header
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid authorization header"
+        )
+    
+    token = auth_header.replace("Bearer ", "")
+    
+    # Decode token without verification (allows expired tokens)
+    payload = decode_jwt_token_lenient(token)
+    
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token - cannot refresh"
+        )
+    
+    # Extract user info
+    user_id = payload.get("sub") or payload.get("user_id")
+    email = payload.get("email")
+    role = payload.get("role")
+    name = payload.get("name")
+    
+    if not user_id or not role:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload - missing user_id or role"
+        )
+    
+    # Generate new token with extended expiration
+    # For video consultations, use longer expiration (4 hours)
+    new_token_expiry = datetime.utcnow() + timedelta(hours=4)
+    
+    new_payload = {
+        "sub": user_id,
+        "user_id": user_id,
+        "email": email,
+        "role": role,
+        "name": name,
+        "exp": new_token_expiry,
+        "iat": datetime.utcnow()
+    }
+    
+    new_token = jwt.encode(
+        new_payload,
+        settings.JWT_SECRET_KEY,
+        algorithm=settings.JWT_ALGORITHM
+    )
+    
+    return {
+        "access_token": new_token,
+        "token_type": "bearer",
+        "expires_at": new_token_expiry.isoformat(),
+        "user": {
+            "user_id": user_id,
+            "email": email,
+            "role": role,
+            "name": name
+        }
+    }

@@ -51,14 +51,11 @@ class VideoConsultationSession(Base):
     patient_id = Column(String(100), nullable=False)  # From auth-service
     clinic_id = Column(Integer, nullable=True)  # From profile-service (for clinic-based)
     
-    # AWS Chime Meeting Details
-    meeting_id = Column(String(255), unique=True, nullable=True)  # AWS Chime Meeting ID
-    external_meeting_id = Column(String(255), unique=True, nullable=True)  # Our custom meeting ID
-    media_region = Column(String(50), nullable=True)  # AWS region for the meeting
-    media_placement_audio_host_url = Column(String(500), nullable=True)
-    media_placement_audio_fallback_url = Column(String(500), nullable=True)
-    media_placement_signaling_url = Column(String(500), nullable=True)
-    media_placement_turn_control_url = Column(String(500), nullable=True)
+    # WebRTC Room Details
+    room_id = Column(String(255), unique=True, nullable=True)  # WebRTC room identifier
+    doctor_token = Column(String(255), nullable=True)  # Access token for doctor
+    patient_token = Column(String(255), nullable=True)  # Access token for patient
+    signaling_server_url = Column(String(500), nullable=True)  # Socket.IO server URL
     
     # Session Status and Timing
     status = Column(Enum(SessionStatus), nullable=False, default=SessionStatus.SCHEDULED)
@@ -101,7 +98,7 @@ class VideoConsultationSession(Base):
 class VideoConsultationAttendee(Base):
     """
     Represents an attendee (doctor or patient) in a video consultation
-    Stores AWS Chime attendee information
+    Stores WebRTC connection information
     """
     __tablename__ = "video_consultation_attendees"
 
@@ -112,10 +109,9 @@ class VideoConsultationAttendee(Base):
     user_id = Column(String(100), nullable=False)  # From auth-service
     role = Column(Enum(ParticipantRole), nullable=False)
     
-    # AWS Chime Attendee Details
-    chime_attendee_id = Column(String(255), unique=True, nullable=True)
-    external_user_id = Column(String(255), nullable=True)
-    join_token = Column(Text, nullable=True)  # JWT token for joining meeting
+    # WebRTC Peer Details
+    peer_id = Column(String(255), nullable=True)  # WebRTC peer identifier
+    access_token = Column(Text, nullable=True)  # Access token for joining room
     
     # Join/Leave Tracking
     joined_at = Column(DateTime, nullable=True)
@@ -200,15 +196,14 @@ class DoctorAvailability(Base):
 class VideoConsultationMetrics(Base):
     """
     Tracks metrics and analytics for video consultations
-    Helps monitor AWS Free Tier usage
     """
     __tablename__ = "video_consultation_metrics"
 
     metric_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     session_id = Column(String(36), nullable=True)
     
-    # Usage Tracking (for AWS Free Tier)
-    attendee_minutes_used = Column(Integer, default=0)  # Total attendee-minutes
+    # Usage Tracking
+    session_duration_minutes = Column(Integer, default=0)  # Total session duration
     date = Column(DateTime, nullable=False)
     
     # Quality Metrics

@@ -122,7 +122,7 @@ class RabbitMQPublisher:
     async def publish_session_started(
         self,
         session_id: str,
-        meeting_id: str,
+        meeting_id: str,  # This is room_id from WebRTC
         doctor_id: str,
         patient_id: str
     ):
@@ -132,7 +132,8 @@ class RabbitMQPublisher:
             routing_key="video.session.started",
             data={
                 "session_id": session_id,
-                "meeting_id": meeting_id,
+                "room_id": meeting_id,  # Send as room_id for clarity
+                "meeting_id": meeting_id,  # Keep for backwards compatibility
                 "doctor_id": doctor_id,
                 "patient_id": patient_id,
                 "started_at": datetime.utcnow().isoformat()

@@ -1,6 +1,6 @@
 """
 Video Consultation Service - Business Logic
-Handles all video consultation operations
+Handles all video consultation operations with WebRTC
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func, extract
@@ -20,7 +20,7 @@ from app.models import (
     BookingType,
     ParticipantRole
 )
-from app.chime_service import chime_service
+from app.webrtc_service import webrtc_service
 from app.rabbitmq_publisher import rabbitmq_publisher
 from app.config import settings
 from fastapi import HTTPException, status
@@ -44,7 +44,7 @@ class VideoConsultationService:
         chief_complaint: Optional[str] = None
     ) -> VideoConsultationSession:
         """
-        Create a new video consultation session with AWS Chime meeting
+        Create a new video consultation session with WebRTC room
         """
         try:
             # Calculate end time
@@ -67,31 +67,25 @@ class VideoConsultationService:
             db.add(session)
             await db.flush()  # Get the session_id
             
-            # Create AWS Chime meeting immediately
-            external_meeting_id = f"pulseone-{session.session_id}"
-            
+            # Create WebRTC room immediately
             try:
-                meeting_data = await chime_service.create_meeting(
-                    external_meeting_id=external_meeting_id,
+                room_data = await webrtc_service.create_room(
                     session_id=session.session_id,
                     doctor_id=doctor_id,
                     patient_id=patient_id
                 )
                 
-                # Update session with meeting details
-                session.meeting_id = meeting_data['meeting_id']
-                session.external_meeting_id = meeting_data['external_meeting_id']
-                session.media_region = meeting_data['media_region']
-                session.media_placement_audio_host_url = meeting_data['media_placement']['audio_host_url']
-                session.media_placement_audio_fallback_url = meeting_data['media_placement']['audio_fallback_url']
-                session.media_placement_signaling_url = meeting_data['media_placement']['signaling_url']
-                session.media_placement_turn_control_url = meeting_data['media_placement']['turn_control_url']
+                # Update session with room details
+                session.room_id = room_data['room_id']
+                session.doctor_token = room_data['doctor_token']
+                session.patient_token = room_data['patient_token']
+                session.signaling_server_url = f"{settings.API_URL}/socket.io"
                 
-                logger.info(f"AWS Chime meeting created: {meeting_data['meeting_id']} for session: {session.session_id}")
+                logger.info(f"WebRTC room created: {room_data['room_id']} for session: {session.session_id}")
                 
             except Exception as e:
-                logger.error(f"Failed to create AWS Chime meeting: {e}")
-                # Continue without meeting - can be created later when starting session
+                logger.error(f"Failed to create WebRTC room: {e}")
+                # Continue without room - can be created later when starting session
                 pass
             
             # Log event
@@ -136,7 +130,7 @@ class VideoConsultationService:
         session_id: str
     ) -> Tuple[VideoConsultationSession, dict]:
         """
-        Start AWS Chime meeting for a session
+        Start WebRTC room for a session
         """
         # Get session
         result = await db.execute(
@@ -152,56 +146,42 @@ class VideoConsultationService:
                 detail="Video consultation session not found"
             )
         
-        # Check if meeting already created
-        if session.meeting_id:
-            # Verify meeting exists in AWS
-            meeting_info = await chime_service.get_meeting(session.meeting_id)
-            if meeting_info:
-                logger.info(f"Meeting already exists for session: {session_id}")
+        # Check if room already created
+        if session.room_id:
+            room_info = await webrtc_service.get_room_info(session.room_id)
+            if room_info:
+                logger.info(f"Room already exists for session: {session_id}")
                 return session, {
-                    'meeting_id': session.meeting_id,
-                    'external_meeting_id': session.external_meeting_id,
-                    'media_region': session.media_region,
-                    'media_placement': {
-                        'audio_host_url': session.media_placement_audio_host_url,
-                        'audio_fallback_url': session.media_placement_audio_fallback_url,
-                        'signaling_url': session.media_placement_signaling_url,
-                        'turn_control_url': session.media_placement_turn_control_url
-                    }
+                    'room_id': session.room_id,
+                    'session_id': session.session_id,
+                    'signaling_server_url': session.signaling_server_url or f"{settings.API_URL}/socket.io"
                 }
             else:
-                # Meeting doesn't exist in AWS anymore - clear it and create new one
-                logger.warning(f"Meeting {session.meeting_id} not found in AWS, creating new one for session: {session_id}")
-                session.meeting_id = None
-                session.external_meeting_id = None
+                # Room doesn't exist anymore - clear it and create new one
+                logger.warning(f"Room {session.room_id} not found, creating new one for session: {session_id}")
+                session.room_id = None
         
-        # Create AWS Chime meeting
-        external_meeting_id = f"pulseone-{session_id}"
-        
+        # Create WebRTC room
         try:
-            meeting_data = await chime_service.create_meeting(
-                external_meeting_id=external_meeting_id,
+            room_data = await webrtc_service.create_room(
                 session_id=session_id,
                 doctor_id=session.doctor_id,
                 patient_id=session.patient_id
             )
             
-            # Update session with meeting details
-            session.meeting_id = meeting_data['meeting_id']
-            session.external_meeting_id = meeting_data['external_meeting_id']
-            session.media_region = meeting_data['media_region']
-            session.media_placement_audio_host_url = meeting_data['media_placement']['audio_host_url']
-            session.media_placement_audio_fallback_url = meeting_data['media_placement']['audio_fallback_url']
-            session.media_placement_signaling_url = meeting_data['media_placement']['signaling_url']
-            session.media_placement_turn_control_url = meeting_data['media_placement']['turn_control_url']
+            # Update session with room details
+            session.room_id = room_data['room_id']
+            session.doctor_token = room_data['doctor_token']
+            session.patient_token = room_data['patient_token']
+            session.signaling_server_url = f"{settings.API_URL}/socket.io"
             session.actual_start_time = datetime.utcnow()
             session.status = SessionStatus.WAITING
             
             # Log event
             event = VideoConsultationEvent(
                 session_id=session_id,
-                event_type="MEETING_CREATED",
-                event_description=f"AWS Chime meeting created: {meeting_data['meeting_id']}",
+                event_type="ROOM_CREATED",
+                event_description=f"WebRTC room created: {room_data['room_id']}",
                 user_id=None
             )
             db.add(event)
@@ -213,15 +193,19 @@ class VideoConsultationService:
             try:
                 await rabbitmq_publisher.publish_session_started(
                     session_id=session_id,
-                    meeting_id=meeting_data['meeting_id'],
+                    meeting_id=room_data['room_id'],
                     doctor_id=session.doctor_id,
                     patient_id=session.patient_id
                 )
             except Exception as e:
                 logger.error(f"Failed to publish session started event: {e}")
             
-            logger.info(f"Started meeting for session: {session_id}")
-            return session, meeting_data
+            logger.info(f"Started WebRTC room for session: {session_id}")
+            return session, {
+                'room_id': room_data['room_id'],
+                'session_id': session_id,
+                'signaling_server_url': session.signaling_server_url
+            }
             
         except Exception as e:
             await db.rollback()
@@ -242,9 +226,9 @@ class VideoConsultationService:
     ) -> Tuple[VideoConsultationSession, dict, dict]:
         """
         Join a video consultation session
-        Returns: (session, meeting_data, attendee_data)
+        Returns: (session, room_data, attendee_data)
         """
-        # Get session with meeting
+        # Get session with room
         result = await db.execute(
             select(VideoConsultationSession).where(
                 VideoConsultationSession.session_id == session_id
@@ -278,21 +262,26 @@ class VideoConsultationService:
                 detail="This session has already been completed"
             )
         
-        # Start meeting if not already started
-        if not session.meeting_id:
-            session, meeting_data = await self.start_meeting(db, session_id)
+        # Start room if not already started
+        if not session.room_id:
+            session, room_data = await self.start_meeting(db, session_id)
         else:
-            meeting_data = {
-                'meeting_id': session.meeting_id,
-                'external_meeting_id': session.external_meeting_id,
-                'media_region': session.media_region,
-                'media_placement': {
-                    'audio_host_url': session.media_placement_audio_host_url,
-                    'audio_fallback_url': session.media_placement_audio_fallback_url,
-                    'signaling_url': session.media_placement_signaling_url,
-                    'turn_control_url': session.media_placement_turn_control_url
-                }
+            room_data = {
+                'room_id': session.room_id,
+                'session_id': session_id,
+                'signaling_server_url': session.signaling_server_url or f"{settings.API_URL}/socket.io"
             }
+        
+        # Get the access token for the user
+        if role == "DOCTOR":
+            access_token = session.doctor_token
+        elif role == "PATIENT":
+            access_token = session.patient_token
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid role"
+            )
         
         # Check if attendee already exists
         result = await db.execute(
@@ -305,84 +294,23 @@ class VideoConsultationService:
         )
         existing_attendee = result.scalar_one_or_none()
         
-        if existing_attendee and existing_attendee.chime_attendee_id:
-            # Return existing attendee data
-            attendee_data = {
-                'attendee_id': existing_attendee.chime_attendee_id,
-                'external_user_id': existing_attendee.external_user_id,
-                'join_token': existing_attendee.join_token,
-                'user_id': user_id,
-                'role': role
-            }
-            
-            # Update join time if not already joined
-            if not existing_attendee.joined_at:
-                existing_attendee.joined_at = datetime.utcnow()
-                existing_attendee.is_active = True
-                
-                # Update session participant join time
-                if role == "DOCTOR":
-                    session.doctor_joined_at = datetime.utcnow()
-                elif role == "PATIENT":
-                    session.patient_joined_at = datetime.utcnow()
-                
-                # Check if both participants have joined
-                if session.doctor_joined_at and session.patient_joined_at:
-                    session.status = SessionStatus.ACTIVE
-                
-                await db.commit()
-            
-            return session, meeting_data, attendee_data
-        
-        # Create AWS Chime attendee
-        external_user_id = f"{role.lower()}-{user_id}"
-        
-        # Try to create attendee, if meeting not found, recreate it
-        attendee_created = False
-        max_retries = 1
-        retry_count = 0
-        
-        while not attendee_created and retry_count <= max_retries:
-            try:
-                attendee_data = await chime_service.create_attendee(
-                    meeting_id=session.meeting_id,
-                    external_user_id=external_user_id,
-                    user_id=user_id,
-                    role=role
-                )
-                attendee_created = True
-                
-            except Exception as e:
-                if "Meeting" in str(e) and "not found" in str(e) and retry_count == 0:
-                    logger.warning(f"Meeting {session.meeting_id} not found, recreating it")
-                    retry_count += 1
-                    # Meeting doesn't exist - recreate it
-                    try:
-                        session, meeting_data = await self.start_meeting(db, session_id)
-                        logger.info(f"Successfully recreated meeting for session {session_id}")
-                        # Continue loop to retry attendee creation
-                    except Exception as meet_error:
-                        logger.error(f"Failed to recreate meeting: {meet_error}")
-                        await db.rollback()
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Failed to create video meeting: {str(meet_error)}"
-                        )
-                else:
-                    logger.error(f"Failed to create attendee: {e}")
-                    await db.rollback()
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Failed to join video session: {str(e)}"
-                    )
-        
         try:
+            # Join room via WebRTC service to get peer_id
+            # Pass session data to allow room recreation if needed
+            join_info = await webrtc_service.join_room(
+                room_id=session.room_id,
+                user_id=user_id,
+                role=role,
+                token=access_token,
+                session_id=session_id,
+                doctor_id=session.doctor_id,
+                patient_id=session.patient_id
+            )
             
             # Create or update attendee record
             if existing_attendee:
-                existing_attendee.chime_attendee_id = attendee_data['attendee_id']
-                existing_attendee.external_user_id = attendee_data['external_user_id']
-                existing_attendee.join_token = attendee_data['join_token']
+                existing_attendee.peer_id = join_info['peer_id']
+                existing_attendee.access_token = access_token
                 existing_attendee.joined_at = datetime.utcnow()
                 existing_attendee.is_active = True
                 existing_attendee.device_type = device_type
@@ -393,9 +321,8 @@ class VideoConsultationService:
                     session_id=session_id,
                     user_id=user_id,
                     role=ParticipantRole(role),
-                    chime_attendee_id=attendee_data['attendee_id'],
-                    external_user_id=attendee_data['external_user_id'],
-                    join_token=attendee_data['join_token'],
+                    peer_id=join_info['peer_id'],
+                    access_token=access_token,
                     joined_at=datetime.utcnow(),
                     is_active=True,
                     device_type=device_type,
@@ -436,10 +363,16 @@ class VideoConsultationService:
             
             logger.info(f"User {user_id} joined session: {session_id}")
             
-            attendee_data['user_id'] = user_id
-            attendee_data['role'] = role
+            # Prepare attendee data for response
+            attendee_data = {
+                'attendee_id': attendee.attendee_id,
+                'peer_id': join_info['peer_id'],
+                'access_token': access_token,
+                'user_id': user_id,
+                'role': role
+            }
             
-            return session, meeting_data, attendee_data
+            return session, room_data, attendee_data
             
         except Exception as e:
             await db.rollback()
@@ -494,21 +427,26 @@ class VideoConsultationService:
             elif role == "PATIENT":
                 session.patient_left_at = datetime.utcnow()
             
-            # Calculate attendee minutes for metrics
+            # Calculate session duration for metrics
             if attendee.joined_at:
-                minutes_used = chime_service.calculate_attendee_minutes(
-                    attendee.joined_at,
-                    attendee.left_at
-                )
+                duration = (attendee.left_at - attendee.joined_at).total_seconds() / 60
+                minutes_used = int(duration)
                 
                 # Record metrics
                 metric = VideoConsultationMetrics(
                     session_id=session_id,
-                    attendee_minutes_used=minutes_used,
+                    session_duration_minutes=minutes_used,
                     date=datetime.utcnow(),
                     session_completed=(session.status == SessionStatus.COMPLETED)
                 )
                 db.add(metric)
+            
+            # Leave WebRTC room
+            if session.room_id:
+                try:
+                    await webrtc_service.leave_room(session.room_id, user_id)
+                except Exception as e:
+                    logger.error(f"Failed to leave WebRTC room: {e}")
             
             # Log event
             event = VideoConsultationEvent(
@@ -579,12 +517,12 @@ class VideoConsultationService:
         else:
             duration_minutes = 0
         
-        # Delete AWS Chime meeting
-        if session.meeting_id:
+        # Delete WebRTC room
+        if session.room_id:
             try:
-                await chime_service.delete_meeting(session.meeting_id)
+                await webrtc_service.delete_room(session.room_id)
             except Exception as e:
-                logger.error(f"Failed to delete Chime meeting: {e}")
+                logger.error(f"Failed to delete WebRTC room: {e}")
         
         # Mark all attendees as inactive
         for attendee in session.attendees:
@@ -666,12 +604,12 @@ class VideoConsultationService:
         session.cancelled_by = cancelled_by
         session.cancellation_reason = cancellation_reason
         
-        # Delete AWS Chime meeting if exists
-        if session.meeting_id:
+        # Delete WebRTC room if exists
+        if session.room_id:
             try:
-                await chime_service.delete_meeting(session.meeting_id)
+                await webrtc_service.delete_room(session.room_id)
             except Exception as e:
-                logger.error(f"Failed to delete Chime meeting: {e}")
+                logger.error(f"Failed to delete WebRTC room: {e}")
         
         # Log event
         event = VideoConsultationEvent(
@@ -715,7 +653,7 @@ class VideoConsultationService:
     async def get_user_sessions(
         self,
         db: AsyncSession,
-        user_id: str,
+        user_id: Optional[str],
         role: Optional[str] = None,
         status: Optional[str] = None,
         page: int = 1,
@@ -724,18 +662,19 @@ class VideoConsultationService:
         """Get sessions for a user"""
         query = select(VideoConsultationSession)
         
-        # Filter by role
-        if role == "DOCTOR":
-            query = query.where(VideoConsultationSession.doctor_id == user_id)
-        elif role == "PATIENT":
-            query = query.where(VideoConsultationSession.patient_id == user_id)
-        else:
-            query = query.where(
-                or_(
-                    VideoConsultationSession.doctor_id == user_id,
-                    VideoConsultationSession.patient_id == user_id
+        # Filter by user and role (skip if user_id is None - admin or unauthenticated)
+        if user_id is not None:
+            if role == "DOCTOR":
+                query = query.where(VideoConsultationSession.doctor_id == user_id)
+            elif role == "PATIENT":
+                query = query.where(VideoConsultationSession.patient_id == user_id)
+            else:
+                query = query.where(
+                    or_(
+                        VideoConsultationSession.doctor_id == user_id,
+                        VideoConsultationSession.patient_id == user_id
+                    )
                 )
-            )
         
         # Filter by status
         if status:

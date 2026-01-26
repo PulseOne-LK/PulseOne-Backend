@@ -60,6 +60,46 @@ def decode_jwt_token(token: str) -> Dict:
         )
 
 
+def decode_jwt_token_lenient(token: str) -> Optional[Dict]:
+    """
+    Decode JWT token without raising exceptions.
+    Useful for video consultation endpoints where we want to log the user
+    but not block access if the token is expired.
+    
+    Args:
+        token: JWT token string
+    
+    Returns:
+        Dict: Decoded token payload if valid, None if invalid/expired
+    """
+    try:
+        # Try to decode with verification
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM]
+        )
+        return payload
+    except jwt.ExpiredSignatureError:
+        # Token is expired, but we can still decode it without verification
+        # This is useful for video sessions that might run longer than token expiry
+        logger.warning("JWT token has expired, decoding without verification for video session")
+        try:
+            payload = jwt.decode(
+                token,
+                settings.JWT_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM],
+                options={"verify_exp": False}  # Don't verify expiration
+            )
+            return payload
+        except JWTError as e:
+            logger.error(f"Failed to decode expired token: {e}")
+            return None
+    except JWTError as e:
+        logger.error(f"JWT decode error: {e}")
+        return None
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> AuthUser:
@@ -91,6 +131,45 @@ async def get_current_user(
         )
     
     return AuthUser(user_id=user_id, email=email, role=role, name=name)
+
+
+async def get_current_user_lenient(request: Request) -> Optional[AuthUser]:
+    """
+    Extract user from JWT token with lenient validation.
+    Allows expired tokens for active video sessions.
+    
+    Args:
+        request: FastAPI request object
+    
+    Returns:
+        AuthUser: Authenticated user object or None
+    """
+    try:
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return None
+        
+        token = auth_header.replace("Bearer ", "")
+        payload = decode_jwt_token_lenient(token)
+        
+        if not payload:
+            return None
+        
+        # Extract user info from token
+        user_id = payload.get("sub") or payload.get("user_id")
+        email = payload.get("email")
+        role = payload.get("role")
+        name = payload.get("name")
+        
+        if not user_id or not role:
+            logger.warning("Token payload missing user_id or role")
+            return None
+        
+        return AuthUser(user_id=user_id, email=email, role=role, name=name)
+        
+    except Exception as e:
+        logger.error(f"Error extracting user from token: {e}")
+        return None
 
 
 async def get_current_user_optional(request: Request) -> Optional[AuthUser]:

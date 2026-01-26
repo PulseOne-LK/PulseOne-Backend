@@ -86,22 +86,18 @@ class DoctorAvailabilityRequest(BaseModel):
 
 # Response Schemas
 
-class MediaPlacementResponse(BaseModel):
-    """AWS Chime media placement details"""
-    audio_host_url: str
-    audio_fallback_url: str
-    signaling_url: str
-    turn_control_url: str
-    screen_data_url: Optional[str] = None
-    screen_viewing_url: Optional[str] = None
-    screen_sharing_url: Optional[str] = None
+class RoomDetailsResponse(BaseModel):
+    """WebRTC room details"""
+    room_id: str
+    signaling_server_url: str
+    session_id: str
 
 
 class AttendeeResponse(BaseModel):
-    """Attendee details for joining meeting"""
+    """Attendee details for joining room"""
     attendee_id: str
-    external_user_id: str
-    join_token: str
+    peer_id: str
+    access_token: str
     user_id: str
     role: ParticipantRoleEnum
 
@@ -109,10 +105,8 @@ class AttendeeResponse(BaseModel):
 class JoinSessionResponse(BaseModel):
     """Response when joining a session"""
     session_id: str
-    meeting_id: str
-    external_meeting_id: str
-    media_region: str
-    media_placement: MediaPlacementResponse
+    room_id: str
+    signaling_server_url: str
     attendee: AttendeeResponse
     scheduled_start_time: datetime
     scheduled_end_time: datetime
@@ -136,14 +130,9 @@ class SessionResponse(BaseModel):
     session_notes: Optional[str]
     doctor_joined_at: Optional[datetime]
     patient_joined_at: Optional[datetime]
-    # AWS Chime meeting details
-    meeting_id: Optional[str]
-    external_meeting_id: Optional[str]
-    media_region: Optional[str]
-    media_placement_audio_host_url: Optional[str]
-    media_placement_audio_fallback_url: Optional[str]
-    media_placement_signaling_url: Optional[str]
-    media_placement_turn_control_url: Optional[str]
+    # WebRTC room details
+    room_id: Optional[str]
+    signaling_server_url: Optional[str]
     created_at: datetime
     updated_at: datetime
     
@@ -178,13 +167,11 @@ class DoctorAvailabilityResponse(BaseModel):
 
 
 class UsageMetricsResponse(BaseModel):
-    """Usage metrics for Free Tier tracking"""
-    total_attendee_minutes_current_month: int
-    free_tier_limit: int
-    remaining_minutes: int
-    percentage_used: float
+    """Usage metrics for video consultations"""
+    total_session_minutes_current_month: int
     total_sessions_current_month: int
     active_sessions: int
+    average_session_duration_minutes: float
 
 
 class SessionEventResponse(BaseModel):
