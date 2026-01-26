@@ -15,7 +15,7 @@ from app.rabbitmq_publisher import rabbitmq_publisher
 from app.rabbitmq_consumer import rabbitmq_consumer
 from app.routes import router
 from app.schemas import HealthCheckResponse
-from app.socket_manager import sio
+# from app.socket_manager import sio # Stream.io handles signaling now
 
 # Configure logging
 logging.basicConfig(
@@ -94,10 +94,10 @@ async def lifespan(app: FastAPI):
 
 
 # Create FastAPI application
-fastapi_app = FastAPI(
+app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
-    description="Video Consultation Service with WebRTC and Socket.IO for PulseOne Healthcare Platform. Create and manage video consultation sessions with real-time peer-to-peer connections.",
+    description="Video Consultation Service with Stream.io for PulseOne Healthcare Platform. Create and manage video consultation sessions.",
     contact={
         "name": "PulseOne Support",
         "email": "support@pulseone.com",
@@ -115,7 +115,7 @@ fastapi_app = FastAPI(
 )
 
 # CORS Configuration
-fastapi_app.add_middleware(
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Configure this properly in production
     allow_credentials=True,
@@ -125,7 +125,7 @@ fastapi_app.add_middleware(
 
 
 # Exception handlers
-@fastapi_app.exception_handler(Exception)
+@app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler"""
     logger.error(f"Global exception: {exc}", exc_info=True)
@@ -139,7 +139,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Health check endpoint
-@fastapi_app.get("/health", response_model=HealthCheckResponse, tags=["Health"])
+@app.get("/health", response_model=HealthCheckResponse, tags=["Health"])
 async def health_check():
     """
     Health check endpoint
@@ -177,12 +177,12 @@ async def health_check():
         timestamp=datetime.utcnow(),
         database=db_status,
         rabbitmq=rabbitmq_status,
-        aws_chime="webrtc"  # Changed from AWS to WebRTC
+        aws_chime="stream-io"  # Changed to stream-io
     )
 
 
 # Root endpoint
-@fastapi_app.get("/", tags=["Root"])
+@app.get("/", tags=["Root"])
 async def root():
     """Root endpoint"""
     return {
@@ -195,22 +195,16 @@ async def root():
 
 
 # Include routers
-fastapi_app.include_router(router)
+app.include_router(router)
 
 # Request logging middleware
-@fastapi_app.middleware("http")
+@app.middleware("http")
 async def log_requests(request: Request, call_next):
     """Log all requests"""
     logger.info(f"{request.method} {request.url.path}")
     response = await call_next(request)
     logger.info(f"{request.method} {request.url.path} - {response.status_code}")
     return response
-
-
-# Create the final ASGI application
-# We wrap the FastAPI app with Socket.IO's ASGI app
-# This handles the routing: /socket.io/... -> Socket.IO, everything else -> FastAPI
-app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
 
 
 if __name__ == "__main__":

@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     ENABLE_USAGE_TRACKING: bool = True
     MAX_PARTICIPANTS_PER_ROOM: int = 2  # Doctor + Patient
     ENABLE_RECORDING: bool = False  # Disable by default
+
+    # Stream.io Configuration
+    STREAM_API_KEY: str = "***REMOVED***"
+    STREAM_API_SECRET: str = "***REMOVED***"
     
     # STUN/TURN Servers (for WebRTC)
     STUN_SERVER: str = "stun:stun.l.google.com:19302"

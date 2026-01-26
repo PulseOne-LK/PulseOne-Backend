@@ -20,7 +20,7 @@ from app.models import (
     BookingType,
     ParticipantRole
 )
-from app.webrtc_service import webrtc_service
+from app.stream_manager import stream_manager
 from app.rabbitmq_publisher import rabbitmq_publisher
 from app.config import settings
 from fastapi import HTTPException, status
@@ -67,25 +67,29 @@ class VideoConsultationService:
             db.add(session)
             await db.flush()  # Get the session_id
             
-            # Create WebRTC room immediately
+            # Create Stream Video call immediately
             try:
-                room_data = await webrtc_service.create_room(
+                # Use session_id as the call_id for Stream
+                call_id = stream_manager.create_video_session(
                     session_id=session.session_id,
                     doctor_id=doctor_id,
                     patient_id=patient_id
                 )
                 
                 # Update session with room details
-                session.room_id = room_data['room_id']
-                session.doctor_token = room_data['doctor_token']
-                session.patient_token = room_data['patient_token']
-                session.signaling_server_url = f"{settings.API_URL}/socket.io"
+                session.room_id = call_id
+                # Generate tokens for doctor and patient to store (optional, can be generated on join)
+                session.doctor_token = stream_manager.generate_token(doctor_id)
+                session.patient_token = stream_manager.generate_token(patient_id)
                 
-                logger.info(f"WebRTC room created: {room_data['room_id']} for session: {session.session_id}")
+                # Use Stream.io API URL or dashboard as signaling URL (for reference)
+                session.signaling_server_url = "https://getstream.io/video"
+                
+                logger.info(f"Stream Video call created: {call_id} for session: {session.session_id}")
                 
             except Exception as e:
-                logger.error(f"Failed to create WebRTC room: {e}")
-                # Continue without room - can be created later when starting session
+                logger.error(f"Failed to create Stream Video call: {e}")
+                # Continue, similar to before
                 pass
             
             # Log event
@@ -130,7 +134,7 @@ class VideoConsultationService:
         session_id: str
     ) -> Tuple[VideoConsultationSession, dict]:
         """
-        Start WebRTC room for a session
+        Start Video Session (Stream.io)
         """
         # Get session
         result = await db.execute(
@@ -148,32 +152,26 @@ class VideoConsultationService:
         
         # Check if room already created
         if session.room_id:
-            room_info = await webrtc_service.get_room_info(session.room_id)
-            if room_info:
-                logger.info(f"Room already exists for session: {session_id}")
-                return session, {
-                    'room_id': session.room_id,
-                    'session_id': session.session_id,
-                    'signaling_server_url': session.signaling_server_url or f"{settings.API_URL}/socket.io"
-                }
-            else:
-                # Room doesn't exist anymore - clear it and create new one
-                logger.warning(f"Room {session.room_id} not found, creating new one for session: {session_id}")
-                session.room_id = None
+            logger.info(f"Stream Call already exists for session: {session_id}")
+            return session, {
+                'room_id': session.room_id,
+                'session_id': session.session_id,
+                'signaling_server_url': settings.STREAM_API_KEY
+            }
         
-        # Create WebRTC room
+        # Create Stream Video Call
         try:
-            room_data = await webrtc_service.create_room(
+            # Call Stream Manager to initialize call
+            room_id = stream_manager.create_video_session(
                 session_id=session_id,
                 doctor_id=session.doctor_id,
                 patient_id=session.patient_id
             )
             
             # Update session with room details
-            session.room_id = room_data['room_id']
-            session.doctor_token = room_data['doctor_token']
-            session.patient_token = room_data['patient_token']
-            session.signaling_server_url = f"{settings.API_URL}/socket.io"
+            session.room_id = room_id
+            # doctor_token and patient_token are generated on demand now
+            session.signaling_server_url = settings.STREAM_API_KEY
             session.actual_start_time = datetime.utcnow()
             session.status = SessionStatus.WAITING
             
@@ -181,7 +179,7 @@ class VideoConsultationService:
             event = VideoConsultationEvent(
                 session_id=session_id,
                 event_type="ROOM_CREATED",
-                event_description=f"WebRTC room created: {room_data['room_id']}",
+                event_description=f"Stream room created: {room_id}",
                 user_id=None
             )
             db.add(event)
@@ -193,23 +191,24 @@ class VideoConsultationService:
             try:
                 await rabbitmq_publisher.publish_session_started(
                     session_id=session_id,
-                    meeting_id=room_data['room_id'],
+                    meeting_id=room_id,
                     doctor_id=session.doctor_id,
                     patient_id=session.patient_id
                 )
             except Exception as e:
                 logger.error(f"Failed to publish session started event: {e}")
             
-            logger.info(f"Started WebRTC room for session: {session_id}")
+            logger.info(f"Started Stream room for session: {session_id}")
             return session, {
-                'room_id': room_data['room_id'],
+                'room_id': room_id,
                 'session_id': session_id,
-                'signaling_server_url': session.signaling_server_url
+                'signaling_server_url': settings.STREAM_API_KEY
             }
             
         except Exception as e:
             await db.rollback()
-            logger.error(f"Failed to start meeting: {e}")
+            # Log full traceback for debugging
+            logger.exception("Failed to start meeting")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to start video meeting: {str(e)}"
@@ -269,19 +268,11 @@ class VideoConsultationService:
             room_data = {
                 'room_id': session.room_id,
                 'session_id': session_id,
-                'signaling_server_url': session.signaling_server_url or f"{settings.API_URL}/socket.io"
+                'signaling_server_url': settings.STREAM_API_KEY
             }
         
-        # Get the access token for the user
-        if role == "DOCTOR":
-            access_token = session.doctor_token
-        elif role == "PATIENT":
-            access_token = session.patient_token
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid role"
-            )
+        # We generate a fresh token for the user, regardless of role
+        access_token = stream_manager.generate_token(user_id)
         
         # Check if attendee already exists
         result = await db.execute(
@@ -295,18 +286,28 @@ class VideoConsultationService:
         existing_attendee = result.scalar_one_or_none()
         
         try:
-            # Join room via WebRTC service to get peer_id
-            # Pass session data to allow room recreation if needed
-            join_info = await webrtc_service.join_room(
-                room_id=session.room_id,
-                user_id=user_id,
-                role=role,
-                token=access_token,
-                session_id=session_id,
-                doctor_id=session.doctor_id,
-                patient_id=session.patient_id
-            )
+            # Join room via Stream
+            # Generate a fresh token for the user
+            access_token = stream_manager.generate_token(user_id)
             
+            # Use Stream's recommended user ID format as 'peer_id'
+            peer_id = str(user_id)
+            
+            # Construct room_data for response (adapting to existing structure)
+            # We pass the STREAM_API_KEY in the 'signaling_server_url' field so the client knows it.
+            room_data = {
+                'room_id': session.room_id or session.session_id,
+                'signaling_server_url': settings.STREAM_API_KEY, 
+                'participants_count': 0,
+                'doctor_token': session.doctor_token, # Keep legacy fields
+                'patient_token': session.patient_token
+            }
+            
+            # Mock join info for compatibility
+            join_info = {
+                'peer_id': peer_id
+            }
+
             # Create or update attendee record
             if existing_attendee:
                 existing_attendee.peer_id = join_info['peer_id']
@@ -442,12 +443,12 @@ class VideoConsultationService:
                 db.add(metric)
             
             # Leave WebRTC room
+            # For Stream.io, we rely on the client disconnecting. 
+            # The backend doesn't need to strictly "remove" them from the call object immediately
+            # as Stream handles presence.
             if session.room_id:
-                try:
-                    await webrtc_service.leave_room(session.room_id, user_id)
-                except Exception as e:
-                    logger.error(f"Failed to leave WebRTC room: {e}")
-            
+                pass
+                
             # Log event
             event = VideoConsultationEvent(
                 session_id=session_id,
@@ -520,9 +521,11 @@ class VideoConsultationService:
         # Delete WebRTC room
         if session.room_id:
             try:
-                await webrtc_service.delete_room(session.room_id)
+                # Stream calls don't explicitly need deletion via REST here, 
+                # or we skip it to avoid webrtc_service dependency
+                logger.info(f"Session {session.room_id} closed locally.")
             except Exception as e:
-                logger.error(f"Failed to delete WebRTC room: {e}")
+                logger.error(f"Failed to close room: {e}")
         
         # Mark all attendees as inactive
         for attendee in session.attendees:
@@ -607,7 +610,8 @@ class VideoConsultationService:
         # Delete WebRTC room if exists
         if session.room_id:
             try:
-                await webrtc_service.delete_room(session.room_id)
+                # await webrtc_service.delete_room(session.room_id)
+                logger.info(f"Session {session.room_id} closed locally (cancelled).")
             except Exception as e:
                 logger.error(f"Failed to delete WebRTC room: {e}")
         
