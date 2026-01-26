@@ -558,58 +558,158 @@ Appointment Workflow:
 
 - **Port:** 8083
 - **Database:** PostgreSQL on port 5437 (`inventorydb`)
-- **Framework:** Spring Boot, Spring Data JPA
+- **Framework:** Spring Boot 3.5.6, Spring Data JPA
 
 **Responsibilities:**
 
-- Medication and supply inventory management
-- Stock level tracking
-- Inventory updates and alerts
-- Reorder management
+- Medication and supply catalog management
+- Stock level tracking and inventory batches
+- Inventory updates and low stock alerts
+- Reorder management and batch tracking
+- Cost price and selling price management
+- Inventory transactions and stock movements
+- Clinic-specific inventory filtering
 
 **Key Tables:**
 
-- `inventory_items` - Medications and supplies
-- `stock_movements` - Track stock ins/outs
-- `reorder_alerts` - Low stock notifications
+- `catalog_items` - Medication and supply catalog
+- `inventory_batches` - Batch tracking with expiry dates
+- `stock_transactions` - Track stock in/out operations
+- `transaction_type` - Transaction classification (IN, OUT, ADJUSTMENT, DISPENSE, RETURN)
+
+**Core Features:**
+
+- Add medications with catalog information
+- Track batches with cost price and expiry dates
+- Stock in/out operations with transaction history
+- Dispense medications and track pharmacy operations
+- Generate low stock item reports
+- Clinic-specific inventory reports
+- Unit type management (TABLETS, BOTTLES, UNITS, etc.)
 
 **API Endpoints:**
 
-- `GET /api/inventory` - List inventory items
-- `POST /api/inventory` - Create inventory item
-- `PUT /api/inventory/{itemId}` - Update inventory
-- `GET /api/inventory/{itemId}` - Get item details
+- `GET /api/inventory/catalog` - List all catalog items
+- `POST /api/inventory/catalog` - Create catalog item
+- `PUT /api/inventory/catalog/{itemId}` - Update catalog
+- `GET /api/inventory/batches/clinic/{clinicId}` - Get clinic batches
+- `POST /api/inventory/stock/in` - Stock in operation
+- `POST /api/inventory/stock/out` - Stock out operation
 - `GET /api/inventory/stock/low` - Get low stock items
+- `POST /api/inventory/dispense` - Dispense medication
+- `GET /api/inventory/transactions` - View stock transactions
 - `GET /health` - Health check
 
 **Technology:**
 
-- Java 17, Spring Boot, Maven
-- Spring Data JPA, PostgreSQL
-- Actuator
+- Java 17, Spring Boot 3.5.6, Maven
+- Spring Data JPA with Hibernate
+- PostgreSQL, Actuator
+- SpringDoc OpenAPI for Swagger docs
+- RabbitMQ integration
 
 ---
 
-### 6. **API Gateway** (Kong)
+### 6. **Video Consultation Service** (Python/FastAPI)
+
+- **Port:** 8086
+- **Database:** PostgreSQL on port 5438 (`videodb`)
+- **Framework:** FastAPI, Socket.IO, WebRTC
+
+**Responsibilities:**
+
+- Real-time video consultation management
+- WebRTC peer-to-peer video sessions
+- Session creation, joining, and lifecycle management
+- Socket.IO real-time messaging and signaling
+- Event-driven architecture with RabbitMQ
+- JWT token-based authentication
+- Support for clinic-based and direct doctor bookings
+
+**Key Tables:**
+
+- `video_sessions` - Video consultation sessions
+- `session_participants` - Participants in each session (doctor, patient)
+- `session_recordings` - Recording metadata (optional)
+
+**Core Features:**
+
+- Create video sessions for appointments or direct bookings
+- Real-time participant management (join/leave)
+- WebRTC offer/answer signaling via Socket.IO
+- Session status tracking (PENDING, ACTIVE, COMPLETED, CANCELLED)
+- Dual booking modes:
+  - Clinic-based: Patient → Clinic Session → Doctor
+  - Direct booking: Patient → Doctor
+- Comprehensive session metrics and monitoring
+
+**API Endpoints:**
+
+- `POST /api/video/sessions` - Create video session
+- `GET /api/video/sessions/{sessionId}` - Get session details
+- `POST /api/video/sessions/{sessionId}/join` - Join session
+- `POST /api/video/sessions/{sessionId}/leave` - Leave session
+- `POST /api/video/sessions/{sessionId}/end` - End session
+- `GET /api/video/sessions/history/{userId}` - Get session history
+- `POST /api/video/sessions/{sessionId}/recording` - Get recording info
+- `GET /health` - Health check
+
+**WebSocket Events:**
+
+- `offer` - WebRTC offer signaling
+- `answer` - WebRTC answer signaling
+- `ice-candidate` - ICE candidate exchange
+- `participant-joined` - New participant joined
+- `participant-left` - Participant left
+- `session-started` - Session started
+- `session-ended` - Session ended
+
+**Technology:**
+
+- Python 3.9+, FastAPI 0.109.0
+- Socket.IO for real-time communication
+- WebRTC for peer-to-peer video
+- SQLAlchemy with PostgreSQL
+- JWT (python-jose) for authentication
+- Pydantic for data validation
+- RabbitMQ (aio-pika) for event publishing
+
+---
+
+### 7. **API Gateway** (Kong)
 
 - **Proxy Port:** 8000
 - **Admin Port:** 8001
-- **Dashboard:** localhost:1337
+- **Image:** Kong 3.4.0
 
 **Responsibilities:**
 
 - Route requests to appropriate microservices
-- Request/response transformation
+- Request/response transformation and validation
 - Rate limiting and throttling
-- Authentication and authorization
-- Load balancing
-- API versioning
+- JWT authentication and authorization
+- Load balancing across service instances
+- API versioning and deprecation
+- Logging and monitoring
 
 **Gateway Configuration:**
 
 - Kong config file: `api-gateway/config/kong.yaml`
+- Declarative configuration (database-less mode)
 - Routes map URLs to backend services
-- Upstream services define backend servers
+- Upstream services define backend server pools
+- Plugin configuration for auth, rate limiting, CORS
+
+**Service Routes:**
+
+```yaml
+/auth/* → Auth Service (8081)
+/profile/* → Profile Service (8082)
+/appointments/* → Appointments Service (8084)
+/prescriptions/* → Prescription Service (8085)
+/inventory/* → Inventory Service (8083)
+/video/* → Video Consultation Service (8086)
+```
 
 ---
 
@@ -671,13 +771,15 @@ Inventory Service → Register user
 
 ### Backend Services
 
-| Service      | Language | Framework   | Version |
-| ------------ | -------- | ----------- | ------- |
-| Auth         | Go       | Chi Router  | 1.24.0  |
-| Profile      | Java     | Spring Boot | 3.5.6   |
-| Appointments | Java     | Spring Boot | 3.5.7   |
-| Prescription | Go       | Fiber       | 1.24.0  |
-| Inventory    | Java     | Spring Boot | Latest  |
+| Service            | Language | Framework   | Version |
+| ------------------ | -------- | ----------- | ------- |
+| Auth               | Go       | Chi Router  | 1.24.0  |
+| Profile            | Java     | Spring Boot | 3.5.6   |
+| Appointments       | Java     | Spring Boot | 3.5.7   |
+| Prescription       | Go       | Fiber       | 1.24.0  |
+| Inventory          | Java     | Spring Boot | 3.5.6   |
+| Video Consultation | Python   | FastAPI     | 0.109.0 |
+| API Gateway        | -        | Kong        | 3.4.0   |
 
 ### Databases & Message Queue
 
@@ -753,10 +855,11 @@ docker-compose logs -f [service-name]
 # - Kong Admin: http://localhost:8001
 # - Auth Service: http://localhost:8081
 # - Profile Service: http://localhost:8082
+# - Inventory Service: http://localhost:8083
 # - Appointments Service: http://localhost:8084
 # - Prescription Service: http://localhost:8085
-# - Inventory Service: http://localhost:8083
-# - Kong Dashboard: http://localhost:1337
+# - Video Consultation Service: http://localhost:8086
+# - Video Consultation Docs: http://localhost:8086/docs
 ```
 
 ### Local Development Setup
@@ -1304,9 +1407,9 @@ test: Add unit tests for prescription service
 
 ## 📁 Project Structure
 
-```
+````
 PulseOne-Backend/
-├── auth-service/                  # Go authentication service
+├── auth-service/                  # Go authentication service (Port 8081)
 │   ├── cmd/main.go               # Entry point
 │   ├── internal/
 │   │   ├── api/handlers/         # HTTP handlers
@@ -1318,69 +1421,93 @@ PulseOne-Backend/
 │   ├── Dockerfile
 │   └── schema.sql
 │
-├── profile-service/              # Spring Boot profile service
+├── profile-service/              # Spring Boot profile service (Port 8082)
 │   ├── src/main/java/com/pulseone/profile_service/
 │   │   ├── controller/           # API endpoints
 │   │   ├── service/              # Business logic
 │   │   ├── repository/           # Database access
-│   │   └── model/                # Entities
+│   │   ├── client/               # Service clients
+│   │   └── entity/               # JPA entities
 │   ├── pom.xml
 │   ├── Dockerfile
 │   └── schema.sql
 │
-├── appointments-service/         # Spring Boot appointments service
-│   ├── src/main/java/com/pulseone/appointments/
+├── appointments-service/         # Spring Boot appointments service (Port 8084)
+│   ├── src/main/java/com/pulseone/appointments_service/
 │   │   ├── controller/
 │   │   ├── service/
 │   │   ├── repository/
-│   │   └── model/
+│   │   ├── messaging/            # RabbitMQ integration
+│   │   └── entity/
 │   ├── pom.xml
 │   ├── Dockerfile
-│   └── schema.sql
+│   ├── schema.sql
+│   ├── migration_add_profile_ids.sql
+│   └── migration_dual_mode_doctor_concept.sql
 │
-├── prescription-service/         # Go prescription service
+├── prescription-service/         # Go prescription service (Port 8085)
 │   ├── cmd/main.go
 │   ├── internal/
+│   │   ├── database/
+│   │   ├── handlers/             # HTTP handlers
+│   │   ├── messaging/            # RabbitMQ consumer
+│   │   ├── model/
+│   │   └── proto/
 │   ├── pkg/
 │   ├── go.mod
 │   ├── Dockerfile
 │   └── schema.sql
 │
-├── inventory-service/            # Spring Boot inventory service
-│   ├── src/main/java/
+├── inventory-service/            # Spring Boot inventory service (Port 8083)
+│   ├── src/main/java/com/pulseone/inventory_service/
+│   │   ├── controller/
+│   │   ├── service/
+│   │   ├── repository/
+│   │   ├── messaging/            # RabbitMQ integration
+│   │   └── entity/
 │   ├── pom.xml
 │   ├── Dockerfile
 │   └── schema.sql
 │
-├── api-gateway/                  # Kong API Gateway
-│   ├── config/kong.yaml
-│   ├── kong-deployment.yaml
-│   └── kong-config-configmap.yaml
+├── video-consultation-service/   # FastAPI video service (Port 8086)
+│   ├── app/
+│   │   ├── routes.py             # API endpoints
+│   │   ├── schemas.py            # Request/response models
+│   │   ├── models.py             # SQLAlchemy models
+│   │   ├── video_service.py      # Business logic
+│   │   ├── webrtc_service.py     # WebRTC signaling
+│   │   ├── socket_manager.py     # Socket.IO management
+│   │   ├── rabbitmq_consumer.py  # Event consumer
+│   │   ├── rabbitmq_publisher.py # Event publisher
+│   │   └── database.py           # DB initialization
+│   ├── main.py                   # FastAPI app entry point
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── migration_webrtc.sql
+│   └── schema.sql
 │
-├── proto/                        # Protocol buffers
+├── api-gateway/                  # Kong API Gateway (Port 8000)
+│   ├── config/
+│   │   └── kong.yaml            # Routes and services
+│   ├── kong-deployment.yaml
+│   ├── kong-config-configmap.yaml
+│   └── kong-service.yaml
+│
+├── nodejs-api-gateway/           # Legacy Node.js gateway
+│   ├── server.js
+│   └── package.json
+│
+├── proto/                        # Protocol Buffer definitions
 │   └── user_events.proto
 │
 ├── api/                          # HTTP test files
 │   ├── register.http
 │   ├── login.http
 │   ├── PatientProfile.http
-│   └── ...
-│
-├── kubernetes/                   # K8s manifests
-│   └── *.yaml
-│
-├── docker-compose.yml            # Stack orchestration
-├── SETUP_DATABASES.bat           # Database initialization
-├── START_SERVICES.bat            # Service startup
-├── VERIFY_SETUP.bat              # Setup verification
-├── TEST_EVENTS.bat               # Event testing
-│
-├── API_ENDPOINTS_DOCUMENTATION.md
-├── CLINIC_ADMIN_REPORT.md
-├── DOCTOR_DASHBOARD_REQUIREMENTS.md
-├── PATIENT_MOBILE_APP_ENDPOINTS.md
-└── README.md
-```
+│   ├── DoctorProfile.http
+│   ├── Clinic.http
+│   ├── profile-service-8082-test.http
+│   └── ...```
 
 ---
 
@@ -1390,12 +1517,15 @@ PulseOne-Backend/
 
 All services expose health checks:
 
-```
-GET http://localhost:8081/health        # Auth Service
-GET http://localhost:8082/health        # Profile Service
-GET http://localhost:8084/health        # Appointments Service
-GET http://localhost:8085/health        # Prescription Service
-GET http://localhost:8083/health        # Inventory Service
+````
+
+GET http://localhost:8081/health # Auth Service
+GET http://localhost:8082/health # Profile Service
+GET http://localhost:8083/health # Inventory Service
+GET http://localhost:8084/health # Appointments Service
+GET http://localhost:8085/health # Prescription Service
+GET http://localhost:8086/health # Video Consultation Service
+
 ```
 
 ### Performance Metrics
@@ -1403,9 +1533,11 @@ GET http://localhost:8083/health        # Inventory Service
 **Java Services (Spring Actuator):**
 
 ```
+
 GET http://localhost:8082/actuator/metrics
 GET http://localhost:8084/actuator/metrics
-```
+
+````
 
 ### Logging
 
@@ -1414,7 +1546,7 @@ GET http://localhost:8084/actuator/metrics
 ```bash
 docker-compose logs -f [service-name]
 docker-compose logs -f --tail=100        # Last 100 lines
-```
+````
 
 ---
 
@@ -1481,16 +1613,19 @@ Proprietary - PulseOne Healthcare Platform
 
 ### Future Enhancements
 
-- [ ] Video consultation integration (WebRTC)
+- [x] Video consultation integration (WebRTC) - **COMPLETED**
+- [ ] Video recording and playback
+- [ ] Screen sharing in consultations
 - [ ] Mobile app (React Native/Flutter)
 - [ ] Advanced analytics dashboard
 - [ ] Insurance integration
-- [ ] Telemedicine features
 - [ ] ML-based appointment recommendations
 - [ ] Automated prescription refill
 - [ ] Payment gateway integration
 - [ ] Multi-language support
 - [ ] Offline capability for mobile
+- [ ] Telehealth billing and reporting
+- [ ] Advanced STUN/TURN server configuration
 
 ---
 
