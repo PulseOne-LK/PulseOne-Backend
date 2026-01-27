@@ -17,7 +17,6 @@ RUN go mod download
 # Copy all source code
 COPY prescription-service/cmd ./cmd
 COPY prescription-service/internal ./internal
-COPY prescription-service/pkg ./pkg
 COPY prescription-service/docs ./docs
 
 # Build the application with proper CGO settings
