@@ -207,8 +207,7 @@ jobs:
             - name: Build & Push Video Consultation Service
               uses: docker/build-push-action@v5
               with:
-                  context: .
-                  file: ./video-consultation-service/Dockerfile
+                  context: ./video-consultation-service
                   push: true
                   tags: |
                       ${{ env.DOCKER_USERNAME }}/video-consultation-service:${{ needs.load-versions.outputs.video_tag }}
