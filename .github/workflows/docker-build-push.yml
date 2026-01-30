@@ -1,0 +1,237 @@
+name: Build & Push Docker Images
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "auth-service/**"
+            - "profile-service/**"
+            - "appointments-service/**"
+            - "prescription-service/**"
+            - "inventory-service/**"
+            - "video-consultation-service/**"
+            - ".env.example"
+            - "docker-compose.yml"
+            - ".github/workflows/docker-build-push.yml"
+
+env:
+    DOCKER_USERNAME: kushan7
+    REGISTRY: docker.io
+
+jobs:
+    load-versions:
+        name: Load Version Tags
+        runs-on: ubuntu-latest
+        outputs:
+            auth_tag: ${{ steps.versions.outputs.auth_tag }}
+            profile_tag: ${{ steps.versions.outputs.profile_tag }}
+            appointments_tag: ${{ steps.versions.outputs.appointments_tag }}
+            prescription_tag: ${{ steps.versions.outputs.prescription_tag }}
+            inventory_tag: ${{ steps.versions.outputs.inventory_tag }}
+            video_tag: ${{ steps.versions.outputs.video_tag }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Load version tags from .env.example
+              id: versions
+              run: |
+                  AUTH_TAG=$(grep "AUTH_SERVICE_TAG=" .env.example | cut -d'=' -f2)
+                  PROFILE_TAG=$(grep "PROFILE_SERVICE_TAG=" .env.example | cut -d'=' -f2)
+                  APPOINTMENTS_TAG=$(grep "APPOINTMENTS_SERVICE_TAG=" .env.example | cut -d'=' -f2)
+                  PRESCRIPTION_TAG=$(grep "PRESCRIPTION_SERVICE_TAG=" .env.example | cut -d'=' -f2)
+                  INVENTORY_TAG=$(grep "INVENTORY_SERVICE_TAG=" .env.example | cut -d'=' -f2)
+                  VIDEO_TAG=$(grep "VIDEO_CONSULTATION_SERVICE_TAG=" .env.example | cut -d'=' -f2)
+
+                  echo "auth_tag=$AUTH_TAG" >> $GITHUB_OUTPUT
+                  echo "profile_tag=$PROFILE_TAG" >> $GITHUB_OUTPUT
+                  echo "appointments_tag=$APPOINTMENTS_TAG" >> $GITHUB_OUTPUT
+                  echo "prescription_tag=$PRESCRIPTION_TAG" >> $GITHUB_OUTPUT
+                  echo "inventory_tag=$INVENTORY_TAG" >> $GITHUB_OUTPUT
+                  echo "video_tag=$VIDEO_TAG" >> $GITHUB_OUTPUT
+
+                  echo "🏷️ Loaded versions:"
+                  echo "  Auth: $AUTH_TAG"
+                  echo "  Profile: $PROFILE_TAG"
+                  echo "  Appointments: $APPOINTMENTS_TAG"
+                  echo "  Prescription: $PRESCRIPTION_TAG"
+                  echo "  Inventory: $INVENTORY_TAG"
+                  echo "  Video: $VIDEO_TAG"
+
+    build-auth-service:
+        name: Build & Push Auth Service
+        runs-on: ubuntu-latest
+        needs: load-versions
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build & Push Auth Service
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./auth-service
+                  push: true
+                  tags: |
+                      ${{ env.DOCKER_USERNAME }}/auth-service:${{ needs.load-versions.outputs.auth_tag }}
+                      ${{ env.DOCKER_USERNAME }}/auth-service:latest
+
+    build-profile-service:
+        name: Build & Push Profile Service
+        runs-on: ubuntu-latest
+        needs: load-versions
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build & Push Profile Service
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./profile-service
+                  push: true
+                  tags: |
+                      ${{ env.DOCKER_USERNAME }}/profile-service:${{ needs.load-versions.outputs.profile_tag }}
+                      ${{ env.DOCKER_USERNAME }}/profile-service:latest
+
+    build-appointments-service:
+        name: Build & Push Appointments Service
+        runs-on: ubuntu-latest
+        needs: load-versions
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build & Push Appointments Service
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./appointments-service
+                  push: true
+                  tags: |
+                      ${{ env.DOCKER_USERNAME }}/appointments-service:${{ needs.load-versions.outputs.appointments_tag }}
+                      ${{ env.DOCKER_USERNAME }}/appointments-service:latest
+
+    build-prescription-service:
+        name: Build & Push Prescription Service
+        runs-on: ubuntu-latest
+        needs: load-versions
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build & Push Prescription Service
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./prescription-service
+                  push: true
+                  tags: |
+                      ${{ env.DOCKER_USERNAME }}/prescription-service:${{ needs.load-versions.outputs.prescription_tag }}
+                      ${{ env.DOCKER_USERNAME }}/prescription-service:latest
+
+    build-inventory-service:
+        name: Build & Push Inventory Service
+        runs-on: ubuntu-latest
+        needs: load-versions
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build & Push Inventory Service
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./inventory-service
+                  push: true
+                  tags: |
+                      ${{ env.DOCKER_USERNAME }}/inventory-service:${{ needs.load-versions.outputs.inventory_tag }}
+                      ${{ env.DOCKER_USERNAME }}/inventory-service:latest
+
+    build-video-consultation-service:
+        name: Build & Push Video Consultation Service
+        runs-on: ubuntu-latest
+        needs: load-versions
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKER_USERNAME }}
+                  password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build & Push Video Consultation Service
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./video-consultation-service
+                  push: true
+                  tags: |
+                      ${{ env.DOCKER_USERNAME }}/video-consultation-service:${{ needs.load-versions.outputs.video_tag }}
+                      ${{ env.DOCKER_USERNAME }}/video-consultation-service:latest
+
+    notify:
+        name: Notify Build Complete
+        runs-on: ubuntu-latest
+        needs:
+            [
+                build-auth-service,
+                build-profile-service,
+                build-appointments-service,
+                build-prescription-service,
+                build-inventory-service,
+                build-video-consultation-service,
+            ]
+        if: always()
+        steps:
+            - name: Check Build Status
+              run: |
+                  if [ "${{ needs.build-auth-service.result }}" == "success" ] && \
+                     [ "${{ needs.build-profile-service.result }}" == "success" ] && \
+                     [ "${{ needs.build-appointments-service.result }}" == "success" ] && \
+                     [ "${{ needs.build-prescription-service.result }}" == "success" ] && \
+                     [ "${{ needs.build-inventory-service.result }}" == "success" ] && \
+                     [ "${{ needs.build-video-consultation-service.result }}" == "success" ]; then
+                    echo "✅ All services built and pushed successfully!"
+                  else
+                    echo "❌ One or more services failed to build"
+                    exit 1
+                  fi

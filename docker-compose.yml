@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   # ===================== DATABASES =====================
   # PostgreSQL for Auth Service
@@ -135,6 +137,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
+      # Using default values, but can be overridden in .env
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_DEFAULT_VHOST: "/"
@@ -231,21 +234,24 @@ services:
   # ===================== MICROSERVICES =====================
   # Auth Service (Go)
   auth-service:
-    build:
-      context: .
-      dockerfile: ./auth-service/Dockerfile
+    image: ${DOCKER_USERNAME}/auth-service:${AUTH_SERVICE_TAG}
     container_name: auth-service
     restart: on-failure
     ports:
       - "8080:8080"
     environment:
+      # Database config (non-secret, hardcoded)
       POSTGRES_DSN: "user=postgres password=postgres host=auth-postgres-db port=5432 dbname=authdb sslmode=disable"
       PORT: "8080"
+
+      # Secrets (from .env)
       JWT_SECRET: ${JWT_SECRET}
       GMAIL_SMTP_EMAIL: ${GMAIL_SMTP_EMAIL}
       GMAIL_SMTP_APP_PASSWORD: ${GMAIL_SMTP_APP_PASSWORD}
-      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
-      AUTH_PUBLIC_BASE_URL: ${AUTH_PUBLIC_BASE_URL}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-PulseOne}
+      AUTH_PUBLIC_BASE_URL: ${AUTH_PUBLIC_BASE_URL:-http://localhost:8080}
+
+      # RabbitMQ (non-secret, hardcoded)
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
     depends_on:
       auth-postgres-db:
@@ -261,16 +267,17 @@ services:
 
   # Profile Service (Spring Boot)
   profile-service:
-    build:
-      context: .
-      dockerfile: ./profile-service/Dockerfile
+    image: ${DOCKER_USERNAME}/profile-service:${PROFILE_SERVICE_TAG}
     container_name: profile-service
     restart: on-failure
     ports:
       - "8082:8082"
     environment:
+      # Server config (non-secret, hardcoded)
       SERVER_PORT: "8082"
       SERVER_ADDRESS: "0.0.0.0"
+
+      # Database config (non-secret, hardcoded)
       DB_URL: "jdbc:postgresql://profile-postgres-db:5432/profiledb"
       DB_USERNAME: "postgres"
       DB_PASSWORD: "postgres"
@@ -282,6 +289,8 @@ services:
       SPRING_DATASOURCE_USERNAME: "postgres"
       SPRING_DATASOURCE_PASSWORD: "postgres"
       SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+
+      # RabbitMQ (non-secret, hardcoded)
       SPRING_RABBITMQ_HOST: "rabbitmq"
       SPRING_RABBITMQ_PORT: "5672"
       SPRING_RABBITMQ_USERNAME: "guest"
@@ -290,18 +299,26 @@ services:
       RABBITMQ_PORT: "5672"
       RABBITMQ_USERNAME: "guest"
       RABBITMQ_PASSWORD: "guest"
+
+      # Monitoring (non-secret, hardcoded)
       MANAGEMENT_ENDPOINTS_EXPOSURE: "health,info"
       MANAGEMENT_HEALTH_SHOW_DETAILS: "always"
       MANAGEMENT_BASE_PATH: "/actuator"
+
+      # CORS (non-secret, hardcoded)
       CORS_ALLOWED_ORIGINS: "*"
       CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
       CORS_ALLOWED_HEADERS: "*"
       CORS_ALLOW_CREDENTIALS: "true"
+
+      # Swagger (non-secret, hardcoded)
       SWAGGER_PATH: "/api-docs"
       SWAGGER_UI_PATH: "/swagger-ui.html"
       SWAGGER_TAGS_SORTER: "alpha"
       SWAGGER_OPERATIONS_SORTER: "alpha"
       SWAGGER_DISPLAY_REQUEST_DURATION: "true"
+
+      # Kafka (non-secret, hardcoded - optional)
       KAFKA_BOOTSTRAP_SERVERS: "localhost:9092"
       KAFKA_CONSUMER_GROUP_ID: "profile-service-group"
       KAFKA_CONSUMER_AUTO_OFFSET_RESET: "earliest"
@@ -320,16 +337,17 @@ services:
 
   # Appointments Service (Spring Boot)
   appointments-service:
-    build:
-      context: .
-      dockerfile: ./appointments-service/Dockerfile
+    image: ${DOCKER_USERNAME}/appointments-service:${APPOINTMENTS_SERVICE_TAG}
     container_name: appointments-service
     restart: on-failure
     ports:
       - "8083:8083"
     environment:
+      # Server config (non-secret, hardcoded)
       SERVER_PORT: "8083"
       SERVER_ADDRESS: "0.0.0.0"
+
+      # Database config (non-secret, hardcoded)
       DB_URL: "jdbc:postgresql://appointments-postgres-db:5432/appointmentsdb"
       DB_USERNAME: "postgres"
       DB_PASSWORD: "postgres"
@@ -341,6 +359,8 @@ services:
       SPRING_DATASOURCE_USERNAME: "postgres"
       SPRING_DATASOURCE_PASSWORD: "postgres"
       SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+
+      # RabbitMQ (non-secret, hardcoded)
       SPRING_RABBITMQ_HOST: "rabbitmq"
       SPRING_RABBITMQ_PORT: "5672"
       SPRING_RABBITMQ_USERNAME: "guest"
@@ -351,13 +371,19 @@ services:
       RABBITMQ_PASSWORD: "guest"
       RABBITMQ_VIRTUAL_HOST: "/"
       RABBITMQ_CONNECTION_TIMEOUT: "30s"
+
+      # Monitoring (non-secret, hardcoded)
       MANAGEMENT_ENDPOINTS_EXPOSURE: "health,info"
       MANAGEMENT_HEALTH_SHOW_DETAILS: "always"
       MANAGEMENT_BASE_PATH: "/actuator"
+
+      # CORS (non-secret, hardcoded)
       CORS_ALLOWED_ORIGINS: "*"
       CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
       CORS_ALLOWED_HEADERS: "*"
       CORS_ALLOW_CREDENTIALS: "true"
+
+      # Swagger (non-secret, hardcoded)
       SWAGGER_PATH: "/api-docs"
       SWAGGER_UI_PATH: "/swagger-ui.html"
     depends_on:
@@ -374,20 +400,21 @@ services:
 
   # Prescription Service (Go)
   prescription-service:
-    build:
-      context: .
-      dockerfile: ./prescription-service/Dockerfile
+    image: ${DOCKER_USERNAME}/prescription-service:${PRESCRIPTION_SERVICE_TAG}
     container_name: prescription-service
     restart: on-failure
     ports:
       - "8085:8085"
     environment:
+      # Database config (non-secret, hardcoded)
       DB_HOST: "prescription-postgres-db"
       DB_PORT: "5432"
       DB_USER: "postgres"
       DB_PASSWORD: "postgres"
       DB_NAME: "prescriptiondb"
       PORT: "8085"
+
+      # RabbitMQ (non-secret, hardcoded)
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
     depends_on:
       prescription-postgres-db:
@@ -403,16 +430,17 @@ services:
 
   # Inventory Service (Spring Boot)
   inventory-service:
-    build:
-      context: .
-      dockerfile: ./inventory-service/Dockerfile
+    image: ${DOCKER_USERNAME}/inventory-service:${INVENTORY_SERVICE_TAG}
     container_name: inventory-service
     restart: on-failure
     ports:
       - "8084:8084"
     environment:
+      # Server config (non-secret, hardcoded)
       SERVER_PORT: "8084"
       SERVER_CONTEXT_PATH: "/"
+
+      # Database config (non-secret, hardcoded)
       DB_URL: "jdbc:postgresql://inventory-postgres-db:5432/inventorydb"
       DB_USERNAME: "postgres"
       DB_PASSWORD: "postgres"
@@ -431,6 +459,8 @@ services:
       SPRING_DATASOURCE_USERNAME: "postgres"
       SPRING_DATASOURCE_PASSWORD: "postgres"
       SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+
+      # RabbitMQ (non-secret, hardcoded)
       SPRING_RABBITMQ_HOST: "rabbitmq"
       SPRING_RABBITMQ_PORT: "5672"
       SPRING_RABBITMQ_USERNAME: "guest"
@@ -439,6 +469,8 @@ services:
       RABBITMQ_PORT: "5672"
       RABBITMQ_USERNAME: "guest"
       RABBITMQ_PASSWORD: "guest"
+
+      # Swagger (non-secret, hardcoded)
       SWAGGER_PATH: "/api-docs"
       SWAGGER_UI_PATH: "/swagger-ui.html"
       SWAGGER_TAGS_SORTER: "alpha"
@@ -458,67 +490,65 @@ services:
 
   # Video Consultation Service (Python FastAPI)
   video-consultation-service:
-    build:
-      context: ./video-consultation-service
-      dockerfile: Dockerfile
+    image: ${DOCKER_USERNAME}/video-consultation-service:${VIDEO_CONSULTATION_SERVICE_TAG}
     container_name: video-consultation-service
     restart: on-failure
     ports:
       - "8086:8086"
     environment:
-      # Application Settings
+      # Application Settings (non-secret, hardcoded)
       APP_NAME: "Video Consultation Service"
       VERSION: "1.0.0"
       DEBUG: "False"
       PORT: "8086"
       HOST: "0.0.0.0"
-      
-      # Database Configuration
+
+      # Database Configuration (non-secret, hardcoded)
       DATABASE_URL: "postgresql+asyncpg://postgres:postgres@video-postgres-db:5432/videodb"
       DB_HOST: "video-postgres-db"
       DB_PORT: "5432"
       DB_NAME: "videodb"
       DB_USER: "postgres"
       DB_PASSWORD: "postgres"
-      
-      # JWT Configuration
+
+      # JWT Configuration (secrets from .env)
       JWT_SECRET_KEY: ${JWT_SECRET}
       JWT_ALGORITHM: "HS256"
       JWT_EXPIRATION_MINUTES: "60"
-      
-      # RabbitMQ Configuration
+
+      # RabbitMQ Configuration (non-secret, hardcoded)
       RABBITMQ_HOST: "rabbitmq"
       RABBITMQ_PORT: "5672"
       RABBITMQ_USER: "guest"
       RABBITMQ_PASSWORD: "guest"
       RABBITMQ_VHOST: "/"
       RABBITMQ_EXCHANGE: "appointments-exchange"
-      
-      # Service URLs (inter-service communication)
+
+      # Service URLs (non-secret, hardcoded)
       API_URL: "http://video-consultation-service:8086"
       AUTH_SERVICE_URL: "http://auth-service:8080"
       PROFILE_SERVICE_URL: "http://profile-service:8082"
       APPOINTMENTS_SERVICE_URL: "http://appointments-service:8083"
-      
-      # Video Provider Configuration (Stream.io)
+
+      # Video Provider Configuration (secrets from .env)
       STREAM_API_KEY: ${STREAM_API_KEY}
       STREAM_API_SECRET: ${STREAM_API_SECRET}
-      
-      # AWS Free Tier Usage Tracking
+
+      # AWS Free Tier Usage Tracking (non-secret, hardcoded)
       AWS_FREE_TIER_ATTENDEE_MINUTES: "1000"
-      
-      # Video Consultation Settings
+
+      # Video Consultation Settings (non-secret, hardcoded)
       DEFAULT_CONSULTATION_DURATION_MINUTES: "30"
       MAX_CONSULTATION_DURATION_MINUTES: "120"
       MIN_CONSULTATION_DURATION_MINUTES: "15"
-      
-      # WebRTC Configuration
+
+      # WebRTC Configuration (non-secret, hardcoded)
       MAX_PARTICIPANTS_PER_ROOM: "2"
       ENABLE_USAGE_TRACKING: "True"
       ENABLE_RECORDING: "False"
       STUN_SERVER: "stun:stun.l.google.com:19302"
-      
-      # CORS Configuration
+
+      # CORS Configuration (non-secret, hardcoded)
       CORS_ORIGINS: '["http://localhost:3000","http://localhost:8000"]'
     depends_on:
       video-postgres-db:
