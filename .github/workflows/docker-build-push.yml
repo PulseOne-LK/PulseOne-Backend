@@ -77,7 +77,8 @@ jobs:
             - name: Build & Push Auth Service
               uses: docker/build-push-action@v5
               with:
-                  context: ./auth-service
+                  context: .
+                  file: ./auth-service/Dockerfile
                   push: true
                   tags: |
                       ${{ env.DOCKER_USERNAME }}/auth-service:${{ needs.load-versions.outputs.auth_tag }}
@@ -102,7 +103,8 @@ jobs:
             - name: Build & Push Profile Service
               uses: docker/build-push-action@v5
               with:
-                  context: ./profile-service
+                  context: .
+                  file: ./profile-service/Dockerfile
                   push: true
                   tags: |
                       ${{ env.DOCKER_USERNAME }}/profile-service:${{ needs.load-versions.outputs.profile_tag }}
@@ -127,7 +129,8 @@ jobs:
             - name: Build & Push Appointments Service
               uses: docker/build-push-action@v5
               with:
-                  context: ./appointments-service
+                  context: .
+                  file: ./appointments-service/Dockerfile
                   push: true
                   tags: |
                       ${{ env.DOCKER_USERNAME }}/appointments-service:${{ needs.load-versions.outputs.appointments_tag }}
@@ -152,7 +155,8 @@ jobs:
             - name: Build & Push Prescription Service
               uses: docker/build-push-action@v5
               with:
-                  context: ./prescription-service
+                  context: .
+                  file: ./prescription-service/Dockerfile
                   push: true
                   tags: |
                       ${{ env.DOCKER_USERNAME }}/prescription-service:${{ needs.load-versions.outputs.prescription_tag }}
@@ -177,7 +181,8 @@ jobs:
             - name: Build & Push Inventory Service
               uses: docker/build-push-action@v5
               with:
-                  context: ./inventory-service
+                  context: .
+                  file: ./inventory-service/Dockerfile
                   push: true
                   tags: |
                       ${{ env.DOCKER_USERNAME }}/inventory-service:${{ needs.load-versions.outputs.inventory_tag }}
@@ -202,7 +207,8 @@ jobs:
             - name: Build & Push Video Consultation Service
               uses: docker/build-push-action@v5
               with:
-                  context: ./video-consultation-service
+                  context: .
+                  file: ./video-consultation-service/Dockerfile
                   push: true
                   tags: |
                       ${{ env.DOCKER_USERNAME }}/video-consultation-service:${{ needs.load-versions.outputs.video_tag }}
